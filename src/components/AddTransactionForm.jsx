@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 const tokens = {
-  ink: "#FFFFFF",
-  surface: "#F5F5F5",
-  surfaceRaised: "#EFEFEF",
-  hairline: "#E0E0E0",
-  bone: "#1A1A1A",
-  muted: "#666666",
-  moss: "#2E7D32",
-  rust: "#C62828",
-  gold: "#1976D2",
+  ink: "#F8F9FA",
+  surface: "#FFFFFF",
+  surfaceRaised: "#F5F7FA",
+  hairline: "#E5E7EB",
+  bone: "#111827",
+  muted: "#6B7280",
+  moss: "#10B981",
+  rust: "#EF4444",
+  gold: "#3B82F6",
 };
 
 const EXPENSE_CATEGORIES = [
@@ -46,9 +46,18 @@ const inputStyle = {
 };
 
 export default function AddTransactionForm({ supabase, onClose, onSaved }) {
-  const [concerns, setConcerns] = useState([]);
+  const [concerns, setConcerns] = useState([
+    { id: "1", name: "Tru Multimedia Limited" },
+    { id: "2", name: "Truphoto Studio" },
+    { id: "3", name: "4R Studio" },
+    { id: "4", name: "Uthsob Mukhor" },
+  ]);
   const [projects, setProjects] = useState([]);
-  const [partners, setPartners] = useState([]);
+  const [partners, setPartners] = useState([
+    { id: "1", name: "Ifthaker Hossain Radone" },
+    { id: "2", name: "Rezwan Kobir Zoha" },
+    { id: "3", name: "Rasel Ahmed" },
+  ]);
 
   const [form, setForm] = useState({
     concern_id: "",
@@ -67,20 +76,7 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!supabase) {
-      setConcerns([
-        { id: "1", name: "Tru Multimedia Limited" },
-        { id: "2", name: "Truphoto Studio" },
-        { id: "3", name: "4R Studio" },
-        { id: "4", name: "Uthsob Mukhor" },
-      ]);
-      setPartners([
-        { id: "1", name: "Ifthaker Hossain Radone" },
-        { id: "2", name: "Rezwan Kobir Zoha" },
-        { id: "3", name: "Rasel Ahmed" },
-      ]);
-      return;
-    }
+    if (!supabase) return;
 
     (async () => {
       try {
@@ -91,14 +87,7 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
         if (c) setConcerns(c);
         if (p) setPartners(p);
       } catch (err) {
-        console.error("Failed to fetch:", err);
-        // fallback to sample
-        setConcerns([
-          { id: "1", name: "Tru Multimedia Limited" },
-          { id: "2", name: "Truphoto Studio" },
-          { id: "3", name: "4R Studio" },
-          { id: "4", name: "Uthsob Mukhor" },
-        ]);
+        console.error("Failed to fetch concerns/partners:", err);
       }
     })();
   }, [supabase]);
