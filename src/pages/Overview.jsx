@@ -11,15 +11,15 @@ import {
 import { Plus, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 
 const tokens = {
-  ink: "#12181A",
-  surface: "#1B2326",
-  surfaceRaised: "#222C2F",
-  hairline: "#2E393C",
-  bone: "#EDEAE2",
-  muted: "#8B9598",
-  moss: "#8FB08A",
-  rust: "#C3714E",
-  gold: "#D3A653",
+  ink: "#F8F9FA",
+  surface: "#FFFFFF",
+  surfaceRaised: "#F5F7FA",
+  hairline: "#E5E7EB",
+  bone: "#111827",
+  muted: "#6B7280",
+  moss: "#10B981",
+  rust: "#EF4444",
+  gold: "#3B82F6",
 };
 
 async function fetchConcernPL(supabase) {
@@ -113,7 +113,7 @@ function ConcernCard({ name, income, expense, net, isMother }) {
           className="flex items-center gap-1 text-sm font-mono px-2 py-1 rounded-md"
           style={{
             color: positive ? tokens.moss : tokens.rust,
-            background: positive ? "rgba(143,176,138,0.12)" : "rgba(195,113,78,0.12)",
+            background: positive ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
           }}
         >
           {positive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -312,7 +312,7 @@ export default function Overview({ supabase }) {
 
       <button
         className="fixed bottom-6 right-6 flex items-center gap-2 px-5 py-3 rounded-full shadow-lg font-medium text-sm"
-        style={{ background: tokens.gold, color: tokens.ink }}
+        style={{ background: tokens.gold, color: "white" }}
         onClick={() => alert("Open Add Transaction form")}
       >
         <Plus size={18} />
