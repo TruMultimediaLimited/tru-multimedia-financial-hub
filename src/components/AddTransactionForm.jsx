@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { X, Upload, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 const tokens = {
-  ink: "#12181A",
-  surface: "#1B2326",
-  surfaceRaised: "#222C2F",
-  hairline: "#2E393C",
-  bone: "#EDEAE2",
-  muted: "#8B9598",
-  moss: "#8FB08A",
-  rust: "#C3714E",
-  gold: "#D3A653",
+  ink: "#FFFFFF",
+  surface: "#F5F5F5",
+  surfaceRaised: "#EFEFEF",
+  hairline: "#E0E0E0",
+  bone: "#1A1A1A",
+  muted: "#666666",
+  moss: "#2E7D32",
+  rust: "#C62828",
+  gold: "#1976D2",
 };
 
 const EXPENSE_CATEGORIES = [
@@ -39,9 +39,10 @@ function Field({ label, children }) {
 }
 
 const inputStyle = {
-  background: tokens.surfaceRaised,
+  background: tokens.surface,
   borderColor: tokens.hairline,
   color: tokens.bone,
+  border: "1px solid",
 };
 
 export default function AddTransactionForm({ supabase, onClose, onSaved }) {
@@ -62,19 +63,43 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
     transaction_date: new Date().toISOString().slice(0, 10),
   });
 
-  const [invoiceFile, setInvoiceFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!supabase) return;
-    (async () => {
-      const [{ data: c }, { data: p }] = await Promise.all([
-        supabase.from("concerns").select("id, name"),
-        supabase.from("partners").select("id, name"),
+    if (!supabase) {
+      setConcerns([
+        { id: "1", name: "Tru Multimedia Limited" },
+        { id: "2", name: "Truphoto Studio" },
+        { id: "3", name: "4R Studio" },
+        { id: "4", name: "Uthsob Mukhor" },
       ]);
-      setConcerns(c || []);
-      setPartners(p || []);
+      setPartners([
+        { id: "1", name: "Ifthaker Hossain Radone" },
+        { id: "2", name: "Rezwan Kobir Zoha" },
+        { id: "3", name: "Rasel Ahmed" },
+      ]);
+      return;
+    }
+
+    (async () => {
+      try {
+        const [{ data: c }, { data: p }] = await Promise.all([
+          supabase.from("concerns").select("id, name"),
+          supabase.from("partners").select("id, name"),
+        ]);
+        if (c) setConcerns(c);
+        if (p) setPartners(p);
+      } catch (err) {
+        console.error("Failed to fetch:", err);
+        // fallback to sample
+        setConcerns([
+          { id: "1", name: "Tru Multimedia Limited" },
+          { id: "2", name: "Truphoto Studio" },
+          { id: "3", name: "4R Studio" },
+          { id: "4", name: "Uthsob Mukhor" },
+        ]);
+      }
     })();
   }, [supabase]);
 
@@ -84,12 +109,16 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
       return;
     }
     (async () => {
-      const { data } = await supabase
-        .from("projects")
-        .select("id, title")
-        .eq("concern_id", form.concern_id)
-        .neq("status", "completed");
-      setProjects(data || []);
+      try {
+        const { data } = await supabase
+          .from("projects")
+          .select("id, title")
+          .eq("concern_id", form.concern_id)
+          .neq("status", "completed");
+        setProjects(data || []);
+      } catch (err) {
+        console.error("Failed to fetch projects:", err);
+      }
     })();
   }, [supabase, form.concern_id]);
 
@@ -107,23 +136,11 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
     if (!form.category) return setError("Category select করো");
     if (!form.amount || Number(form.amount) <= 0) return setError("সঠিক Amount দাও");
     if (form.paid_by === "partner_pocket" && !form.partner_id) {
-      return setError("Partner pocket সিলেক্ট করলে কোন পার্টনার তা বলতে হবে");
+      return setError("Partner select করো");
     }
 
     setSaving(true);
     try {
-      let invoice_url = null;
-
-      if (invoiceFile) {
-        const path = `invoices/${Date.now()}_${invoiceFile.name}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("receipts")
-          .upload(path, invoiceFile);
-        if (uploadErr) throw uploadErr;
-        const { data: pub } = supabase.storage.from("receipts").getPublicUrl(path);
-        invoice_url = pub.publicUrl;
-      }
-
       const { error: insertErr } = await supabase.from("transactions").insert({
         concern_id: form.concern_id,
         project_id: form.project_id || null,
@@ -135,7 +152,6 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
         partner_id: form.paid_by === "partner_pocket" ? form.partner_id : null,
         description: form.description || null,
         transaction_date: form.transaction_date,
-        invoice_url,
       });
 
       if (insertErr) throw insertErr;
@@ -144,7 +160,7 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
       onClose?.();
     } catch (err) {
       console.error(err);
-      setError(err.message || "কিছু একটা ভুল হয়েছে, আবার চেষ্টা করো");
+      setError(err.message || "Error saving transaction");
     } finally {
       setSaving(false);
     }
@@ -153,14 +169,14 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ background: "rgba(0,0,0,0.55)" }}
+      style={{ background: "rgba(0,0,0,0.3)" }}
       onClick={onClose}
     >
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
         className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
-        style={{ background: tokens.surface, borderColor: tokens.hairline }}
+        style={{ background: tokens.ink, borderColor: tokens.hairline }}
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>
@@ -179,8 +195,8 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
               onClick={() => update("type", t)}
               className="flex-1 py-2 text-sm font-medium capitalize"
               style={{
-                background: form.type === t ? (t === "income" ? tokens.moss : tokens.rust) : "transparent",
-                color: form.type === t ? tokens.ink : tokens.muted,
+                background: form.type === t ? (t === "income" ? tokens.moss : tokens.rust) : tokens.surface,
+                color: form.type === t ? "white" : tokens.bone,
               }}
             >
               {t}
@@ -304,21 +320,6 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
           />
         </Field>
 
-        <Field label="Invoice / receipt (optional)">
-          <label
-            className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer"
-            style={inputStyle}
-          >
-            <Upload size={14} />
-            {invoiceFile ? invoiceFile.name : "Upload file"}
-            <input
-              type="file"
-              className="hidden"
-              onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
-            />
-          </label>
-        </Field>
-
         {error && (
           <p className="text-sm" style={{ color: tokens.rust }}>{error}</p>
         )}
@@ -327,7 +328,7 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
           type="submit"
           disabled={saving}
           className="mt-2 rounded-lg py-3 text-sm font-semibold flex items-center justify-center gap-2"
-          style={{ background: tokens.gold, color: tokens.ink }}
+          style={{ background: tokens.gold, color: "white" }}
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
           {saving ? "Saving…" : "Save transaction"}
