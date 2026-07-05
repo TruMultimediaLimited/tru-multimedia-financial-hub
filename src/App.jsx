@@ -4,15 +4,15 @@ import Overview from "./pages/Overview";
 import AddTransactionForm from "./components/AddTransactionForm";
 
 const tokens = {
-  ink: "#12181A",
-  surface: "#1B2326",
-  surfaceRaised: "#222C2F",
-  hairline: "#2E393C",
-  bone: "#EDEAE2",
-  muted: "#8B9598",
-  moss: "#8FB08A",
-  rust: "#C3714E",
-  gold: "#D3A653",
+  ink: "#F8F9FA",
+  surface: "#FFFFFF",
+  surfaceRaised: "#F5F7FA",
+  hairline: "#E5E7EB",
+  bone: "#111827",
+  muted: "#6B7280",
+  moss: "#10B981",
+  rust: "#EF4444",
+  gold: "#3B82F6",
 };
 
 const TABS = [
@@ -70,7 +70,7 @@ export default function App({ supabase }) {
                   }`}
                   style={{
                     background: currentTab === id ? tokens.gold : "transparent",
-                    color: currentTab === id ? tokens.ink : tokens.bone,
+                    color: currentTab === id ? "white" : tokens.bone,
                   }}
                 >
                   <Icon size={16} />
@@ -112,7 +112,7 @@ export default function App({ supabase }) {
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ background: tokens.gold, color: tokens.ink }}
+            style={{ background: tokens.gold, color: "white" }}
           >
             <span className="text-lg">+</span> Add transaction
           </button>
