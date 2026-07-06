@@ -27,6 +27,19 @@ const EXPENSE_CATEGORIES = [
 
 const INCOME_CATEGORIES = ["client_payment", "milestone_payment", "other_income"];
 
+const SAMPLE_CONCERNS = [
+  { id: "1", name: "Tru Multimedia Limited" },
+  { id: "2", name: "Truphoto Studio" },
+  { id: "3", name: "4R Studio" },
+  { id: "4", name: "Uthsob Mukhor" },
+];
+
+const SAMPLE_PARTNERS = [
+  { id: "1", name: "Ifthaker Hossain Radone" },
+  { id: "2", name: "Rezwan Kobir Zoha" },
+  { id: "3", name: "Rasel Ahmed" },
+];
+
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -46,18 +59,9 @@ const inputStyle = {
 };
 
 export default function AddTransactionForm({ supabase, onClose, onSaved }) {
-  const [concerns, setConcerns] = useState([
-    { id: "1", name: "Tru Multimedia Limited" },
-    { id: "2", name: "Truphoto Studio" },
-    { id: "3", name: "4R Studio" },
-    { id: "4", name: "Uthsob Mukhor" },
-  ]);
+  const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [projects, setProjects] = useState([]);
-  const [partners, setPartners] = useState([
-    { id: "1", name: "Ifthaker Hossain Radone" },
-    { id: "2", name: "Rezwan Kobir Zoha" },
-    { id: "3", name: "Rasel Ahmed" },
-  ]);
+  const [partners, setPartners] = useState(SAMPLE_PARTNERS);
 
   const [form, setForm] = useState({
     concern_id: "",
@@ -78,18 +82,18 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   useEffect(() => {
     if (!supabase) return;
 
-    (async () => {
-      try {
+    try {
+      (async () => {
         const [{ data: c }, { data: p }] = await Promise.all([
           supabase.from("concerns").select("id, name"),
           supabase.from("partners").select("id, name"),
         ]);
         if (c && c.length > 0) setConcerns(c);
         if (p && p.length > 0) setPartners(p);
-      } catch (err) {
-        console.error("Failed to fetch concerns/partners:", err);
-      }
-    })();
+      })();
+    } catch (err) {
+      console.error("Failed to fetch:", err);
+    }
   }, [supabase]);
 
   useEffect(() => {
@@ -97,18 +101,18 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
       setProjects([]);
       return;
     }
-    (async () => {
-      try {
+    try {
+      (async () => {
         const { data } = await supabase
           .from("projects")
           .select("id, title")
           .eq("concern_id", form.concern_id)
           .neq("status", "completed");
         setProjects(data || []);
-      } catch (err) {
-        console.error("Failed to fetch projects:", err);
-      }
-    })();
+      })();
+    } catch (err) {
+      console.error("Failed to fetch projects:", err);
+    }
   }, [supabase, form.concern_id]);
 
   const categories = form.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -130,6 +134,12 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
 
     setSaving(true);
     try {
+      if (!supabase) {
+        alert("Supabase not connected. This is demo mode.");
+        setSaving(false);
+        return;
+      }
+
       const { error: insertErr } = await supabase.from("transactions").insert({
         concern_id: form.concern_id,
         project_id: form.project_id || null,
