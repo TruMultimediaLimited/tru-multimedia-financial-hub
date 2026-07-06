@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Menu, X } from "lucide-react";
 import Overview from "./pages/Overview";
@@ -6,7 +7,6 @@ import Expenses from "./pages/Expenses";
 import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Partners from "./pages/Partners";
-import AddTransactionForm from "./components/AddTransactionForm";
 
 const tokens = {
   ink: "#0F172A",
@@ -32,7 +32,6 @@ const TABS = [
 export default function App({ supabase }) {
   const [currentTab, setCurrentTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -41,11 +40,13 @@ export default function App({ supabase }) {
     }
   }, [currentTab]);
 
+  const bump = () => setRefreshKey((k) => k + 1);
+
   const pages = {
     overview: <Overview supabase={supabase} key={refreshKey} />,
-    income: <Income />,
-    expenses: <Expenses />,
-    staff: <Staff />,
+    income: <Income supabase={supabase} onChanged={bump} />,
+    expenses: <Expenses supabase={supabase} onChanged={bump} />,
+    staff: <Staff supabase={supabase} />,
     reports: <Reports />,
     partners: <Partners />,
   };
@@ -113,18 +114,7 @@ export default function App({ supabase }) {
           >
             <Menu size={20} />
           </button>
-
           <div className="flex-1" />
-
-          {currentTab === "overview" && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-              style={{ background: tokens.gold, color: "white" }}
-            >
-              <span className="text-lg">+</span> Add transaction
-            </button>
-          )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -136,17 +126,6 @@ export default function App({ supabase }) {
         <div
           className="fixed inset-0 bg-black/50 md:hidden z-30"
           onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {showAddModal && (
-        <AddTransactionForm
-          supabase={supabase}
-          onClose={() => setShowAddModal(false)}
-          onSaved={() => {
-            setShowAddModal(false);
-            setRefreshKey((k) => k + 1);
-          }}
         />
       )}
     </div>
