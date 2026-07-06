@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Menu, X } from "lucide-react";
 import Overview from "./pages/Overview";
-import Partners from "./pages/Partners";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
+import Partners from "./pages/Partners";
 import AddTransactionForm from "./components/AddTransactionForm";
 
 const tokens = {
@@ -22,11 +22,11 @@ const tokens = {
 
 const TABS = [
   { id: "overview", label: "Dashboard", icon: Home },
-  { id: "partners", label: "Partners", icon: Users2 },
   { id: "income", label: "Income", icon: DollarSign },
   { id: "expenses", label: "Expenses", icon: TrendingDown },
   { id: "staff", label: "Staff & Payroll", icon: Users },
   { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "partners", label: "Partners", icon: Users2 },
 ];
 
 export default function App({ supabase }) {
@@ -43,11 +43,11 @@ export default function App({ supabase }) {
 
   const pages = {
     overview: <Overview supabase={supabase} key={refreshKey} />,
-    partners: <Partners />,
     income: <Income />,
     expenses: <Expenses />,
     staff: <Staff />,
     reports: <Reports />,
+    partners: <Partners />,
   };
 
   return (
