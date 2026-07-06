@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 const tokens = {
-  ink: "#F8F9FA",
-  surface: "#FFFFFF",
-  surfaceRaised: "#F5F7FA",
-  hairline: "#E5E7EB",
-  bone: "#111827",
-  muted: "#6B7280",
+  ink: "#0F172A",
+  surface: "#1E293B",
+  surfaceRaised: "#334155",
+  hairline: "#475569",
+  bone: "#F1F5F9",
+  muted: "#94A3B8",
   moss: "#10B981",
   rust: "#EF4444",
   gold: "#3B82F6",
@@ -84,8 +84,8 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
           supabase.from("concerns").select("id, name"),
           supabase.from("partners").select("id, name"),
         ]);
-        if (c) setConcerns(c);
-        if (p) setPartners(p);
+        if (c && c.length > 0) setConcerns(c);
+        if (p && p.length > 0) setPartners(p);
       } catch (err) {
         console.error("Failed to fetch concerns/partners:", err);
       }
