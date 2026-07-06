@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { Plus, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 
 const tokens = {
   ink: "#0F172A",
@@ -179,6 +179,7 @@ export default function Overview({ supabase }) {
   const [trend, setTrend] = useState(SAMPLE_TREND);
   const [ledger, setLedger] = useState(SAMPLE_LEDGER);
   const [loading, setLoading] = useState(!!supabase);
+  const [liveError, setLiveError] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -192,11 +193,12 @@ export default function Overview({ supabase }) {
           fetchPartnerLedgerBalance(supabase),
         ]);
         if (cancelled) return;
-        setConcerns(pl);
-        setTrend(trendData);
-        setLedger(ledgerData);
+        if (pl && pl.length > 0) setConcerns(pl);
+        if (trendData && trendData.length > 0) setTrend(trendData);
+        if (ledgerData && ledgerData.length > 0) setLedger(ledgerData);
       } catch (err) {
         console.error("Overview fetch failed:", err);
+        setLiveError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -218,7 +220,7 @@ export default function Overview({ supabase }) {
 
   return (
     <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
-      <div className="max-w-5xl mx-auto px-5 py-8 pb-28">
+      <div className="max-w-5xl mx-auto px-5 py-8 pb-16">
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs uppercase tracking-[0.2em]" style={{ color: tokens.muted }}>
@@ -239,9 +241,9 @@ export default function Overview({ supabase }) {
           </div>
         </div>
 
-        {loading && (
-          <p className="text-sm mb-4" style={{ color: tokens.muted }}>
-            Loading live figures…
+        {liveError && (
+          <p className="text-sm mb-4" style={{ color: tokens.rust }}>
+            Live data connect করা যায়নি — sample figures দেখানো হচ্ছে। Supabase project active আছে কিনা check করো।
           </p>
         )}
 
@@ -309,15 +311,6 @@ export default function Overview({ supabase }) {
 
         <PartnerLedgerStrip rows={ledger} />
       </div>
-
-      <button
-        className="fixed bottom-6 right-6 flex items-center gap-2 px-5 py-3 rounded-full shadow-lg font-medium text-sm"
-        style={{ background: tokens.gold, color: "white" }}
-        onClick={() => alert("Open Add Transaction form")}
-      >
-        <Plus size={18} />
-        Add transaction
-      </button>
     </div>
   );
 }
