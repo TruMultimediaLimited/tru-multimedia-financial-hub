@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Home, DollarSign, TrendingDown, Users, BarChart3, Menu, X } from "lucide-react";
+import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Menu, X } from "lucide-react";
 import Overview from "./pages/Overview";
+import Partners from "./pages/Partners";
+import Income from "./pages/Income";
+import Expenses from "./pages/Expenses";
+import Staff from "./pages/Staff";
+import Reports from "./pages/Reports";
 import AddTransactionForm from "./components/AddTransactionForm";
 
 const tokens = {
@@ -17,6 +22,7 @@ const tokens = {
 
 const TABS = [
   { id: "overview", label: "Dashboard", icon: Home },
+  { id: "partners", label: "Partners", icon: Users2 },
   { id: "income", label: "Income", icon: DollarSign },
   { id: "expenses", label: "Expenses", icon: TrendingDown },
   { id: "staff", label: "Staff & Payroll", icon: Users },
@@ -37,10 +43,11 @@ export default function App({ supabase }) {
 
   const pages = {
     overview: <Overview supabase={supabase} key={refreshKey} />,
-    income: <PageStub title="Income" subtitle="View all income entries" />,
-    expenses: <PageStub title="Expenses" subtitle="Track all business expenses" />,
-    staff: <PageStub title="Staff & Payroll" subtitle="Manage staff and generate payroll" />,
-    reports: <PageStub title="Reports" subtitle="Export and analyze financial data" />,
+    partners: <Partners />,
+    income: <Income />,
+    expenses: <Expenses />,
+    staff: <Staff />,
+    reports: <Reports />,
   };
 
   return (
@@ -109,13 +116,15 @@ export default function App({ supabase }) {
 
           <div className="flex-1" />
 
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ background: tokens.gold, color: "white" }}
-          >
-            <span className="text-lg">+</span> Add transaction
-          </button>
+          {currentTab === "overview" && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: tokens.gold, color: "white" }}
+            >
+              <span className="text-lg">+</span> Add transaction
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -140,29 +149,6 @@ export default function App({ supabase }) {
           }}
         />
       )}
-    </div>
-  );
-}
-
-function PageStub({ title, subtitle }) {
-  return (
-    <div className="max-w-5xl mx-auto px-5 py-8">
-      <div className="mb-8">
-        <p className="text-xs uppercase tracking-widest" style={{ color: tokens.muted }}>
-          Coming soon
-        </p>
-        <h1 className="text-2xl font-semibold mt-2" style={{ color: tokens.bone }}>
-          {title}
-        </h1>
-        <p style={{ color: tokens.muted }}>{subtitle}</p>
-      </div>
-
-      <div
-        className="rounded-xl border p-8 text-center"
-        style={{ background: tokens.surface, borderColor: tokens.hairline }}
-      >
-        <p style={{ color: tokens.muted }}>This section is under development</p>
-      </div>
     </div>
   );
 }
