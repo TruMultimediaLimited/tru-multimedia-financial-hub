@@ -11,12 +11,12 @@ import {
 import { Plus, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 
 const tokens = {
-  ink: "#F8F9FA",
-  surface: "#FFFFFF",
-  surfaceRaised: "#F5F7FA",
-  hairline: "#E5E7EB",
-  bone: "#111827",
-  muted: "#6B7280",
+  ink: "#0F172A",
+  surface: "#1E293B",
+  surfaceRaised: "#334155",
+  hairline: "#475569",
+  bone: "#F1F5F9",
+  muted: "#94A3B8",
   moss: "#10B981",
   rust: "#EF4444",
   gold: "#3B82F6",
@@ -113,7 +113,7 @@ function ConcernCard({ name, income, expense, net, isMother }) {
           className="flex items-center gap-1 text-sm font-mono px-2 py-1 rounded-md"
           style={{
             color: positive ? tokens.moss : tokens.rust,
-            background: positive ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
+            background: positive ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)",
           }}
         >
           {positive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
