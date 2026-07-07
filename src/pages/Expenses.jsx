@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from "react";
-import { ArrowDownRight, Plus, X, Loader2, Trash2 } from "lucide-react";
+import { ArrowDownRight, Plus, X, Loader2, Trash2, Edit2 } from "lucide-react";
 
 const tokens = {
   ink: "#0F172A",
@@ -56,15 +55,15 @@ function Field({ label, children }) {
   );
 }
 
-function AddExpenseForm({ supabase, concerns, onClose, onSaved }) {
+function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
   const [form, setForm] = useState({
-    concern_id: "",
-    category: "",
-    amount: "",
-    tds_vds_amount: "",
-    paid_by: "company_account",
-    description: "",
-    transaction_date: new Date().toISOString().slice(0, 10),
+    concern_id: entry?.concern_id || "",
+    category: entry?.category || "",
+    amount: entry?.amount || "",
+    tds_vds_amount: entry?.tds_vds_amount || "",
+    paid_by: entry?.paid_by || "company_account",
+    description: entry?.description || "",
+    transaction_date: entry?.transaction_date || new Date().toISOString().slice(0, 10),
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -83,21 +82,40 @@ function AddExpenseForm({ supabase, concerns, onClose, onSaved }) {
     setSaving(true);
     try {
       if (!supabase) {
-        alert("Supabase connected নেই। Demo mode.");
+        alert("Supabase connected নেই।");
         setSaving(false);
         return;
       }
-      const { error: insertErr } = await supabase.from("transactions").insert({
-        concern_id: form.concern_id,
-        type: "expense",
-        category: form.category,
-        amount: Number(form.amount),
-        tds_vds_amount: Number(form.tds_vds_amount || 0),
-        paid_by: form.paid_by,
-        description: form.description || null,
-        transaction_date: form.transaction_date,
-      });
-      if (insertErr) throw insertErr;
+
+      if (entry?.id) {
+        const { error: updateErr } = await supabase
+          .from("transactions")
+          .update({
+            concern_id: form.concern_id,
+            type: "expense",
+            category: form.category,
+            amount: Number(form.amount),
+            tds_vds_amount: Number(form.tds_vds_amount || 0),
+            paid_by: form.paid_by,
+            description: form.description || null,
+            transaction_date: form.transaction_date,
+          })
+          .eq("id", entry.id);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await supabase.from("transactions").insert({
+          concern_id: form.concern_id,
+          type: "expense",
+          category: form.category,
+          amount: Number(form.amount),
+          tds_vds_amount: Number(form.tds_vds_amount || 0),
+          paid_by: form.paid_by,
+          description: form.description || null,
+          transaction_date: form.transaction_date,
+        });
+        if (insertErr) throw insertErr;
+      }
+
       onSaved?.();
       onClose?.();
     } catch (err) {
@@ -120,7 +138,9 @@ function AddExpenseForm({ supabase, concerns, onClose, onSaved }) {
         style={{ background: tokens.ink, borderColor: tokens.hairline }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>Add expense</h2>
+          <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>
+            {entry ? "Edit expense" : "Add expense"}
+          </h2>
           <button type="button" onClick={onClose} style={{ color: tokens.muted }}><X size={20} /></button>
         </div>
 
@@ -175,7 +195,7 @@ function AddExpenseForm({ supabase, concerns, onClose, onSaved }) {
           className="mt-2 rounded-lg py-3 text-sm font-semibold flex items-center justify-center gap-2"
           style={{ background: tokens.rust, color: "white" }}>
           {saving && <Loader2 size={16} className="animate-spin" />}
-          {saving ? "Saving…" : "Save expense"}
+          {saving ? "Saving…" : (entry ? "Update expense" : "Save expense")}
         </button>
       </form>
     </div>
@@ -186,7 +206,8 @@ export default function Expenses({ supabase, onChanged }) {
   const [entries, setEntries] = useState(SAMPLE_ENTRIES);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [filterConcern, setFilterConcern] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
   const [loading, setLoading] = useState(!!supabase);
 
   async function loadData() {
@@ -196,7 +217,7 @@ export default function Expenses({ supabase, onChanged }) {
         supabase.from("concerns").select("id, name"),
         supabase
           .from("transactions")
-          .select("id, transaction_date, category, amount, description, concern_id, concerns(name)")
+          .select("id, transaction_date, category, amount, description, concern_id, paid_by, tds_vds_amount, concerns(name)")
           .eq("type", "expense")
           .order("transaction_date", { ascending: false }),
       ]);
@@ -209,6 +230,9 @@ export default function Expenses({ supabase, onChanged }) {
             category: row.category,
             amount: row.amount,
             description: row.description,
+            concern_id: row.concern_id,
+            paid_by: row.paid_by,
+            tds_vds_amount: row.tds_vds_amount,
             concern_name: row.concerns?.name || "—",
           }))
         );
@@ -253,7 +277,10 @@ export default function Expenses({ supabase, onChanged }) {
             <p style={{ color: tokens.muted }}>All business expenses across concerns</p>
           </div>
           <button
-            onClick={() => setShowAdd(true)}
+            onClick={() => {
+              setEditingEntry(null);
+              setShowForm(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
             style={{ background: tokens.rust, color: "white" }}
           >
@@ -307,9 +334,20 @@ export default function Expenses({ supabase, onChanged }) {
                 <div className="flex items-center gap-3">
                   <p className="text-sm font-mono" style={{ color: tokens.rust }}>-{fmtBDT(entry.amount)}</p>
                   {supabase && (
-                    <button onClick={() => handleDelete(entry.id)} style={{ color: tokens.rust }}>
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingEntry(entry);
+                          setShowForm(true);
+                        }}
+                        style={{ color: tokens.gold }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(entry.id)} style={{ color: tokens.rust }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -321,11 +359,15 @@ export default function Expenses({ supabase, onChanged }) {
         </div>
       </div>
 
-      {showAdd && (
-        <AddExpenseForm
+      {showForm && (
+        <ExpenseForm
           supabase={supabase}
           concerns={concerns}
-          onClose={() => setShowAdd(false)}
+          entry={editingEntry}
+          onClose={() => {
+            setShowForm(false);
+            setEditingEntry(null);
+          }}
           onSaved={() => {
             loadData();
             onChanged?.();
