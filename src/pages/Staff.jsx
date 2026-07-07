@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, Plus, X, Loader2, Trash2 } from "lucide-react";
+import { Users, Plus, X, Loader2, Trash2, Edit2 } from "lucide-react";
 
 const tokens = {
   ink: "#0F172A",
@@ -50,14 +50,14 @@ function Field({ label, children }) {
   );
 }
 
-function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
+function StaffForm({ supabase, concerns, member, onClose, onSaved }) {
   const [form, setForm] = useState({
-    name: "",
-    concern_id: "",
-    role: "",
-    salary: "",
-    payment_mode: "fixed",
-    status: "Active",
+    name: member?.name || "",
+    concern_id: member?.concern_id || "",
+    role: member?.role || "",
+    salary: member?.salary || "",
+    payment_mode: member?.payment_mode || "fixed",
+    status: member?.status || "Active",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -81,15 +81,32 @@ function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
         setSaving(false);
         return;
       }
-      const { error: insertErr } = await supabase.from("staff").insert({
-        name: form.name,
-        concern_id: form.concern_id,
-        role: form.role,
-        salary: Number(form.salary),
-        payment_mode: form.payment_mode,
-        status: form.status,
-      });
-      if (insertErr) throw insertErr;
+
+      if (member?.id) {
+        const { error: updateErr } = await supabase
+          .from("staff")
+          .update({
+            name: form.name,
+            concern_id: form.concern_id,
+            role: form.role,
+            salary: Number(form.salary),
+            payment_mode: form.payment_mode,
+            status: form.status,
+          })
+          .eq("id", member.id);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await supabase.from("staff").insert({
+          name: form.name,
+          concern_id: form.concern_id,
+          role: form.role,
+          salary: Number(form.salary),
+          payment_mode: form.payment_mode,
+          status: form.status,
+        });
+        if (insertErr) throw insertErr;
+      }
+
       onSaved?.();
       onClose?.();
     } catch (err) {
@@ -112,7 +129,9 @@ function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
         style={{ background: tokens.ink, borderColor: tokens.hairline }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>Add staff member</h2>
+          <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>
+            {member ? "Edit staff member" : "Add staff member"}
+          </h2>
           <button type="button" onClick={onClose} style={{ color: tokens.muted }}><X size={20} /></button>
         </div>
 
@@ -162,7 +181,7 @@ function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
           className="mt-2 rounded-lg py-3 text-sm font-semibold flex items-center justify-center gap-2"
           style={{ background: tokens.gold, color: "white" }}>
           {saving && <Loader2 size={16} className="animate-spin" />}
-          {saving ? "Saving…" : "Save staff member"}
+          {saving ? "Saving…" : (member ? "Update staff member" : "Save staff member")}
         </button>
       </form>
     </div>
@@ -172,7 +191,8 @@ function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
 export default function Staff({ supabase }) {
   const [staffList, setStaffList] = useState(SAMPLE_STAFF);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
-  const [showAdd, setShowAdd] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
   const [loading, setLoading] = useState(!!supabase);
 
   async function loadData() {
@@ -180,7 +200,7 @@ export default function Staff({ supabase }) {
     try {
       const [{ data: c }, { data: s }] = await Promise.all([
         supabase.from("concerns").select("id, name"),
-        supabase.from("staff").select("id, name, role, salary, status, concern_id, concerns(name)"),
+        supabase.from("staff").select("*,concerns(name)"),
       ]);
       if (c && c.length > 0) setConcerns(c);
       if (s) {
@@ -188,9 +208,11 @@ export default function Staff({ supabase }) {
           s.map((row) => ({
             id: row.id,
             name: row.name,
-            role: row.role,
-            salary: row.salary,
-            status: row.status,
+            role: row.role || "Staff",
+            salary: row.salary || 0,
+            status: row.status || "Active",
+            payment_mode: row.payment_mode || "fixed",
+            concern_id: row.concern_id,
             concern_name: row.concerns?.name || "—",
           }))
         );
@@ -230,7 +252,10 @@ export default function Staff({ supabase }) {
             <p style={{ color: tokens.muted }}>Team members and salary management</p>
           </div>
           <button
-            onClick={() => setShowAdd(true)}
+            onClick={() => {
+              setEditingMember(null);
+              setShowForm(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
             style={{ background: tokens.gold, color: "white" }}
           >
@@ -278,9 +303,20 @@ export default function Staff({ supabase }) {
                     </p>
                   </div>
                   {supabase && (
-                    <button onClick={() => handleDelete(member.id)} style={{ color: tokens.rust }}>
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingMember(member);
+                          setShowForm(true);
+                        }}
+                        style={{ color: tokens.gold }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(member.id)} style={{ color: tokens.rust }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -292,11 +328,15 @@ export default function Staff({ supabase }) {
         </div>
       </div>
 
-      {showAdd && (
-        <AddStaffForm
+      {showForm && (
+        <StaffForm
           supabase={supabase}
           concerns={concerns}
-          onClose={() => setShowAdd(false)}
+          member={editingMember}
+          onClose={() => {
+            setShowForm(false);
+            setEditingMember(null);
+          }}
           onSaved={loadData}
         />
       )}
