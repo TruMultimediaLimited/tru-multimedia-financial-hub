@@ -1,5 +1,5 @@
-import React from "react";
-import { Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Users, Plus, X, Loader2, Trash2 } from "lucide-react";
 
 const tokens = {
   ink: "#0F172A",
@@ -20,101 +20,286 @@ const fmtBDT = (n) =>
     maximumFractionDigits: 0,
   }).format(n || 0);
 
-const STAFF_DATA = [
-  { id: 1, name: "John Doe", concern: "4R Studio", role: "Video Editor", salary: 25000, status: "Active" },
-  { id: 2, name: "Jane Smith", concern: "Truphoto Studio", role: "Photographer", salary: 30000, status: "Active" },
-  { id: 3, name: "Ahmed Khan", concern: "Tru Multimedia Limited", role: "Graphic Designer", salary: 22000, status: "Active" },
-  { id: 4, name: "Sara Ali", concern: "Uthsob Mukhor", role: "Coordinator", salary: 18000, status: "On Leave" },
+const SAMPLE_CONCERNS = [
+  { id: "1", name: "Tru Multimedia Limited" },
+  { id: "2", name: "Truphoto Studio" },
+  { id: "3", name: "4R Studio" },
+  { id: "4", name: "Uthsob Mukhor" },
 ];
 
-export default function Staff() {
-  const activeSalaryBill = STAFF_DATA.reduce((sum, s) => sum + s.salary, 0);
+const SAMPLE_STAFF = [
+  { id: 1, name: "John Doe", concern_name: "4R Studio", role: "Video Editor", salary: 25000, status: "Active" },
+  { id: 2, name: "Jane Smith", concern_name: "Truphoto Studio", role: "Photographer", salary: 30000, status: "Active" },
+  { id: 3, name: "Ahmed Khan", concern_name: "Tru Multimedia Limited", role: "Graphic Designer", salary: 22000, status: "Active" },
+  { id: 4, name: "Sara Ali", concern_name: "Uthsob Mukhor", role: "Coordinator", salary: 18000, status: "On Leave" },
+];
+
+const inputStyle = {
+  background: tokens.surface,
+  borderColor: tokens.hairline,
+  color: tokens.bone,
+  border: "1px solid",
+};
+
+function Field({ label, children }) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs uppercase tracking-wide" style={{ color: tokens.muted }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function AddStaffForm({ supabase, concerns, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: "",
+    concern_id: "",
+    role: "",
+    salary: "",
+    payment_mode: "fixed",
+    status: "Active",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function update(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    if (!form.name) return setError("Name দাও");
+    if (!form.concern_id) return setError("Concern select করো");
+    if (!form.role) return setError("Role দাও");
+    if (!form.salary || Number(form.salary) <= 0) return setError("সঠিক Salary দাও");
+
+    setSaving(true);
+    try {
+      if (!supabase) {
+        alert("Supabase connected নেই। Demo mode.");
+        setSaving(false);
+        return;
+      }
+      const { error: insertErr } = await supabase.from("staff").insert({
+        name: form.name,
+        concern_id: form.concern_id,
+        role: form.role,
+        salary: Number(form.salary),
+        payment_mode: form.payment_mode,
+        status: form.status,
+      });
+      if (insertErr) throw insertErr;
+      onSaved?.();
+      onClose?.();
+    } catch (err) {
+      setError(err.message || "Error saving");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ background: "rgba(0,0,0,0.3)" }}
+      onClick={onClose}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+        style={{ background: tokens.ink, borderColor: tokens.hairline }}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold" style={{ color: tokens.bone }}>Add staff member</h2>
+          <button type="button" onClick={onClose} style={{ color: tokens.muted }}><X size={20} /></button>
+        </div>
+
+        <Field label="Name">
+          <input type="text" className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Full name" />
+        </Field>
+
+        <Field label="Concern">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.concern_id} onChange={(e) => update("concern_id", e.target.value)}>
+            <option value="">Select concern</option>
+            {concerns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>
+
+        <Field label="Role">
+          <input type="text" className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="e.g. Video Editor" />
+        </Field>
+
+        <Field label="Monthly Salary (৳)">
+          <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
+            value={form.salary} onChange={(e) => update("salary", e.target.value)} placeholder="0" />
+        </Field>
+
+        <Field label="Payment mode">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.payment_mode} onChange={(e) => update("payment_mode", e.target.value)}>
+            <option value="fixed">Fixed monthly</option>
+            <option value="project_based">Project based</option>
+          </select>
+        </Field>
+
+        <Field label="Status">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.status} onChange={(e) => update("status", e.target.value)}>
+            <option value="Active">Active</option>
+            <option value="On Leave">On Leave</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </Field>
+
+        {error && <p className="text-sm" style={{ color: tokens.rust }}>{error}</p>}
+
+        <button type="submit" disabled={saving}
+          className="mt-2 rounded-lg py-3 text-sm font-semibold flex items-center justify-center gap-2"
+          style={{ background: tokens.gold, color: "white" }}>
+          {saving && <Loader2 size={16} className="animate-spin" />}
+          {saving ? "Saving…" : "Save staff member"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default function Staff({ supabase }) {
+  const [staffList, setStaffList] = useState(SAMPLE_STAFF);
+  const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
+  const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(!!supabase);
+
+  async function loadData() {
+    if (!supabase) return;
+    try {
+      const [{ data: c }, { data: s }] = await Promise.all([
+        supabase.from("concerns").select("id, name"),
+        supabase.from("staff").select("id, name, role, salary, status, concern_id, concerns(name)"),
+      ]);
+      if (c && c.length > 0) setConcerns(c);
+      if (s) {
+        setStaffList(
+          s.map((row) => ({
+            id: row.id,
+            name: row.name,
+            role: row.role,
+            salary: row.salary,
+            status: row.status,
+            concern_name: row.concerns?.name || "—",
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("Staff load failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, [supabase]);
+
+  async function handleDelete(id) {
+    if (!supabase) return;
+    if (!confirm("এই staff member delete করবে?")) return;
+    try {
+      const { error } = await supabase.from("staff").delete().eq("id", id);
+      if (error) throw error;
+      loadData();
+    } catch (err) {
+      alert("Delete failed: " + err.message);
+    }
+  }
+
+  const activeSalaryBill = staffList.reduce((sum, s) => sum + Number(s.salary), 0);
 
   return (
     <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
-      <div className="max-w-5xl mx-auto px-5 py-8">
-        <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: tokens.muted }}>
-            Human Resources
-          </p>
-          <h1 className="text-2xl font-semibold mt-1" style={{ color: tokens.bone }}>
-            Staff & Payroll
-          </h1>
-          <p style={{ color: tokens.muted }}>Team members and salary management</p>
+      <div className="max-w-5xl mx-auto px-5 py-8 pb-16">
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: tokens.muted }}>Human Resources</p>
+            <h1 className="text-2xl font-semibold mt-1" style={{ color: tokens.bone }}>Staff & Payroll</h1>
+            <p style={{ color: tokens.muted }}>Team members and salary management</p>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+            style={{ background: tokens.gold, color: "white" }}
+          >
+            <Plus size={16} /> Add staff
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div
-            className="rounded-xl border p-5"
-            style={{ background: tokens.surface, borderColor: tokens.hairline }}
-          >
+          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
             <p className="text-[11px]" style={{ color: tokens.muted }}>Total Staff</p>
-            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.moss }}>
-              {STAFF_DATA.length}
-            </p>
+            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.moss }}>{staffList.length}</p>
           </div>
-          <div
-            className="rounded-xl border p-5"
-            style={{ background: tokens.surface, borderColor: tokens.hairline }}
-          >
+          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
             <p className="text-[11px]" style={{ color: tokens.muted }}>Monthly Salary Bill</p>
-            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.rust }}>
-              {fmtBDT(activeSalaryBill)}
-            </p>
+            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.rust }}>{fmtBDT(activeSalaryBill)}</p>
           </div>
-          <div
-            className="rounded-xl border p-5"
-            style={{ background: tokens.surface, borderColor: tokens.hairline }}
-          >
+          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
             <p className="text-[11px]" style={{ color: tokens.muted }}>Average Salary</p>
             <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.gold }}>
-              {fmtBDT(activeSalaryBill / STAFF_DATA.length)}
+              {fmtBDT(staffList.length ? activeSalaryBill / staffList.length : 0)}
             </p>
           </div>
         </div>
 
-        <div
-          className="rounded-xl border p-6"
-          style={{ background: tokens.surface, borderColor: tokens.hairline }}
-        >
-          <h3 className="text-lg font-semibold mb-6" style={{ color: tokens.bone }}>
-            Team Members
-          </h3>
+        <div className="rounded-xl border p-6" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
+          <h3 className="text-lg font-semibold mb-6" style={{ color: tokens.bone }}>Team Members</h3>
+
+          {loading && <p style={{ color: tokens.muted }}>Loading…</p>}
 
           <div className="flex flex-col gap-3">
-            {STAFF_DATA.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-4 rounded-lg"
-                style={{ background: tokens.surfaceRaised }}
-              >
+            {staffList.map((member) => (
+              <div key={member.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: tokens.surfaceRaised }}>
                 <div className="flex items-center gap-3">
                   <Users size={20} style={{ color: tokens.gold }} />
                   <div>
                     <p style={{ color: tokens.bone }}>{member.name}</p>
-                    <p className="text-sm" style={{ color: tokens.muted }}>
-                      {member.role} • {member.concern}
-                    </p>
+                    <p className="text-sm" style={{ color: tokens.muted }}>{member.role} • {member.concern_name}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono" style={{ color: tokens.bone }}>
-                    {fmtBDT(member.salary)}
-                  </p>
-                  <p
-                    className="text-[11px] mt-1"
-                    style={{
-                      color: member.status === "Active" ? tokens.moss : tokens.muted,
-                    }}
-                  >
-                    {member.status}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm font-mono" style={{ color: tokens.bone }}>{fmtBDT(member.salary)}</p>
+                    <p className="text-[11px] mt-1" style={{ color: member.status === "Active" ? tokens.moss : tokens.muted }}>
+                      {member.status}
+                    </p>
+                  </div>
+                  {supabase && (
+                    <button onClick={() => handleDelete(member.id)} style={{ color: tokens.rust }}>
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
+            {staffList.length === 0 && !loading && (
+              <p style={{ color: tokens.muted }}>কোনো staff member নেই।</p>
+            )}
           </div>
         </div>
       </div>
+
+      {showAdd && (
+        <AddStaffForm
+          supabase={supabase}
+          concerns={concerns}
+          onClose={() => setShowAdd(false)}
+          onSaved={loadData}
+        />
+      )}
     </div>
   );
 }
