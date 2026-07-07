@@ -135,7 +135,7 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
     setSaving(true);
     try {
       if (!supabase) {
-        alert("Supabase not connected. This is demo mode.");
+        alert("Supabase not connected. Demo mode.");
         setSaving(false);
         return;
       }
