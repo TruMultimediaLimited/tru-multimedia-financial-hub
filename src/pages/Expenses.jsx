@@ -323,7 +323,7 @@ export default function Expenses({ supabase, onChanged }) {
 
           <div className="flex flex-col gap-3">
             {filteredEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: tokens.surfaceRaised }}>
+              <div key={String(entry.id)} className="flex items-center justify-between p-4 rounded-lg" style={{ background: tokens.surfaceRaised }}>
                 <div className="flex items-center gap-3">
                   <ArrowDownRight size={20} style={{ color: tokens.rust }} />
                   <div>
