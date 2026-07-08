@@ -60,8 +60,8 @@ const inputStyle = {
 
 export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
-  const [projects, setProjects] = useState([]);
   const [partners, setPartners] = useState(SAMPLE_PARTNERS);
+  const [projects, setProjects] = useState([]);
 
   const [form, setForm] = useState({
     concern_id: "",
@@ -79,40 +79,49 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // Load concerns and partners on mount
   useEffect(() => {
     if (!supabase) return;
 
-    try {
-      (async () => {
+    (async () => {
+      try {
         const [{ data: c }, { data: p }] = await Promise.all([
           supabase.from("concerns").select("id, name"),
           supabase.from("partners").select("id, name"),
         ]);
-        if (c && c.length > 0) setConcerns(c);
-        if (p && p.length > 0) setPartners(p);
-      })();
-    } catch (err) {
-      console.error("Failed to fetch:", err);
-    }
+        
+        if (c && c.length > 0) {
+          setConcerns(c);
+        }
+        if (p && p.length > 0) {
+          setPartners(p);
+        }
+      } catch (err) {
+        console.error("Failed to fetch concerns/partners:", err);
+        // Keep sample data as fallback
+      }
+    })();
   }, [supabase]);
 
+  // Load projects when concern changes
   useEffect(() => {
     if (!supabase || !form.concern_id) {
       setProjects([]);
       return;
     }
-    try {
-      (async () => {
+
+    (async () => {
+      try {
         const { data } = await supabase
           .from("projects")
           .select("id, title")
           .eq("concern_id", form.concern_id)
           .neq("status", "completed");
         setProjects(data || []);
-      })();
-    } catch (err) {
-      console.error("Failed to fetch projects:", err);
-    }
+      } catch (err) {
+        console.error("Failed to fetch projects:", err);
+      }
+    })();
   }, [supabase, form.concern_id]);
 
   const categories = form.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
