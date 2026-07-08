@@ -29,11 +29,11 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
-const SAMPLE_ENTRIES = [
-  { id: 1, transaction_date: "2026-07-05", category: "client_payment", amount: 150000, concern_name: "4R Studio", description: "Wedding Photography" },
-  { id: 2, transaction_date: "2026-07-04", category: "milestone_payment", amount: 200000, concern_name: "Truphoto Studio", description: "Real estate project milestone 1" },
-  { id: 3, transaction_date: "2026-07-03", category: "client_payment", amount: 100000, concern_name: "Tru Multimedia Limited", description: "Video editing project" },
-  { id: 4, transaction_date: "2026-07-02", category: "other_income", amount: 50000, concern_name: "Uthsob Mukhor", description: "Miscellaneous" },
+const PAID_BY_OPTIONS = [
+  { value: "company_account", label: "Company account" },
+  { value: "ifthaker", label: "Ifthaker Hossain Radone" },
+  { value: "rezwan", label: "Rezwan Kobir Zoha" },
+  { value: "rasel", label: "Rasel Ahmed" },
 ];
 
 const inputStyle = {
@@ -58,6 +58,7 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
     category: entry?.category || "",
     amount: entry?.amount || "",
     description: entry?.description || "",
+    paid_by: entry?.paid_by || "company_account",
     transaction_date: entry?.transaction_date || new Date().toISOString().slice(0, 10),
   });
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,21 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
         return;
       }
 
+      // Map paid_by to partner_id if needed
+      let partner_id = null;
+      let paid_by_value = form.paid_by;
+
+      if (form.paid_by === "ifthaker") {
+        partner_id = "1";
+        paid_by_value = "partner_pocket";
+      } else if (form.paid_by === "rezwan") {
+        partner_id = "2";
+        paid_by_value = "partner_pocket";
+      } else if (form.paid_by === "rasel") {
+        partner_id = "3";
+        paid_by_value = "partner_pocket";
+      }
+
       if (entry?.id) {
         const { error: updateErr } = await supabase
           .from("transactions")
@@ -90,7 +106,8 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
             type: "income",
             category: form.category,
             amount: Number(form.amount),
-            paid_by: "company_account",
+            paid_by: paid_by_value,
+            partner_id: partner_id,
             description: form.description || null,
             transaction_date: form.transaction_date,
           })
@@ -102,7 +119,8 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
           type: "income",
           category: form.category,
           amount: Number(form.amount),
-          paid_by: "company_account",
+          paid_by: paid_by_value,
+          partner_id: partner_id,
           description: form.description || null,
           transaction_date: form.transaction_date,
         });
@@ -158,6 +176,15 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
             value={form.amount} onChange={(e) => update("amount", e.target.value)} placeholder="0" />
         </Field>
 
+        <Field label="Received by">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.paid_by} onChange={(e) => update("paid_by", e.target.value)}>
+            {PAID_BY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </Field>
+
         <Field label="Date">
           <input type="date" className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.transaction_date} onChange={(e) => update("transaction_date", e.target.value)} />
@@ -182,7 +209,7 @@ function IncomeForm({ supabase, concerns, entry, onClose, onSaved }) {
 }
 
 export default function Income({ supabase, onChanged }) {
-  const [entries, setEntries] = useState(SAMPLE_ENTRIES);
+  const [entries, setEntries] = useState([]);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [filterConcern, setFilterConcern] = useState("");
   const [showForm, setShowForm] = useState(false);
