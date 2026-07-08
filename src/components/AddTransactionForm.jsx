@@ -34,10 +34,11 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
-const SAMPLE_PARTNERS = [
-  { id: "1", name: "Ifthaker Hossain Radone" },
-  { id: "2", name: "Rezwan Kobir Zoha" },
-  { id: "3", name: "Rasel Ahmed" },
+const PAID_BY_OPTIONS = [
+  { value: "company_account", label: "Company account" },
+  { value: "ifthaker", label: "Ifthaker Hossain Radone" },
+  { value: "rezwan", label: "Rezwan Kobir Zoha" },
+  { value: "rasel", label: "Rasel Ahmed" },
 ];
 
 function Field({ label, children }) {
@@ -60,7 +61,6 @@ const inputStyle = {
 
 export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
-  const [partners, setPartners] = useState(SAMPLE_PARTNERS);
   const [projects, setProjects] = useState([]);
 
   const [form, setForm] = useState({
@@ -71,7 +71,6 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
     amount: "",
     tds_vds_amount: "",
     paid_by: "company_account",
-    partner_id: "",
     description: "",
     transaction_date: new Date().toISOString().slice(0, 10),
   });
@@ -89,28 +88,6 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
         if (c && c.length > 0) setConcerns(c);
       } catch (err) {
         console.error("Failed to fetch concerns:", err);
-      }
-    })();
-  }, [supabase]);
-
-  // Load partners on mount (ALWAYS fetch from Supabase)
-  useEffect(() => {
-    if (!supabase) {
-      setPartners(SAMPLE_PARTNERS);
-      return;
-    }
-
-    (async () => {
-      try {
-        const { data: p } = await supabase.from("partners").select("id, name");
-        if (p && p.length > 0) {
-          setPartners(p);
-        } else {
-          setPartners(SAMPLE_PARTNERS);
-        }
-      } catch (err) {
-        console.error("Failed to fetch partners:", err);
-        setPartners(SAMPLE_PARTNERS);
       }
     })();
   }, [supabase]);
@@ -149,9 +126,6 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
     if (!form.concern_id) return setError("Concern select করো");
     if (!form.category) return setError("Category select করো");
     if (!form.amount || Number(form.amount) <= 0) return setError("সঠিক Amount দাও");
-    if (form.paid_by === "partner_pocket" && !form.partner_id) {
-      return setError("Partner select করো");
-    }
 
     setSaving(true);
     try {
@@ -161,6 +135,12 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
         return;
       }
 
+      // Map paid_by to partner_id if needed
+      let partner_id = null;
+      if (form.paid_by === "ifthaker") partner_id = "1";
+      else if (form.paid_by === "rezwan") partner_id = "2";
+      else if (form.paid_by === "rasel") partner_id = "3";
+
       const { error: insertErr } = await supabase.from("transactions").insert({
         concern_id: form.concern_id,
         project_id: form.project_id || null,
@@ -168,8 +148,8 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
         category: form.category,
         amount: Number(form.amount),
         tds_vds_amount: Number(form.tds_vds_amount || 0),
-        paid_by: form.paid_by,
-        partner_id: form.paid_by === "partner_pocket" ? form.partner_id : null,
+        paid_by: partner_id ? "partner_pocket" : "company_account",
+        partner_id: partner_id,
         description: form.description || null,
         transaction_date: form.transaction_date,
       });
@@ -298,30 +278,13 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
             value={form.paid_by}
             onChange={(e) => update("paid_by", e.target.value)}
           >
-            <option value="company_account">Company account</option>
-            <option value="partner_pocket">Partner's pocket</option>
+            {PAID_BY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </Field>
-
-        {form.paid_by === "partner_pocket" && (
-          <Field label="Which partner">
-            <select
-              className="rounded-lg border px-3 py-2 text-sm"
-              style={inputStyle}
-              value={form.partner_id}
-              onChange={(e) => update("partner_id", e.target.value)}
-            >
-              <option value="">Select partner</option>
-              {partners && partners.length > 0 ? (
-                partners.map((p) => (
-                  <option key={String(p.id)} value={String(p.id)}>{p.name}</option>
-                ))
-              ) : (
-                <option disabled>No partners available</option>
-              )}
-            </select>
-          </Field>
-        )}
 
         <Field label="Date">
           <input
