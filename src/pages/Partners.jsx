@@ -109,6 +109,7 @@ function PartnerForm({ supabase, partner, onClose, onSaved }) {
           name: form.name,
           share_percentage: Number(form.share_percentage),
           investment: Number(form.investment),
+          contribution: 0,
         });
         if (insertErr) throw insertErr;
       }
@@ -174,7 +175,7 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
     type: "investment",
     amount: "",
     date: new Date().toISOString().slice(0, 10),
-    description: "",
+    note: "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -200,7 +201,7 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
         partner_id: partner.id,
         type: form.type,
         amount: Number(form.amount),
-        description: form.description || null,
+        description: form.note || null,
         recorded_date: form.date,
       });
 
@@ -214,8 +215,6 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
       setSaving(false);
     }
   }
-
-  const typeLabel = TRANSACTION_TYPES.find(t => t.value === form.type)?.label || "";
 
   return (
     <div
@@ -257,7 +256,7 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
 
         <Field label="Note (optional)">
           <textarea className="rounded-lg border px-3 py-2 text-sm resize-none" style={inputStyle}
-            rows={2} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Short note…" />
+            rows={2} value={form.note} onChange={(e) => update("note", e.target.value)} placeholder="Short note…" />
         </Field>
 
         {error && <p className="text-sm" style={{ color: tokens.rust }}>{error}</p>}
