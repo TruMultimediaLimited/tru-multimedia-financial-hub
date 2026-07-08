@@ -79,26 +79,38 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Load concerns and partners on mount
+  // Load concerns on mount
   useEffect(() => {
     if (!supabase) return;
 
     (async () => {
       try {
-        const [{ data: c }, { data: p }] = await Promise.all([
-          supabase.from("concerns").select("id, name"),
-          supabase.from("partners").select("id, name"),
-        ]);
-        
-        if (c && c.length > 0) {
-          setConcerns(c);
-        }
+        const { data: c } = await supabase.from("concerns").select("id, name");
+        if (c && c.length > 0) setConcerns(c);
+      } catch (err) {
+        console.error("Failed to fetch concerns:", err);
+      }
+    })();
+  }, [supabase]);
+
+  // Load partners on mount (ALWAYS fetch from Supabase)
+  useEffect(() => {
+    if (!supabase) {
+      setPartners(SAMPLE_PARTNERS);
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data: p } = await supabase.from("partners").select("id, name");
         if (p && p.length > 0) {
           setPartners(p);
+        } else {
+          setPartners(SAMPLE_PARTNERS);
         }
       } catch (err) {
-        console.error("Failed to fetch concerns/partners:", err);
-        // Keep sample data as fallback
+        console.error("Failed to fetch partners:", err);
+        setPartners(SAMPLE_PARTNERS);
       }
     })();
   }, [supabase]);
@@ -300,9 +312,13 @@ export default function AddTransactionForm({ supabase, onClose, onSaved }) {
               onChange={(e) => update("partner_id", e.target.value)}
             >
               <option value="">Select partner</option>
-              {partners.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              {partners && partners.length > 0 ? (
+                partners.map((p) => (
+                  <option key={String(p.id)} value={String(p.id)}>{p.name}</option>
+                ))
+              ) : (
+                <option disabled>No partners available</option>
+              )}
             </select>
           </Field>
         )}
