@@ -32,11 +32,11 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
-const SAMPLE_ENTRIES = [
-  { id: 1, transaction_date: "2026-07-05", category: "office_rent", amount: 50000, concern_name: "Tru Multimedia Limited", description: "Monthly office rent" },
-  { id: 2, transaction_date: "2026-07-04", category: "salary", amount: 80000, concern_name: "4R Studio", description: "Staff salary" },
-  { id: 3, transaction_date: "2026-07-03", category: "equipment", amount: 120000, concern_name: "Truphoto Studio", description: "Camera equipment" },
-  { id: 4, transaction_date: "2026-07-02", category: "electricity", amount: 15000, concern_name: "Uthsob Mukhor", description: "Monthly electricity bill" },
+const PAID_BY_OPTIONS = [
+  { value: "company_account", label: "Company account" },
+  { value: "ifthaker", label: "Ifthaker Hossain Radone" },
+  { value: "rezwan", label: "Rezwan Kobir Zoha" },
+  { value: "rasel", label: "Rasel Ahmed" },
 ];
 
 const inputStyle = {
@@ -87,6 +87,21 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
         return;
       }
 
+      // Map paid_by to partner_id if needed
+      let partner_id = null;
+      let paid_by_value = form.paid_by;
+
+      if (form.paid_by === "ifthaker") {
+        partner_id = "1";
+        paid_by_value = "partner_pocket";
+      } else if (form.paid_by === "rezwan") {
+        partner_id = "2";
+        paid_by_value = "partner_pocket";
+      } else if (form.paid_by === "rasel") {
+        partner_id = "3";
+        paid_by_value = "partner_pocket";
+      }
+
       if (entry?.id) {
         const { error: updateErr } = await supabase
           .from("transactions")
@@ -96,7 +111,8 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
             category: form.category,
             amount: Number(form.amount),
             tds_vds_amount: Number(form.tds_vds_amount || 0),
-            paid_by: form.paid_by,
+            paid_by: paid_by_value,
+            partner_id: partner_id,
             description: form.description || null,
             transaction_date: form.transaction_date,
           })
@@ -109,7 +125,8 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
           category: form.category,
           amount: Number(form.amount),
           tds_vds_amount: Number(form.tds_vds_amount || 0),
-          paid_by: form.paid_by,
+          paid_by: paid_by_value,
+          partner_id: partner_id,
           description: form.description || null,
           transaction_date: form.transaction_date,
         });
@@ -174,8 +191,9 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
         <Field label="Paid by">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.paid_by} onChange={(e) => update("paid_by", e.target.value)}>
-            <option value="company_account">Company account</option>
-            <option value="partner_pocket">Partner's pocket</option>
+            {PAID_BY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
         </Field>
 
@@ -203,7 +221,7 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
 }
 
 export default function Expenses({ supabase, onChanged }) {
-  const [entries, setEntries] = useState(SAMPLE_ENTRIES);
+  const [entries, setEntries] = useState([]);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [filterConcern, setFilterConcern] = useState("");
   const [showForm, setShowForm] = useState(false);
