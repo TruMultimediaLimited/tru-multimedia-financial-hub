@@ -550,10 +550,7 @@ export default function Staff({ supabase }) {
 
               return (
                 <div key={member.id} className="rounded-lg overflow-hidden" style={{ background: tokens.surfaceRaised }}>
-                  <div
-                    className={`flex items-center justify-between p-4 ${isProjectBased ? "cursor-pointer" : ""}`}
-                    onClick={() => isProjectBased && setExpandedStaff(isExpanded ? null : member.id)}
-                  >
+                  <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <Users size={20} style={{ color: tokens.gold }} />
                       <div>
@@ -575,19 +572,31 @@ export default function Staff({ supabase }) {
                       {supabase && (
                         <div className="flex gap-2">
                           <button
-                            onClick={(e) => { e.stopPropagation(); setEditingMember(member); setShowForm(true); }}
+                            onClick={() => { setEditingMember(member); setShowForm(true); }}
                             style={{ color: tokens.gold }}
                           >
                             <Edit2 size={16} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(member.id); }} style={{ color: tokens.rust }}>
+                          <button onClick={() => handleDelete(member.id)} style={{ color: tokens.rust }}>
                             <Trash2 size={16} />
                           </button>
                         </div>
                       )}
-                      {isProjectBased && (isExpanded ? <ChevronUp size={16} style={{ color: tokens.muted }} /> : <ChevronDown size={16} style={{ color: tokens.muted }} />)}
                     </div>
                   </div>
+
+                  {isProjectBased && (
+                    <div className="px-4 pb-3">
+                      <button
+                        onClick={() => setExpandedStaff(isExpanded ? null : member.id)}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium"
+                        style={{ background: tokens.ink, color: tokens.gold }}
+                      >
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        কাজের হিসাব দেখুন / যোগ করুন ({entries.length} entries)
+                      </button>
+                    </div>
+                  )}
 
                   {isProjectBased && isExpanded && (
                     <div className="px-4 pb-4 border-t" style={{ borderColor: tokens.hairline }}>
