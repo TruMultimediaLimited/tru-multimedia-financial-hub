@@ -1,24 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Users, Plus, X, Loader2, Trash2, Edit2 } from "lucide-react";
-
-const tokens = {
-  ink: "#0F172A",
-  surface: "#1E293B",
-  surfaceRaised: "#334155",
-  hairline: "#475569",
-  bone: "#F1F5F9",
-  muted: "#94A3B8",
-  moss: "#10B981",
-  rust: "#EF4444",
-  gold: "#3B82F6",
-};
-
-const fmtBDT = (n) =>
-  new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(n || 0);
+import { tokens, fmtBDT, inputStyle } from "../lib/theme";
+import Field from "../components/Field";
 
 const SAMPLE_CONCERNS = [
   { id: "1", name: "Tru Multimedia Limited" },
@@ -33,22 +16,6 @@ const SAMPLE_STAFF = [
   { id: 3, name: "Ahmed Khan", concern_name: "Tru Multimedia Limited", role: "Graphic Designer", salary: 22000, status: "Active" },
   { id: 4, name: "Sara Ali", concern_name: "Uthsob Mukhor", role: "Coordinator", salary: 18000, status: "On Leave" },
 ];
-
-const inputStyle = {
-  background: tokens.surface,
-  borderColor: tokens.hairline,
-  color: tokens.bone,
-  border: "1px solid",
-};
-
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-xs uppercase tracking-wide" style={{ color: tokens.muted }}>{label}</span>
-      {children}
-    </label>
-  );
-}
 
 function StaffForm({ supabase, concerns, member, onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -194,14 +161,17 @@ export default function Staff({ supabase }) {
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [loading, setLoading] = useState(!!supabase);
+  const [liveError, setLiveError] = useState(false);
 
   async function loadData() {
     if (!supabase) return;
     try {
-      const [{ data: c }, { data: s }] = await Promise.all([
+      const [{ data: c, error: cErr }, { data: s, error: sErr }] = await Promise.all([
         supabase.from("concerns").select("id, name"),
         supabase.from("staff").select("*,concerns(name)"),
       ]);
+      if (cErr) throw cErr;
+      if (sErr) throw sErr;
       if (c && c.length > 0) setConcerns(c);
       if (s) {
         setStaffList(
@@ -219,6 +189,7 @@ export default function Staff({ supabase }) {
       }
     } catch (err) {
       console.error("Staff load failed:", err);
+      setLiveError(true);
     } finally {
       setLoading(false);
     }
@@ -262,6 +233,12 @@ export default function Staff({ supabase }) {
             <Plus size={16} /> Add staff
           </button>
         </div>
+
+        {liveError && (
+          <p className="text-sm mb-4" style={{ color: tokens.rust }}>
+            Live data connect করা যায়নি — sample figures দেখানো হচ্ছে। Supabase project active আছে কিনা check করো।
+          </p>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>

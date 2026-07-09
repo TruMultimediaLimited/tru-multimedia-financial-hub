@@ -1,0 +1,9 @@
+{
+  "name": "Tru Multimedia Financial Hub",
+  "short_name": "Tru Financial",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12181A",
+  "theme_color": "#12181A",
+  "icons": []
+}
