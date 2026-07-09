@@ -14,9 +14,9 @@ const TABLE_LABELS = {
 };
 
 const ACTION_META = {
-  INSERT: { label: "তৈরি করা হয়েছে", icon: Plus, color: tokens.moss },
-  UPDATE: { label: "পরিবর্তন করা হয়েছে", icon: Edit2, color: tokens.gold },
-  DELETE: { label: "মুছে ফেলা হয়েছে", icon: Trash2, color: tokens.rust },
+  insert: { label: "তৈরি করা হয়েছে", icon: Plus, color: tokens.moss },
+  update: { label: "পরিবর্তন করা হয়েছে", icon: Edit2, color: tokens.gold },
+  delete: { label: "মুছে ফেলা হয়েছে", icon: Trash2, color: tokens.rust },
 };
 
 function diffFields(oldData, newData) {
@@ -138,7 +138,7 @@ export default function AuditLog({ supabase }) {
 
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t" style={{ borderColor: tokens.hairline }}>
-                      {entry.action === "UPDATE" && changes.length > 0 && (
+                      {entry.action === "update" && changes.length > 0 && (
                         <div className="flex flex-col gap-1 mt-3">
                           {changes.map((c) => (
                             <p key={c.field} className="text-xs font-mono" style={{ color: tokens.muted }}>
@@ -147,10 +147,10 @@ export default function AuditLog({ supabase }) {
                           ))}
                         </div>
                       )}
-                      {entry.action === "INSERT" && entry.new_data && (
+                      {entry.action === "insert" && entry.new_data && (
                         <pre className="text-xs mt-3 overflow-x-auto" style={{ color: tokens.muted }}>{JSON.stringify(entry.new_data, null, 2)}</pre>
                       )}
-                      {entry.action === "DELETE" && entry.old_data && (
+                      {entry.action === "delete" && entry.old_data && (
                         <pre className="text-xs mt-3 overflow-x-auto" style={{ color: tokens.muted }}>{JSON.stringify(entry.old_data, null, 2)}</pre>
                       )}
                     </div>
