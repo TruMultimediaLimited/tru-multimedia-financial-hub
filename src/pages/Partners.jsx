@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users2, Plus, X, Loader2, Edit2, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Users2, Plus, X, Loader2, Edit2, Trash2, TrendingUp, TrendingDown, CheckCircle2 } from "lucide-react";
 import { tokens, fmtBDT, inputStyle } from "../lib/theme";
 import Field from "../components/Field";
 
@@ -29,6 +29,13 @@ const TRANSACTION_TYPES = [
   { value: "withdrawal", label: "Withdrawal (টাকা নিয়েছে)", color: "#EF4444" },
   { value: "advance", label: "Advance (এডভান্স)", color: "#3B82F6" },
   { value: "dividend", label: "Dividend (লাভ)", color: "#F59E0B" },
+];
+
+const SAMPLE_CONCERNS = [
+  { id: "1", name: "Tru Multimedia Limited" },
+  { id: "2", name: "Truphoto Studio" },
+  { id: "3", name: "4R Studio" },
+  { id: "4", name: "Uthsob Mukhor" },
 ];
 
 function PartnerForm({ supabase, partner, onClose, onSaved }) {
@@ -136,8 +143,9 @@ function PartnerForm({ supabase, partner, onClose, onSaved }) {
   );
 }
 
-function TransactionForm({ supabase, partner, onClose, onSaved }) {
+function TransactionForm({ supabase, partner, concerns, onClose, onSaved }) {
   const [form, setForm] = useState({
+    concern_id: "",
     type: "investment",
     amount: "",
     date: new Date().toISOString().slice(0, 10),
@@ -153,6 +161,7 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (!form.concern_id) return setError("Concern select করো");
     if (!form.amount || Number(form.amount) <= 0) return setError("সঠিক amount দাও");
 
     setSaving(true);
@@ -165,10 +174,12 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
 
       const { error: insertErr } = await supabase.from("partner_ledger").insert({
         partner_id: partner.id,
-        type: form.type,
+        concern_id: form.concern_id,
+        entry_type: form.type,
         amount: Number(form.amount),
         description: form.note || null,
-        recorded_date: form.date,
+        entry_date: form.date,
+        status: "pending",
       });
 
       if (insertErr) throw insertErr;
@@ -200,6 +211,14 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
           </h2>
           <button type="button" onClick={onClose} style={{ color: tokens.muted }}><X size={20} /></button>
         </div>
+
+        <Field label="Concern">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.concern_id} onChange={(e) => update("concern_id", e.target.value)}>
+            <option value="">Select concern</option>
+            {concerns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>
 
         <Field label="Transaction Type">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
@@ -240,6 +259,7 @@ function TransactionForm({ supabase, partner, onClose, onSaved }) {
 
 export default function Partners({ supabase }) {
   const [partners, setPartners] = useState(SAMPLE_PARTNERS);
+  const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [ledger, setLedger] = useState({});
   const [loading, setLoading] = useState(!!supabase);
   const [showPartnerForm, setShowPartnerForm] = useState(false);
@@ -252,8 +272,16 @@ export default function Partners({ supabase }) {
   async function loadData() {
     if (!supabase) return;
     try {
-      const { data: p, error: pErr } = await supabase.from("partners").select("*");
+      const [{ data: c, error: cErr }, { data: p, error: pErr }, { data: l, error: lErr }] = await Promise.all([
+        supabase.from("concerns").select("id, name"),
+        supabase.from("partners").select("*"),
+        supabase.from("partner_ledger").select("*").order("entry_date", { ascending: false }),
+      ]);
+      if (cErr) throw cErr;
       if (pErr) throw pErr;
+      if (lErr) throw lErr;
+
+      if (c && c.length > 0) setConcerns(c);
       if (p && p.length > 0) {
         setPartners(
           p.map((x) => ({
@@ -264,9 +292,6 @@ export default function Partners({ supabase }) {
           }))
         );
       }
-
-      const { data: l, error: lErr } = await supabase.from("partner_ledger").select("*").order("recorded_date", { ascending: false });
-      if (lErr) throw lErr;
       if (l) {
         const byPartner = {};
         l.forEach((item) => {
@@ -311,6 +336,21 @@ export default function Partners({ supabase }) {
     }
   }
 
+  async function handleSettle(ledgerId) {
+    if (!supabase) return;
+    if (!confirm("এই advance settled হিসেবে মার্ক করবে?")) return;
+    try {
+      const { error } = await supabase
+        .from("partner_ledger")
+        .update({ status: "settled", settled_date: new Date().toISOString().slice(0, 10) })
+        .eq("id", ledgerId);
+      if (error) throw error;
+      loadData();
+    } catch (err) {
+      alert("Settle failed: " + err.message);
+    }
+  }
+
   const getTypeColor = (type) => {
     const t = TRANSACTION_TYPES.find(x => x.value === type);
     return t?.color || tokens.muted;
@@ -320,6 +360,13 @@ export default function Partners({ supabase }) {
     const t = TRANSACTION_TYPES.find(x => x.value === type);
     return t?.label.split("(")[0].trim() || type;
   };
+
+  const owedByPartner = {};
+  Object.entries(ledger).forEach(([partnerId, entries]) => {
+    owedByPartner[partnerId] = entries
+      .filter((e) => e.entry_type === "advance" && e.status === "pending")
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  });
 
   const totalInvestment = partners.reduce((sum, p) => sum + Number(p.investment || 0), 0);
 
@@ -396,7 +443,7 @@ export default function Partners({ supabase }) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-[11px]" style={{ color: tokens.muted }}>Initial Investment</p>
                     <p className="text-sm font-mono mt-1" style={{ color: tokens.bone }}>{fmtBDT(partner.investment)}</p>
@@ -404,6 +451,12 @@ export default function Partners({ supabase }) {
                   <div>
                     <p className="text-[11px]" style={{ color: tokens.muted }}>Share %</p>
                     <p className="text-sm font-mono mt-1" style={{ color: tokens.bone }}>{partner.share_percentage}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px]" style={{ color: tokens.muted }}>Company owes</p>
+                    <p className="text-sm font-mono mt-1" style={{ color: owedByPartner[partner.id] > 0 ? tokens.gold : tokens.muted }}>
+                      {owedByPartner[partner.id] > 0 ? fmtBDT(owedByPartner[partner.id]) : "Settled"}
+                    </p>
                   </div>
                 </div>
 
@@ -424,32 +477,47 @@ export default function Partners({ supabase }) {
                   <div className="border-t" style={{ borderColor: tokens.hairline }}>
                     <p className="text-xs uppercase tracking-wide mt-4 mb-3" style={{ color: tokens.muted }}>Transaction history</p>
                     <div className="flex flex-col gap-2">
-                      {ledger[partner.id].map((txn) => (
-                        <div key={txn.id} className="flex items-center justify-between p-3 rounded text-sm" style={{ background: tokens.surfaceRaised }}>
-                          <div className="flex items-center gap-2">
-                            {txn.type === "investment" || txn.type === "dividend" ? (
-                              <TrendingUp size={16} style={{ color: getTypeColor(txn.type) }} />
-                            ) : (
-                              <TrendingDown size={16} style={{ color: getTypeColor(txn.type) }} />
-                            )}
-                            <div>
-                              <p style={{ color: tokens.bone }}>{getTypeLabel(txn.type)}</p>
-                              <p style={{ color: tokens.muted }} className="text-[10px]">{txn.recorded_date}</p>
+                      {ledger[partner.id].map((txn) => {
+                        const isOutstandingAdvance = txn.entry_type === "advance" && txn.status === "pending";
+                        return (
+                          <div key={txn.id} className="flex items-center justify-between p-3 rounded text-sm" style={{ background: tokens.surfaceRaised }}>
+                            <div className="flex items-center gap-2">
+                              {txn.entry_type === "investment" || txn.entry_type === "dividend" ? (
+                                <TrendingUp size={16} style={{ color: getTypeColor(txn.entry_type) }} />
+                              ) : (
+                                <TrendingDown size={16} style={{ color: getTypeColor(txn.entry_type) }} />
+                              )}
+                              <div>
+                                <p style={{ color: tokens.bone }}>{getTypeLabel(txn.entry_type)}</p>
+                                <p style={{ color: tokens.muted }} className="text-[10px]">
+                                  {txn.entry_date}
+                                  {txn.entry_type === "advance" && (txn.status === "settled" ? " • settled" : " • pending")}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-mono" style={{ color: getTypeColor(txn.entry_type) }}>{fmtBDT(txn.amount)}</p>
+                              {supabase && isOutstandingAdvance && (
+                                <button
+                                  onClick={() => handleSettle(txn.id)}
+                                  title="Mark as settled"
+                                  style={{ color: tokens.moss }}
+                                >
+                                  <CheckCircle2 size={16} />
+                                </button>
+                              )}
+                              {supabase && (
+                                <button
+                                  onClick={() => handleDeleteTransaction(txn.id)}
+                                  style={{ color: tokens.rust }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-mono" style={{ color: getTypeColor(txn.type) }}>{fmtBDT(txn.amount)}</p>
-                            {supabase && (
-                              <button
-                                onClick={() => handleDeleteTransaction(txn.id)}
-                                style={{ color: tokens.rust }}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -478,6 +546,7 @@ export default function Partners({ supabase }) {
         <TransactionForm
           supabase={supabase}
           partner={selectedPartner}
+          concerns={concerns}
           onClose={() => {
             setShowTransactionForm(false);
             setSelectedPartner(null);
