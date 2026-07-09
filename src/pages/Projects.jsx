@@ -9,7 +9,7 @@ const PROJECT_STATUS = [
   { value: "completed", label: "Completed" },
   { value: "stalled", label: "Stalled" },
 ];
-const MILESTONE_STATUS = ["pending", "partially_paid", "paid", "overdue"];
+const MILESTONE_STATUS = ["pending", "partial", "paid"];
 
 const SAMPLE_CONCERNS = [
   { id: "1", name: "Tru Multimedia Limited" },
@@ -24,8 +24,8 @@ function projectStatusLabel(status) {
 
 function statusColor(status) {
   if (status === "active" || status === "paid") return tokens.moss;
-  if (status === "completed") return tokens.gold;
-  if (status === "stalled" || status === "overdue") return tokens.rust;
+  if (status === "completed" || status === "partial") return tokens.gold;
+  if (status === "stalled") return tokens.rust;
   return tokens.muted;
 }
 
