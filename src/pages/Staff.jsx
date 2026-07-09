@@ -39,7 +39,10 @@ function StaffForm({ supabase, concerns, member, onClose, onSaved }) {
     if (!form.name) return setError("Name দাও");
     if (!form.concern_id) return setError("Concern select করো");
     if (!form.role) return setError("Role দাও");
-    if (!form.salary || Number(form.salary) <= 0) return setError("সঠিক Salary দাও");
+    if (form.payment_mode === "fixed" && (!form.salary || Number(form.salary) <= 0)) {
+      return setError("সঠিক Salary দাও");
+    }
+    if (form.salary && Number(form.salary) < 0) return setError("সঠিক Salary দাও");
 
     setSaving(true);
     try {
@@ -120,17 +123,18 @@ function StaffForm({ supabase, concerns, member, onClose, onSaved }) {
             value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="e.g. Video Editor" />
         </Field>
 
-        <Field label="Monthly Salary (৳)">
-          <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
-            value={form.salary} onChange={(e) => update("salary", e.target.value)} placeholder="0" />
-        </Field>
-
         <Field label="Payment mode">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.payment_mode} onChange={(e) => update("payment_mode", e.target.value)}>
             <option value="fixed">Fixed monthly</option>
             <option value="project_based">Project based</option>
           </select>
+        </Field>
+
+        <Field label={form.payment_mode === "project_based" ? "Average/Reference Salary (৳, optional)" : "Monthly Salary (৳)"}>
+          <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
+            value={form.salary} onChange={(e) => update("salary", e.target.value)}
+            placeholder={form.payment_mode === "project_based" ? "কাজের উপর নির্ভরশীল — ঐচ্ছিক" : "0"} />
         </Field>
 
         <Field label="Status">
@@ -274,7 +278,9 @@ export default function Staff({ supabase }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-sm font-mono" style={{ color: tokens.bone }}>{fmtBDT(member.salary)}</p>
+                    <p className="text-sm font-mono" style={{ color: tokens.bone }}>
+                      {member.payment_mode === "project_based" && !member.salary ? "কাজভিত্তিক" : fmtBDT(member.salary)}
+                    </p>
                     <p className="text-[11px] mt-1" style={{ color: member.status === "Active" ? tokens.moss : tokens.muted }}>
                       {member.status}
                     </p>
