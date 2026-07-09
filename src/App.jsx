@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, Menu, X, LogOut } from "lucide-react";
+import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, History, Menu, X, LogOut } from "lucide-react";
 import Overview from "./pages/Overview";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
@@ -9,6 +9,7 @@ import Reports from "./pages/Reports";
 import Partners from "./pages/Partners";
 import Projects from "./pages/Projects";
 import Login from "./pages/Login";
+import AuditLog from "./pages/AuditLog";
 import { tokens } from "./lib/theme";
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { id: "staff", label: "Staff & Payroll", icon: Users },
   { id: "reports", label: "Reports", icon: BarChart3 },
   { id: "partners", label: "Partners", icon: Users2 },
+  { id: "activity", label: "Activity Log", icon: History },
 ];
 
 export default function App({ supabase }) {
@@ -63,6 +65,7 @@ export default function App({ supabase }) {
     staff: <Staff supabase={supabase} />,
     reports: <Reports supabase={supabase} />,
     partners: <Partners supabase={supabase} />,
+    activity: <AuditLog supabase={supabase} />,
   };
 
   return (

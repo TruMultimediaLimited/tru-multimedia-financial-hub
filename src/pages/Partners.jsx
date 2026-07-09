@@ -25,10 +25,8 @@ const SAMPLE_PARTNERS = [
 ];
 
 const TRANSACTION_TYPES = [
-  { value: "investment", label: "Investment (টাকা দিয়েছে)", color: "#10B981" },
-  { value: "withdrawal", label: "Withdrawal (টাকা নিয়েছে)", color: "#EF4444" },
-  { value: "advance", label: "Advance (এডভান্স)", color: "#3B82F6" },
-  { value: "dividend", label: "Dividend (লাভ)", color: "#F59E0B" },
+  { value: "advance", label: "Advance (পার্টনার নিজের পকেট থেকে দিয়েছে)", color: "#3B82F6" },
+  { value: "settlement", label: "Settlement (কোম্পানি পার্টনারকে পরিশোধ করেছে)", color: "#10B981" },
 ];
 
 const SAMPLE_CONCERNS = [
@@ -146,7 +144,7 @@ function PartnerForm({ supabase, partner, onClose, onSaved }) {
 function TransactionForm({ supabase, partner, concerns, onClose, onSaved }) {
   const [form, setForm] = useState({
     concern_id: "",
-    type: "investment",
+    type: "advance",
     amount: "",
     date: new Date().toISOString().slice(0, 10),
     note: "",
@@ -179,7 +177,7 @@ function TransactionForm({ supabase, partner, concerns, onClose, onSaved }) {
         amount: Number(form.amount),
         description: form.note || null,
         entry_date: form.date,
-        status: "pending",
+        status: form.type === "advance" ? "pending" : "settled",
       });
 
       if (insertErr) throw insertErr;
@@ -482,7 +480,7 @@ export default function Partners({ supabase }) {
                         return (
                           <div key={txn.id} className="flex items-center justify-between p-3 rounded text-sm" style={{ background: tokens.surfaceRaised }}>
                             <div className="flex items-center gap-2">
-                              {txn.entry_type === "investment" || txn.entry_type === "dividend" ? (
+                              {txn.entry_type === "settlement" ? (
                                 <TrendingUp size={16} style={{ color: getTypeColor(txn.entry_type) }} />
                               ) : (
                                 <TrendingDown size={16} style={{ color: getTypeColor(txn.entry_type) }} />

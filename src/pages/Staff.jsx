@@ -412,7 +412,7 @@ export default function Staff({ supabase }) {
           concern_id: payrollConcern,
           month: monthStart,
           total_amount: totalAmount,
-          status: "generated",
+          status: "finalized",
           generated_at: new Date().toISOString(),
         })
         .select();
