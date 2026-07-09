@@ -76,7 +76,6 @@ function PartnerForm({ supabase, partner, onClose, onSaved }) {
           name: form.name,
           share_percentage: Number(form.share_percentage),
           investment: Number(form.investment),
-          contribution: 0,
         });
         if (insertErr) throw insertErr;
       }
