@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, Menu, X } from "lucide-react";
+import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, Menu, X, LogOut } from "lucide-react";
 import Overview from "./pages/Overview";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
@@ -8,6 +8,7 @@ import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Partners from "./pages/Partners";
 import Projects from "./pages/Projects";
+import Login from "./pages/Login";
 import { tokens } from "./lib/theme";
 
 const TABS = [
@@ -24,6 +25,15 @@ export default function App({ supabase }) {
   const [currentTab, setCurrentTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, [supabase]);
 
   useEffect(() => {
     if (window.innerWidth < 768) {
@@ -32,6 +42,18 @@ export default function App({ supabase }) {
   }, [currentTab]);
 
   const bump = () => setRefreshKey((k) => k + 1);
+
+  if (session === undefined) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center" style={{ background: tokens.ink }}>
+        <p style={{ color: tokens.muted }}>Loading…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login supabase={supabase} />;
+  }
 
   const pages = {
     overview: <Overview supabase={supabase} key={refreshKey} />,
@@ -80,8 +102,17 @@ export default function App({ supabase }) {
             </nav>
           </div>
 
-          <div className="text-[11px]" style={{ color: tokens.muted }}>
-            <p>© 2026 Tru Multimedia Ltd.</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium hover:opacity-75"
+              style={{ color: tokens.muted }}
+            >
+              <LogOut size={16} /> Log out
+            </button>
+            <div className="text-[11px] px-4" style={{ color: tokens.muted }}>
+              <p>© 2026 Tru Multimedia Ltd.</p>
+            </div>
           </div>
         </div>
 
