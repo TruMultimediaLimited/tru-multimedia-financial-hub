@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect } from "react";
-import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Menu, X } from "lucide-react";
+import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, Menu, X } from "lucide-react";
 import Overview from "./pages/Overview";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Partners from "./pages/Partners";
+import Projects from "./pages/Projects";
 import { tokens } from "./lib/theme";
 
 const TABS = [
   { id: "overview", label: "Dashboard", icon: Home },
+  { id: "projects", label: "Projects", icon: Briefcase },
   { id: "income", label: "Income", icon: DollarSign },
   { id: "expenses", label: "Expenses", icon: TrendingDown },
   { id: "staff", label: "Staff & Payroll", icon: Users },
@@ -33,6 +35,7 @@ export default function App({ supabase }) {
 
   const pages = {
     overview: <Overview supabase={supabase} key={refreshKey} />,
+    projects: <Projects supabase={supabase} />,
     income: <Income supabase={supabase} onChanged={bump} />,
     expenses: <Expenses supabase={supabase} onChanged={bump} />,
     staff: <Staff supabase={supabase} />,
