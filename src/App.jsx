@@ -7,18 +7,7 @@ import Expenses from "./pages/Expenses";
 import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Partners from "./pages/Partners";
-
-const tokens = {
-  ink: "#0F172A",
-  surface: "#1E293B",
-  surfaceRaised: "#334155",
-  hairline: "#475569",
-  bone: "#F1F5F9",
-  muted: "#94A3B8",
-  moss: "#10B981",
-  rust: "#EF4444",
-  gold: "#3B82F6",
-};
+import { tokens } from "./lib/theme";
 
 const TABS = [
   { id: "overview", label: "Dashboard", icon: Home },
@@ -47,8 +36,8 @@ export default function App({ supabase }) {
     income: <Income supabase={supabase} onChanged={bump} />,
     expenses: <Expenses supabase={supabase} onChanged={bump} />,
     staff: <Staff supabase={supabase} />,
-    reports: <Reports />,
-    partners: <Partners />,
+    reports: <Reports supabase={supabase} />,
+    partners: <Partners supabase={supabase} />,
   };
 
   return (

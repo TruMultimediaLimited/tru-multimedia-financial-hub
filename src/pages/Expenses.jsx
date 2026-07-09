@@ -1,24 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowDownRight, Plus, X, Loader2, Trash2, Edit2 } from "lucide-react";
-
-const tokens = {
-  ink: "#0F172A",
-  surface: "#1E293B",
-  surfaceRaised: "#334155",
-  hairline: "#475569",
-  bone: "#F1F5F9",
-  muted: "#94A3B8",
-  moss: "#10B981",
-  rust: "#EF4444",
-  gold: "#3B82F6",
-};
-
-const fmtBDT = (n) =>
-  new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(n || 0);
+import { tokens, fmtBDT, inputStyle } from "../lib/theme";
+import Field from "../components/Field";
 
 const EXPENSE_CATEGORIES = [
   "office_rent", "electricity", "salary", "equipment", "travel",
@@ -32,36 +15,13 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
-const PAID_BY_OPTIONS = [
-  { value: "company_account", label: "Company account" },
-  { value: "ifthaker", label: "Ifthaker Hossain Radone" },
-  { value: "rezwan", label: "Rezwan Kobir Zoha" },
-  { value: "rasel", label: "Rasel Ahmed" },
-];
-
-const inputStyle = {
-  background: tokens.surface,
-  borderColor: tokens.hairline,
-  color: tokens.bone,
-  border: "1px solid",
-};
-
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-xs uppercase tracking-wide" style={{ color: tokens.muted }}>{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
+function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) {
   const [form, setForm] = useState({
     concern_id: entry?.concern_id || "",
     category: entry?.category || "",
     amount: entry?.amount || "",
     tds_vds_amount: entry?.tds_vds_amount || "",
-    paid_by: entry?.paid_by || "company_account",
+    paid_by: entry?.partner_id || entry?.paid_by || "company_account",
     description: entry?.description || "",
     transaction_date: entry?.transaction_date || new Date().toISOString().slice(0, 10),
   });
@@ -87,20 +47,8 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
         return;
       }
 
-      // Map paid_by to partner_id if needed
-      let partner_id = null;
-      let paid_by_value = form.paid_by;
-
-      if (form.paid_by === "ifthaker") {
-        partner_id = "1";
-        paid_by_value = "partner_pocket";
-      } else if (form.paid_by === "rezwan") {
-        partner_id = "2";
-        paid_by_value = "partner_pocket";
-      } else if (form.paid_by === "rasel") {
-        partner_id = "3";
-        paid_by_value = "partner_pocket";
-      }
+      const partner_id = form.paid_by === "company_account" ? null : form.paid_by;
+      const paid_by_value = form.paid_by === "company_account" ? "company_account" : "partner_pocket";
 
       if (entry?.id) {
         const { error: updateErr } = await supabase
@@ -191,8 +139,9 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
         <Field label="Paid by">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.paid_by} onChange={(e) => update("paid_by", e.target.value)}>
-            {PAID_BY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            <option value="company_account">Company account</option>
+            {partners.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </Field>
@@ -223,23 +172,30 @@ function ExpenseForm({ supabase, concerns, entry, onClose, onSaved }) {
 export default function Expenses({ supabase, onChanged }) {
   const [entries, setEntries] = useState([]);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
+  const [partners, setPartners] = useState([]);
   const [filterConcern, setFilterConcern] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [loading, setLoading] = useState(!!supabase);
+  const [liveError, setLiveError] = useState(false);
 
   async function loadData() {
     if (!supabase) return;
     try {
-      const [{ data: c }, { data: t }] = await Promise.all([
+      const [{ data: c, error: cErr }, { data: t, error: tErr }, { data: pt, error: ptErr }] = await Promise.all([
         supabase.from("concerns").select("id, name"),
         supabase
           .from("transactions")
-          .select("id, transaction_date, category, amount, description, concern_id, paid_by, tds_vds_amount, concerns(name)")
+          .select("id, transaction_date, category, amount, description, concern_id, partner_id, paid_by, tds_vds_amount, concerns(name)")
           .eq("type", "expense")
           .order("transaction_date", { ascending: false }),
+        supabase.from("partners").select("id, name"),
       ]);
+      if (cErr) throw cErr;
+      if (tErr) throw tErr;
+      if (ptErr) throw ptErr;
       if (c && c.length > 0) setConcerns(c);
+      if (pt) setPartners(pt);
       if (t) {
         setEntries(
           t.map((row) => ({
@@ -249,6 +205,7 @@ export default function Expenses({ supabase, onChanged }) {
             amount: row.amount,
             description: row.description,
             concern_id: row.concern_id,
+            partner_id: row.partner_id,
             paid_by: row.paid_by,
             tds_vds_amount: row.tds_vds_amount,
             concern_name: row.concerns?.name || "—",
@@ -257,6 +214,7 @@ export default function Expenses({ supabase, onChanged }) {
       }
     } catch (err) {
       console.error("Expenses load failed:", err);
+      setLiveError(true);
     } finally {
       setLoading(false);
     }
@@ -305,6 +263,12 @@ export default function Expenses({ supabase, onChanged }) {
             <Plus size={16} /> Add expense
           </button>
         </div>
+
+        {liveError && (
+          <p className="text-sm mb-4" style={{ color: tokens.rust }}>
+            Live data connect করা যায়নি — sample figures দেখানো হচ্ছে। Supabase project active আছে কিনা check করো।
+          </p>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
@@ -381,6 +345,7 @@ export default function Expenses({ supabase, onChanged }) {
         <ExpenseForm
           supabase={supabase}
           concerns={concerns}
+          partners={partners}
           entry={editingEntry}
           onClose={() => {
             setShowForm(false);

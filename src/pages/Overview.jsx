@@ -9,18 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
-
-const tokens = {
-  ink: "#0F172A",
-  surface: "#1E293B",
-  surfaceRaised: "#334155",
-  hairline: "#475569",
-  bone: "#F1F5F9",
-  muted: "#94A3B8",
-  moss: "#10B981",
-  rust: "#EF4444",
-  gold: "#3B82F6",
-};
+import { tokens, fmtBDT } from "../lib/theme";
 
 async function fetchConcernPL(supabase) {
   const { data, error } = await supabase.from("concern_pl_view").select("*");
@@ -58,13 +47,6 @@ async function fetchPartnerLedgerBalance(supabase) {
   if (error) throw error;
   return data;
 }
-
-const fmtBDT = (n) =>
-  new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(n || 0);
 
 const SAMPLE_CONCERNS = [
   { concern_id: "1", concern_name: "Tru Multimedia Limited", total_income: 1250000, total_expense: 980000, net_pl: 270000 },

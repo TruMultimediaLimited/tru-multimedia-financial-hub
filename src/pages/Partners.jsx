@@ -1,24 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Users2, Plus, X, Loader2, Edit2, Trash2, TrendingUp, TrendingDown } from "lucide-react";
-
-const tokens = {
-  ink: "#0F172A",
-  surface: "#1E293B",
-  surfaceRaised: "#334155",
-  hairline: "#475569",
-  bone: "#F1F5F9",
-  muted: "#94A3B8",
-  moss: "#10B981",
-  rust: "#EF4444",
-  gold: "#3B82F6",
-};
-
-const fmtBDT = (n) =>
-  new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(n || 0);
+import { tokens, fmtBDT, inputStyle } from "../lib/theme";
+import Field from "../components/Field";
 
 const SAMPLE_PARTNERS = [
   {
@@ -47,22 +30,6 @@ const TRANSACTION_TYPES = [
   { value: "advance", label: "Advance (এডভান্স)", color: "#3B82F6" },
   { value: "dividend", label: "Dividend (লাভ)", color: "#F59E0B" },
 ];
-
-const inputStyle = {
-  background: tokens.surface,
-  borderColor: tokens.hairline,
-  color: tokens.bone,
-  border: "1px solid",
-};
-
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-xs uppercase tracking-wide" style={{ color: tokens.muted }}>{label}</span>
-      {children}
-    </label>
-  );
-}
 
 function PartnerForm({ supabase, partner, onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -281,11 +248,13 @@ export default function Partners({ supabase }) {
   const [editingPartner, setEditingPartner] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [expandedPartner, setExpandedPartner] = useState(null);
+  const [liveError, setLiveError] = useState(false);
 
   async function loadData() {
     if (!supabase) return;
     try {
-      const { data: p } = await supabase.from("partners").select("*");
+      const { data: p, error: pErr } = await supabase.from("partners").select("*");
+      if (pErr) throw pErr;
       if (p && p.length > 0) {
         setPartners(
           p.map((x) => ({
@@ -297,7 +266,8 @@ export default function Partners({ supabase }) {
         );
       }
 
-      const { data: l } = await supabase.from("partner_ledger").select("*").order("recorded_date", { ascending: false });
+      const { data: l, error: lErr } = await supabase.from("partner_ledger").select("*").order("recorded_date", { ascending: false });
+      if (lErr) throw lErr;
       if (l) {
         const byPartner = {};
         l.forEach((item) => {
@@ -308,6 +278,7 @@ export default function Partners({ supabase }) {
       }
     } catch (err) {
       console.error("Partners load failed:", err);
+      setLiveError(true);
     } finally {
       setLoading(false);
     }
@@ -373,6 +344,12 @@ export default function Partners({ supabase }) {
             <Plus size={16} /> Add partner
           </button>
         </div>
+
+        {liveError && (
+          <p className="text-sm mb-4" style={{ color: tokens.rust }}>
+            Live data connect করা যায়নি — sample figures দেখানো হচ্ছে। Supabase project active আছে কিনা check করো।
+          </p>
+        )}
 
         <div className="rounded-xl border p-5 mb-8" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
           <p className="text-[11px]" style={{ color: tokens.muted }}>Total Investment</p>
