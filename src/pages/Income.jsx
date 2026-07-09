@@ -215,6 +215,8 @@ export default function Income({ supabase, onChanged }) {
     if (!supabase) return;
     if (!confirm("এই income entry delete করবে?")) return;
     try {
+      const { error: ledgerErr } = await supabase.from("partner_ledger").delete().eq("transaction_id", id);
+      if (ledgerErr) throw ledgerErr;
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
       loadData();
