@@ -3,7 +3,12 @@ import { Briefcase, Plus, X, Loader2, Edit2, Trash2, Calendar, TrendingUp, Trend
 import { tokens, fmtBDT, inputStyle } from "../lib/theme";
 import Field from "../components/Field";
 
-const PROJECT_STATUS = ["Active", "Partially Paid", "Completed", "Stalled"];
+const PROJECT_STATUS = [
+  { value: "active", label: "Active" },
+  { value: "partially_paid", label: "Partially Paid" },
+  { value: "completed", label: "Completed" },
+  { value: "stalled", label: "Stalled" },
+];
 const MILESTONE_STATUS = ["pending", "partially_paid", "paid", "overdue"];
 
 const SAMPLE_CONCERNS = [
@@ -13,10 +18,14 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
+function projectStatusLabel(status) {
+  return PROJECT_STATUS.find((s) => s.value === status)?.label || status;
+}
+
 function statusColor(status) {
-  if (status === "Active" || status === "paid") return tokens.moss;
-  if (status === "Completed") return tokens.gold;
-  if (status === "Stalled" || status === "overdue") return tokens.rust;
+  if (status === "active" || status === "paid") return tokens.moss;
+  if (status === "completed") return tokens.gold;
+  if (status === "stalled" || status === "overdue") return tokens.rust;
   return tokens.muted;
 }
 
@@ -26,7 +35,7 @@ function ProjectForm({ supabase, concerns, project, onClose, onSaved }) {
     client_name: project?.client_name || "",
     title: project?.title || "",
     total_contract_value: project?.total_contract_value || "",
-    status: project?.status || "Active",
+    status: project?.status || "active",
     start_date: project?.start_date || new Date().toISOString().slice(0, 10),
     end_date: project?.end_date || "",
   });
@@ -126,7 +135,7 @@ function ProjectForm({ supabase, concerns, project, onClose, onSaved }) {
         <Field label="Status">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.status} onChange={(e) => update("status", e.target.value)}>
-            {PROJECT_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+            {PROJECT_STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </Field>
 
@@ -416,7 +425,7 @@ export default function Projects({ supabase }) {
                       className="text-xs px-2.5 py-1 rounded-full font-medium"
                       style={{ color: statusColor(project.status), background: tokens.surfaceRaised }}
                     >
-                      {project.status}
+                      {projectStatusLabel(project.status)}
                     </span>
                     {supabase && (
                       <div className="flex gap-2">
