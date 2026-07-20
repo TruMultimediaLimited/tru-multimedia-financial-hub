@@ -8,6 +8,14 @@ const EXPENSE_CATEGORIES = [
   "entertainment", "marketing", "software_subscription", "misc",
 ];
 
+const PAYMENT_CHANNELS = [
+  { value: "bkash", label: "bKash" },
+  { value: "nagad", label: "Nagad" },
+  { value: "bank", label: "Bank" },
+  { value: "cash", label: "Cash" },
+  { value: "other", label: "Other" },
+];
+
 const SAMPLE_CONCERNS = [
   { id: "1", name: "Tru Multimedia Limited" },
   { id: "2", name: "Truphoto Studio" },
@@ -15,11 +23,23 @@ const SAMPLE_CONCERNS = [
   { id: "4", name: "Uthsob Mukhor" },
 ];
 
-function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) {
+function paymentStatusOf(amount, paidAmount) {
+  const total = Number(amount) || 0;
+  const paid = paidAmount === "" || paidAmount === null || paidAmount === undefined ? total : Number(paidAmount);
+  if (paid <= 0) return "pending";
+  if (paid >= total) return "paid";
+  return "partial";
+}
+
+function ExpenseForm({ supabase, concerns, partners, projects, staff, entry, onClose, onSaved }) {
   const [form, setForm] = useState({
     concern_id: entry?.concern_id || "",
+    project_id: entry?.project_id || "",
     category: entry?.category || "",
     amount: entry?.amount || "",
+    paid_amount: entry?.paid_amount ?? "",
+    payment_channel: entry?.payment_channel || "",
+    handled_by_staff_id: entry?.handled_by_staff_id || "",
     tds_vds_amount: entry?.tds_vds_amount || "",
     paid_by: entry?.partner_id || entry?.paid_by || "company_account",
     description: entry?.description || "",
@@ -38,6 +58,7 @@ function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) 
     if (!form.concern_id) return setError("Concern select করো");
     if (!form.category) return setError("Category select করো");
     if (!form.amount || Number(form.amount) <= 0) return setError("সঠিক Amount দাও");
+    if (form.paid_amount !== "" && Number(form.paid_amount) < 0) return setError("সঠিক Paid amount দাও");
 
     setSaving(true);
     try {
@@ -49,35 +70,33 @@ function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) 
 
       const partner_id = form.paid_by === "company_account" ? null : form.paid_by;
       const paid_by_value = form.paid_by === "company_account" ? "company_account" : "partner_pocket";
+      const payment_status = paymentStatusOf(form.amount, form.paid_amount);
+
+      const { data: userData } = await supabase.auth.getUser();
+
+      const payload = {
+        concern_id: form.concern_id,
+        project_id: form.project_id || null,
+        type: "expense",
+        category: form.category,
+        amount: Number(form.amount),
+        paid_amount: form.paid_amount === "" ? Number(form.amount) : Number(form.paid_amount),
+        payment_status,
+        payment_channel: form.payment_channel || null,
+        handled_by_staff_id: form.handled_by_staff_id || null,
+        tds_vds_amount: Number(form.tds_vds_amount || 0),
+        paid_by: paid_by_value,
+        partner_id: partner_id,
+        description: form.description || null,
+        transaction_date: form.transaction_date,
+        entry_by: userData?.user?.id || null,
+      };
 
       if (entry?.id) {
-        const { error: updateErr } = await supabase
-          .from("transactions")
-          .update({
-            concern_id: form.concern_id,
-            type: "expense",
-            category: form.category,
-            amount: Number(form.amount),
-            tds_vds_amount: Number(form.tds_vds_amount || 0),
-            paid_by: paid_by_value,
-            partner_id: partner_id,
-            description: form.description || null,
-            transaction_date: form.transaction_date,
-          })
-          .eq("id", entry.id);
+        const { error: updateErr } = await supabase.from("transactions").update(payload).eq("id", entry.id);
         if (updateErr) throw updateErr;
       } else {
-        const { error: insertErr } = await supabase.from("transactions").insert({
-          concern_id: form.concern_id,
-          type: "expense",
-          category: form.category,
-          amount: Number(form.amount),
-          tds_vds_amount: Number(form.tds_vds_amount || 0),
-          paid_by: paid_by_value,
-          partner_id: partner_id,
-          description: form.description || null,
-          transaction_date: form.transaction_date,
-        });
+        const { error: insertErr } = await supabase.from("transactions").insert(payload);
         if (insertErr) throw insertErr;
       }
 
@@ -117,6 +136,14 @@ function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) 
           </select>
         </Field>
 
+        <Field label="Project (optional)">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.project_id} onChange={(e) => update("project_id", e.target.value)}>
+            <option value="">No specific project</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+          </select>
+        </Field>
+
         <Field label="Category">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
             value={form.category} onChange={(e) => update("category", e.target.value)}>
@@ -126,15 +153,29 @@ function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) 
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Amount (৳)">
+          <Field label="Total amount (৳)">
             <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
               value={form.amount} onChange={(e) => update("amount", e.target.value)} placeholder="0" />
           </Field>
-          <Field label="TDS/VDS (৳)">
+          <Field label="Paid so far (৳, optional)">
             <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
-              value={form.tds_vds_amount} onChange={(e) => update("tds_vds_amount", e.target.value)} placeholder="0" />
+              value={form.paid_amount} onChange={(e) => update("paid_amount", e.target.value)}
+              placeholder="খালি রাখলে পুরোটাই দেওয়া ধরা হবে" />
           </Field>
         </div>
+
+        <Field label="TDS/VDS (৳)">
+          <input type="number" className="rounded-lg border px-3 py-2 text-sm font-mono" style={inputStyle}
+            value={form.tds_vds_amount} onChange={(e) => update("tds_vds_amount", e.target.value)} placeholder="0" />
+        </Field>
+
+        <Field label="Payment channel (optional)">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.payment_channel} onChange={(e) => update("payment_channel", e.target.value)}>
+            <option value="">Not specified</option>
+            {PAYMENT_CHANNELS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </Field>
 
         <Field label="Paid by">
           <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
@@ -143,6 +184,14 @@ function ExpenseForm({ supabase, concerns, partners, entry, onClose, onSaved }) 
             {partners.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
+          </select>
+        </Field>
+
+        <Field label="Handled by (optional — staff)">
+          <select className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}
+            value={form.handled_by_staff_id} onChange={(e) => update("handled_by_staff_id", e.target.value)}>
+            <option value="">Not specified</option>
+            {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </Field>
 
@@ -173,6 +222,8 @@ export default function Expenses({ supabase, onChanged }) {
   const [entries, setEntries] = useState([]);
   const [concerns, setConcerns] = useState(SAMPLE_CONCERNS);
   const [partners, setPartners] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [filterConcern, setFilterConcern] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
@@ -182,20 +233,33 @@ export default function Expenses({ supabase, onChanged }) {
   async function loadData() {
     if (!supabase) return;
     try {
-      const [{ data: c, error: cErr }, { data: t, error: tErr }, { data: pt, error: ptErr }] = await Promise.all([
+      const [
+        { data: c, error: cErr },
+        { data: t, error: tErr },
+        { data: pt, error: ptErr },
+        { data: pr, error: prErr },
+        { data: s, error: sErr },
+      ] = await Promise.all([
         supabase.from("concerns").select("id, name"),
         supabase
           .from("transactions")
-          .select("id, transaction_date, category, amount, description, concern_id, partner_id, paid_by, tds_vds_amount, concerns(name)")
+          .select("id, transaction_date, category, amount, paid_amount, payment_status, payment_channel, handled_by_staff_id, description, concern_id, project_id, partner_id, paid_by, tds_vds_amount, concerns(name)")
           .eq("type", "expense")
           .order("transaction_date", { ascending: false }),
         supabase.from("partners").select("id, name"),
+        supabase.from("projects").select("id, title"),
+        supabase.from("staff").select("id, name"),
       ]);
       if (cErr) throw cErr;
       if (tErr) throw tErr;
       if (ptErr) throw ptErr;
+      if (prErr) throw prErr;
+      if (sErr) throw sErr;
+
       if (c && c.length > 0) setConcerns(c);
       if (pt) setPartners(pt);
+      if (pr) setProjects(pr);
+      if (s) setStaff(s);
       if (t) {
         setEntries(
           t.map((row) => ({
@@ -203,8 +267,13 @@ export default function Expenses({ supabase, onChanged }) {
             transaction_date: row.transaction_date,
             category: row.category,
             amount: row.amount,
+            paid_amount: row.paid_amount,
+            payment_status: row.payment_status,
+            payment_channel: row.payment_channel,
+            handled_by_staff_id: row.handled_by_staff_id,
             description: row.description,
             concern_id: row.concern_id,
+            project_id: row.project_id,
             partner_id: row.partner_id,
             paid_by: row.paid_by,
             tds_vds_amount: row.tds_vds_amount,
@@ -244,6 +313,10 @@ export default function Expenses({ supabase, onChanged }) {
     : entries;
 
   const totalExpense = filteredEntries.reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalDue = filteredEntries.reduce((sum, e) => {
+    const paid = e.paid_amount === null || e.paid_amount === undefined ? Number(e.amount) : Number(e.paid_amount);
+    return sum + Math.max(0, Number(e.amount) - paid);
+  }, 0);
 
   return (
     <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
@@ -272,10 +345,14 @@ export default function Expenses({ supabase, onChanged }) {
           </p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
             <p className="text-[11px]" style={{ color: tokens.muted }}>Total Expenses</p>
             <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.rust }}>{fmtBDT(totalExpense)}</p>
+          </div>
+          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
+            <p className="text-[11px]" style={{ color: tokens.muted }}>Total Due</p>
+            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: totalDue > 0 ? tokens.gold : tokens.muted }}>{fmtBDT(totalDue)}</p>
           </div>
           <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
             <p className="text-[11px]" style={{ color: tokens.muted }}>Entries</p>
@@ -306,36 +383,48 @@ export default function Expenses({ supabase, onChanged }) {
           {loading && <p style={{ color: tokens.muted }}>Loading…</p>}
 
           <div className="flex flex-col gap-3">
-            {filteredEntries.map((entry) => (
-              <div key={String(entry.id)} className="flex items-center justify-between p-4 rounded-lg" style={{ background: tokens.surfaceRaised }}>
-                <div className="flex items-center gap-3">
-                  <ArrowDownRight size={20} style={{ color: tokens.rust }} />
-                  <div>
-                    <p style={{ color: tokens.bone }}>{entry.description || entry.category}</p>
-                    <p className="text-sm" style={{ color: tokens.muted }}>{entry.concern_name} • {entry.transaction_date}</p>
+            {filteredEntries.map((entry) => {
+              const paid = entry.paid_amount === null || entry.paid_amount === undefined ? Number(entry.amount) : Number(entry.paid_amount);
+              const due = Math.max(0, Number(entry.amount) - paid);
+              return (
+                <div key={String(entry.id)} className="flex items-center justify-between p-4 rounded-lg" style={{ background: tokens.surfaceRaised }}>
+                  <div className="flex items-center gap-3">
+                    <ArrowDownRight size={20} style={{ color: tokens.rust }} />
+                    <div>
+                      <p style={{ color: tokens.bone }}>{entry.description || entry.category}</p>
+                      <p className="text-sm" style={{ color: tokens.muted }}>
+                        {entry.concern_name} • {entry.transaction_date}
+                        {entry.payment_channel && ` • ${entry.payment_channel}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-mono" style={{ color: tokens.rust }}>-{fmtBDT(entry.amount)}</p>
+                      {due > 0 && (
+                        <p className="text-[11px] font-mono" style={{ color: tokens.gold }}>Due: {fmtBDT(due)}</p>
+                      )}
+                    </div>
+                    {supabase && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingEntry(entry);
+                            setShowForm(true);
+                          }}
+                          style={{ color: tokens.gold }}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(entry.id)} style={{ color: tokens.rust }}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <p className="text-sm font-mono" style={{ color: tokens.rust }}>-{fmtBDT(entry.amount)}</p>
-                  {supabase && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingEntry(entry);
-                          setShowForm(true);
-                        }}
-                        style={{ color: tokens.gold }}
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(entry.id)} style={{ color: tokens.rust }}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredEntries.length === 0 && !loading && (
               <p style={{ color: tokens.muted }}>কোনো expense entry নেই।</p>
             )}
@@ -348,6 +437,8 @@ export default function Expenses({ supabase, onChanged }) {
           supabase={supabase}
           concerns={concerns}
           partners={partners}
+          projects={projects}
+          staff={staff}
           entry={editingEntry}
           onClose={() => {
             setShowForm(false);
