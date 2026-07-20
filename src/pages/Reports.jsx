@@ -181,7 +181,7 @@ export default function Reports({ supabase }) {
   }
 
   return (
-    <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
+    <div className="w-full" style={{ background: tokens.ink }}>
       <div className="max-w-5xl mx-auto px-5 py-8">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-[0.2em]" style={{ color: tokens.muted }}>

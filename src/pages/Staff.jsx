@@ -440,7 +440,7 @@ export default function Staff({ supabase }) {
     .reduce((sum, s) => sum + Number(s.salary), 0);
 
   return (
-    <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
+    <div className="w-full" style={{ background: tokens.ink }}>
       <div className="max-w-5xl mx-auto px-5 py-8 pb-16">
         <div className="flex items-start justify-between mb-8">
           <div>

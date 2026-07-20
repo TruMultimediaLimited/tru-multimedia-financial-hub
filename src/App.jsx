@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, History, Menu, X, LogOut } from "lucide-react";
+import { Home, DollarSign, TrendingDown, Users, BarChart3, Users2, Briefcase, History, LogOut, ChevronDown, ChevronUp } from "lucide-react";
 import Overview from "./pages/Overview";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
@@ -24,8 +24,7 @@ const TABS = [
 ];
 
 export default function App({ supabase }) {
-  const [currentTab, setCurrentTab] = useState("overview");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedTab, setExpandedTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
   const [session, setSession] = useState(undefined);
 
@@ -36,12 +35,6 @@ export default function App({ supabase }) {
     });
     return () => listener.subscription.unsubscribe();
   }, [supabase]);
-
-  useEffect(() => {
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false);
-    }
-  }, [currentTab]);
 
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -57,103 +50,88 @@ export default function App({ supabase }) {
     return <Login supabase={supabase} />;
   }
 
-  const pages = {
-    overview: <Overview supabase={supabase} key={refreshKey} />,
-    projects: <Projects supabase={supabase} />,
-    income: <Income supabase={supabase} onChanged={bump} />,
-    expenses: <Expenses supabase={supabase} onChanged={bump} />,
-    staff: <Staff supabase={supabase} />,
-    reports: <Reports supabase={supabase} />,
-    partners: <Partners supabase={supabase} />,
-    activity: <AuditLog supabase={supabase} />,
-  };
+  function toggleTab(id) {
+    setExpandedTab((current) => (current === id ? null : id));
+  }
+
+  function renderTabContent(id) {
+    switch (id) {
+      case "overview":
+        return <Overview supabase={supabase} key={refreshKey} />;
+      case "projects":
+        return <Projects supabase={supabase} />;
+      case "income":
+        return <Income supabase={supabase} onChanged={bump} />;
+      case "expenses":
+        return <Expenses supabase={supabase} onChanged={bump} />;
+      case "staff":
+        return <Staff supabase={supabase} />;
+      case "reports":
+        return <Reports supabase={supabase} />;
+      case "partners":
+        return <Partners supabase={supabase} />;
+      case "activity":
+        return <AuditLog supabase={supabase} />;
+      default:
+        return null;
+    }
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: tokens.ink }}>
+    <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
       <div
-        className={`fixed inset-y-0 left-0 w-64 border-r transform transition-transform md:relative md:translate-x-0 z-40 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className="border-b px-5 py-6 flex items-start justify-between"
         style={{ background: tokens.surface, borderColor: tokens.hairline }}
       >
-        <div className="p-6 flex flex-col h-full">
-          <div>
-            <h1 className="text-xl font-bold" style={{ color: tokens.bone }}>
-              Tru Multimedia
-            </h1>
-            <p className="text-[11px] uppercase tracking-widest mt-1" style={{ color: tokens.muted }}>
-              Financial Engine
-            </p>
-
-            <nav className="mt-8 space-y-1">
-              {TABS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setCurrentTab(id)}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors ${
-                    currentTab === id ? "" : "hover:opacity-75"
-                  }`}
-                  style={{
-                    background: currentTab === id ? tokens.gold : "transparent",
-                    color: currentTab === id ? "white" : tokens.bone,
-                  }}
-                >
-                  <Icon size={16} />
-                  {label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium hover:opacity-75"
-              style={{ color: tokens.muted }}
-            >
-              <LogOut size={16} /> Log out
-            </button>
-            <div className="text-[11px] px-4" style={{ color: tokens.muted }}>
-              <p>© 2026 Tru Multimedia Ltd.</p>
-            </div>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: tokens.bone }}>
+            Tru Multimedia
+          </h1>
+          <p className="text-[11px] uppercase tracking-widest mt-1" style={{ color: tokens.muted }}>
+            Financial Engine
+          </p>
         </div>
-
         <button
-          onClick={() => setSidebarOpen(false)}
-          className="absolute top-4 right-4 md:hidden"
+          onClick={() => supabase.auth.signOut()}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:opacity-75"
           style={{ color: tokens.muted }}
         >
-          <X size={20} />
+          <LogOut size={16} /> Log out
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div
-          className="border-b p-4 flex items-center justify-between"
-          style={{ background: tokens.surface, borderColor: tokens.hairline }}
-        >
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="md:hidden"
-            style={{ color: tokens.bone }}
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex-1" />
-        </div>
+      <div className="flex flex-col">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const isExpanded = expandedTab === id;
+          return (
+            <div key={id} className="border-b" style={{ borderColor: tokens.hairline }}>
+              <button
+                onClick={() => toggleTab(id)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                style={{ background: isExpanded ? tokens.surface : "transparent" }}
+              >
+                <span className="flex items-center gap-3 text-sm font-medium" style={{ color: isExpanded ? tokens.gold : tokens.bone }}>
+                  <Icon size={18} />
+                  {label}
+                </span>
+                {isExpanded ? (
+                  <ChevronUp size={18} style={{ color: tokens.muted }} />
+                ) : (
+                  <ChevronDown size={18} style={{ color: tokens.muted }} />
+                )}
+              </button>
 
-        <div className="flex-1 overflow-y-auto">
-          {pages[currentTab]}
-        </div>
+              {isExpanded && (
+                <div className="overflow-y-auto" style={{ maxHeight: "80vh" }}>
+                  {renderTabContent(id)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 md:hidden z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <p className="text-[11px] text-center py-6" style={{ color: tokens.muted }}>© 2026 Tru Multimedia Ltd.</p>
     </div>
   );
 }
