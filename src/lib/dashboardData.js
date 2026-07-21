@@ -38,8 +38,10 @@ export async function fetchConcernPL(concernId) {
       : { totalIncome: 0, totalExpense: 0, netPl: 0 };
   }
 
-  const leafRows = rows.filter((r) => r.parent_concern_id !== null);
-  return leafRows.reduce(
+  // Sum every concern's row, including the parent's own — Tru Multimedia
+  // Limited can now hold transactions directly (general/company-wide
+  // expenses), so consolidated must include them, not just the 4 concerns.
+  return rows.reduce(
     (acc, r) => ({
       totalIncome: acc.totalIncome + Number(r.total_income),
       totalExpense: acc.totalExpense + Number(r.total_expense),

@@ -13,7 +13,7 @@ import { fetchIncomeExpenseReport, fetchPLByPeriod, fetchEmployeeCostReport, toC
 export default function Reports() {
   const navigate = useNavigate();
   const { concerns } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [concernId, setConcernId] = useState('');
   const [projectId, setProjectId] = useState('');

@@ -9,7 +9,7 @@ import { fetchConcernPL, fetchDueSummary, fetchChannelBreakdown } from '../lib/d
 export default function Dashboard() {
   const navigate = useNavigate();
   const { concerns, selectedConcernId, setSelectedConcernId } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [pl, setPl] = useState({ totalIncome: 0, totalExpense: 0, netPl: 0 });
   const [dueSummary, setDueSummary] = useState({ receivables: [], payables: [] });

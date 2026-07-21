@@ -11,7 +11,7 @@ import TransactionForm from './ledger/TransactionForm.jsx';
 export default function Ledger() {
   const navigate = useNavigate();
   const { selectedConcernId, concerns } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [concernFilter, setConcernFilter] = useState(selectedConcernId ?? '');
   const [projectFilter, setProjectFilter] = useState('');
