@@ -15,6 +15,7 @@ import VendorDetail from './pages/VendorDetail.jsx';
 import Employees from './pages/Employees.jsx';
 import EmployeeDetail from './pages/EmployeeDetail.jsx';
 import Invoices from './pages/Invoices.jsx';
+import InvoiceDetail from './pages/InvoiceDetail.jsx';
 import Reports from './pages/Reports.jsx';
 import AuditLog from './pages/AuditLog.jsx';
 
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/employees" element={<Employees />} />
             <Route path="/employees/:id" element={<EmployeeDetail />} />
             <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoices/:id" element={<InvoiceDetail />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/audit-log" element={<AuditLog />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
