@@ -5,6 +5,7 @@ import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
+import { initials, avatarColor } from '../lib/avatar.js';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 
@@ -21,26 +22,6 @@ const PAYMENT_TABS = [
   { key: 'partial', label: 'Partial' },
   { key: 'due', label: 'Due' },
 ];
-
-const AVATAR_COLORS = [
-  'bg-blue-100 text-blue-700',
-  'bg-orange-100 text-orange-700',
-  'bg-green-100 text-green-700',
-  'bg-purple-100 text-purple-700',
-  'bg-pink-100 text-pink-700',
-  'bg-teal-100 text-teal-700',
-];
-
-function initials(name) {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase();
-}
-
-function avatarColor(id) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
 
 // New projects are added from a client's own page — this page is purely
 // for browsing, grouped by client rather than listing every project flatly.
