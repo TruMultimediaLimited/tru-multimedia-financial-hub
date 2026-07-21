@@ -271,6 +271,27 @@ create index idx_invoices_client on invoices(client_id);
 
 
 -- ============================================================================
+-- 9b. RLS — explicitly OFF for now
+-- Supabase enables Row Level Security by default on some project setups;
+-- since no policies exist yet, that silently blocks every read/write from
+-- the anon key ("new row violates row-level security policy"). RLS is a
+-- deliberate later phase (see docs/architecture.md, "Future scalability"),
+-- not skipped — turned off explicitly here rather than left to whatever
+-- the project default happens to be.
+-- ============================================================================
+
+alter table concerns disable row level security;
+alter table clients disable row level security;
+alter table vendors disable row level security;
+alter table employees disable row level security;
+alter table projects disable row level security;
+alter table transactions disable row level security;
+alter table payments disable row level security;
+alter table work_logs disable row level security;
+alter table invoices disable row level security;
+
+
+-- ============================================================================
 -- 10. AUDIT LOG — generic, trigger-populated
 -- Logging happens at the database level (not app code), so it can't be
 -- silently skipped by a missed call site as a new module is added.
@@ -288,6 +309,8 @@ create table audit_log (
 );
 
 create index idx_audit_log_table_record on audit_log(table_name, record_id);
+
+alter table audit_log disable row level security;
 
 create or replace function log_audit_event()
 returns trigger
