@@ -9,7 +9,7 @@ import ProjectForm from './projects/ProjectForm.jsx';
 
 const STATUS_BADGE = {
   active: 'bg-income/15 text-income border-income/30',
-  completed: 'bg-surfaceRaised text-gray-300 border-gray-700',
+  completed: 'bg-surfaceRaised text-gray-700 border-gray-300',
   stalled: 'bg-due/15 text-due border-due/30',
 };
 
@@ -56,8 +56,8 @@ export default function Projects() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-100">Projects</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900">
+        <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
           + New project
         </button>
       </div>
@@ -79,7 +79,7 @@ export default function Projects() {
               key={b.key}
               onClick={() => setBucketFilter(b.key)}
               className={`px-3 py-1.5 rounded-md text-xs ${
-                bucketFilter === b.key ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'
+                bucketFilter === b.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
               }`}
             >
               {b.label} ({count})
@@ -92,7 +92,7 @@ export default function Projects() {
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
       {!loading && projects.filter((p) => paymentBucket(p) === bucketFilter).length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
           No {BUCKETS.find((b) => b.key === bucketFilter)?.label.toLowerCase()} projects.
         </div>
       )}
@@ -104,17 +104,17 @@ export default function Projects() {
             <div
               key={p.id}
               onClick={() => navigate(`/projects/${p.id}`)}
-              className="border border-gray-800 rounded-lg p-4 cursor-pointer hover:bg-surfaceRaised/60"
+              className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-surface"
             >
               <div className="flex items-start justify-between mb-1">
-                <div className="font-medium text-gray-100">{p.title}</div>
+                <div className="font-medium text-gray-900">{p.title}</div>
                 <Badge className={STATUS_BADGE[p.status]}>{p.status}</Badge>
               </div>
               <div className="text-xs text-gray-500 mb-3">
                 {p.clients?.name ?? 'No client'} · {p.concerns?.name}
               </div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">Contract {formatMoney(p.contract_value)}</span>
+                <span className="text-gray-500">Contract {formatMoney(p.contract_value)}</span>
                 <span className="text-income">Received {formatMoney(p.totalReceived)}</span>
                 {p.totalDue > 0 && <span className="text-due">Due {formatMoney(p.totalDue)}</span>}
               </div>

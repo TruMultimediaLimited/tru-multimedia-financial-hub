@@ -89,7 +89,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
   const remaining = dueAmount - (Number(amount) || 0);
 
   return (
-    <form onSubmit={handleSubmit} className="border border-gray-800 rounded-lg p-4 bg-surfaceRaised">
+    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-gray-200 rounded-lg p-4">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Amount" required>
           <input
@@ -136,13 +136,13 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
             <button
               type="button"
               onClick={() => setShowNewEmployee(true)}
-              className="shrink-0 px-3 rounded-md text-sm border border-gray-700 text-gray-300 hover:text-gray-100"
+              className="shrink-0 px-3 rounded-md text-sm border border-gray-300 text-gray-700 hover:text-gray-900"
             >
               + New
             </button>
           </div>
         ) : (
-          <div className="border border-gray-700 rounded-md p-3 space-y-2">
+          <div className="border border-gray-300 rounded-md p-3 space-y-2">
             <input
               className={inputClass}
               placeholder="Employee name"
@@ -160,14 +160,14 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
                 type="button"
                 disabled={savingEmployee}
                 onClick={handleSaveNewEmployee}
-                className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white disabled:opacity-50"
               >
                 {savingEmployee ? 'Saving…' : 'Save'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowNewEmployee(false)}
-                className="px-3 py-1.5 rounded-md text-sm border border-gray-700 text-gray-300"
+                className="px-3 py-1.5 rounded-md text-sm border border-gray-300 text-gray-700"
               >
                 Cancel
               </button>
@@ -192,7 +192,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
       <button
         type="submit"
         disabled={saving}
-        className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-100 text-gray-900 disabled:opacity-50"
+        className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
       >
         {saving ? 'Adding…' : '+ Add payment'}
       </button>

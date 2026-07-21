@@ -63,16 +63,16 @@ export default function ClientDetail() {
         ← Back to Clients
       </button>
 
-      <div className="border border-gray-800 rounded-lg p-4 mb-4">
+      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-gray-100">{client.name}</div>
+            <div className="text-lg font-semibold text-gray-900">{client.name}</div>
             <div className="text-xs text-gray-500">
               {[client.phone, client.email, client.address].filter(Boolean).join(' · ') || 'No contact info'}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-700 text-gray-300">
+            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
               Edit
             </button>
             <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
@@ -81,20 +81,20 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {client.notes && <p className="text-sm text-gray-400 mb-3">{client.notes}</p>}
+        {client.notes && <p className="text-sm text-gray-500 mb-3">{client.notes}</p>}
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div>
             <div className="text-xs text-gray-500">Billed</div>
-            <div className="text-gray-100">{formatMoney(totalBilled)}</div>
+            <div className="text-gray-900">{formatMoney(totalBilled)}</div>
           </div>
           <div>
             <div className="text-xs text-gray-500">Paid</div>
-            <div className="text-gray-100">{formatMoney(totalPaid)}</div>
+            <div className="text-gray-900">{formatMoney(totalPaid)}</div>
           </div>
           <div>
             <div className="text-xs text-gray-500">Due</div>
-            <div className={totalDue > 0 ? 'text-due' : 'text-gray-100'}>{formatMoney(totalDue)}</div>
+            <div className={totalDue > 0 ? 'text-due' : 'text-gray-900'}>{formatMoney(totalDue)}</div>
           </div>
         </div>
       </div>
@@ -103,15 +103,15 @@ export default function ClientDetail() {
 
       {projects.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-300 mb-2">Projects</h2>
+          <h2 className="text-sm font-medium text-gray-700 mb-2">Projects</h2>
           <div className="space-y-2 mb-4">
             {projects.map((p) => (
               <div
                 key={p.id}
                 onClick={() => navigate(`/projects/${p.id}`)}
-                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+                className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
-                <div className="text-sm text-gray-100">{p.title}</div>
+                <div className="text-sm text-gray-900">{p.title}</div>
               </div>
             ))}
           </div>
@@ -120,15 +120,15 @@ export default function ClientDetail() {
 
       {invoices.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-300 mb-2">Invoices</h2>
+          <h2 className="text-sm font-medium text-gray-700 mb-2">Invoices</h2>
           <div className="space-y-2 mb-4">
             {invoices.map((inv) => (
               <div
                 key={inv.id}
                 onClick={() => navigate(`/invoices/${inv.id}`)}
-                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+                className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
-                <div className="text-sm text-gray-100">{inv.invoice_number}</div>
+                <div className="text-sm text-gray-900">{inv.invoice_number}</div>
                 <div className="text-xs text-gray-500">{formatDate(inv.issued_date)}</div>
               </div>
             ))}
@@ -136,7 +136,7 @@ export default function ClientDetail() {
         </>
       )}
 
-      <h2 className="text-sm font-medium text-gray-300 mb-2">Transaction history</h2>
+      <h2 className="text-sm font-medium text-gray-700 mb-2">Transaction history</h2>
       {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions yet.</p>}
       <div className="space-y-2">
         {transactions.map((t) => {
@@ -145,17 +145,17 @@ export default function ClientDetail() {
             <div
               key={t.id}
               onClick={() => navigate(`/ledger/${t.id}`)}
-              className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
             >
               <div>
-                <div className="text-sm text-gray-100">{t.category || 'Uncategorized'}</div>
+                <div className="text-sm text-gray-900">{t.category || 'Uncategorized'}</div>
                 <div className="text-xs text-gray-500">
                   {t.concerns?.name} · {formatDate(t.transaction_date)}
                   {t.projects?.title && ` · ${t.projects.title}`}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-100">{formatMoney(t.total_amount)}</div>
+                <div className="text-sm text-gray-900">{formatMoney(t.total_amount)}</div>
                 <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
               </div>
             </div>
