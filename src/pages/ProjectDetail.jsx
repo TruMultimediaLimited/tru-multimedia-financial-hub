@@ -46,7 +46,7 @@ export default function ProjectDetail() {
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
   if (error && !project) return <p className="text-sm text-expense">{error}</p>;
   if (!project) return null;
 
@@ -75,17 +75,17 @@ export default function ProjectDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/projects')} className="text-xs text-gray-500 mb-3">
+      <button onClick={() => navigate('/projects')} className="text-xs text-slate-500 mb-3">
         ← Back to Projects
       </button>
 
-      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-gray-900">{project.title}</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-lg font-semibold text-slate-900">{project.title}</div>
+            <div className="text-xs text-slate-500">
               {project.clients ? (
-                <button onClick={() => navigate(`/clients/${project.clients.id}`)} className="text-gray-700 underline underline-offset-2">
+                <button onClick={() => navigate(`/clients/${project.clients.id}`)} className="text-slate-700 underline underline-offset-2">
                   {project.clients.name}
                 </button>
               ) : (
@@ -97,7 +97,7 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Badge className={PROJECT_STATUS_STYLES[project.status]}>{project.status}</Badge>
-            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
+            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
               Edit
             </button>
             <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
@@ -108,23 +108,23 @@ export default function ProjectDetail() {
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-3">
           <div>
-            <div className="text-xs text-gray-500">Contract value</div>
-            <div className="text-gray-900">{formatMoney(project.contract_value)}</div>
+            <div className="text-xs text-slate-500">Contract value</div>
+            <div className="text-slate-900">{formatMoney(project.contract_value)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Received</div>
+            <div className="text-xs text-slate-500">Received</div>
             <div className="text-income">{formatMoney(project.totalReceived)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Due</div>
-            <div className={project.totalDue > 0 ? 'text-due' : 'text-gray-900'}>{formatMoney(project.totalDue)}</div>
+            <div className="text-xs text-slate-500">Due</div>
+            <div className={project.totalDue > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(project.totalDue)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Expenses paid</div>
+            <div className="text-xs text-slate-500">Expenses paid</div>
             <div className="text-expense">{formatMoney(project.totalExpensePaid)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Profit</div>
+            <div className="text-xs text-slate-500">Profit</div>
             <div className={project.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(project.profit)}</div>
           </div>
         </div>
@@ -138,29 +138,29 @@ export default function ProjectDetail() {
 
       {invoices.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-700 mb-2">Invoices</h2>
+          <h2 className="text-sm font-medium text-slate-700 mb-2">Invoices</h2>
           <div className="space-y-2 mb-6">
             {invoices.map((inv) => (
               <div
                 key={inv.id}
                 onClick={() => navigate(`/invoices/${inv.id}`)}
-                className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+                className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
-                <div className="text-sm text-gray-900">{inv.invoice_number}</div>
-                <div className="text-xs text-gray-500">{formatDate(inv.issued_date)}</div>
+                <div className="text-sm text-slate-900">{inv.invoice_number}</div>
+                <div className="text-xs text-slate-500">{formatDate(inv.issued_date)}</div>
               </div>
             ))}
           </div>
         </>
       )}
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Team</h2>
-      {team.length === 0 && <p className="text-sm text-gray-500 mb-4">No employee expenses linked to this project yet.</p>}
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Team</h2>
+      {team.length === 0 && <p className="text-sm text-slate-500 mb-4">No employee expenses linked to this project yet.</p>}
       {team.length > 0 && (
         <div className="overflow-x-auto mb-6">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-200">
+              <tr className="text-left text-slate-500 border-b border-slate-200">
                 <th className="py-2 pr-3 font-normal">Employee</th>
                 <th className="py-2 pr-3 font-normal text-right">Total</th>
                 <th className="py-2 pr-3 font-normal text-right">Paid</th>
@@ -172,11 +172,11 @@ export default function ProjectDetail() {
                 <tr
                   key={m.id}
                   onClick={() => navigate(`/employees/${m.id}`)}
-                  className="border-b border-gray-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                  className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
                 >
-                  <td className="py-2 pr-3 text-gray-900">{m.name}</td>
-                  <td className="py-2 pr-3 text-right text-gray-700">{formatMoney(m.total)}</td>
-                  <td className="py-2 pr-3 text-right text-gray-700">{formatMoney(m.paid)}</td>
+                  <td className="py-2 pr-3 text-slate-900">{m.name}</td>
+                  <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(m.total)}</td>
+                  <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(m.paid)}</td>
                   <td className="py-2 pr-3 text-right">{m.due > 0 ? <span className="text-due">{formatMoney(m.due)}</span> : '—'}</td>
                 </tr>
               ))}
@@ -185,15 +185,15 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Client payments</h2>
-      {clientPayments.length === 0 && <p className="text-sm text-gray-500 mb-4">No client payments recorded yet.</p>}
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Client payments</h2>
+      {clientPayments.length === 0 && <p className="text-sm text-slate-500 mb-4">No client payments recorded yet.</p>}
       {clientPayments.length > 0 && (
         <div className="space-y-2 mb-6">
           {clientPayments.map((p) => (
-            <div key={p.id} className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
+            <div key={p.id} className="flex items-center justify-between border border-slate-200 rounded-lg p-3">
               <div>
-                <div className="text-sm text-gray-900">{formatMoney(p.amount)}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm text-slate-900">{formatMoney(p.amount)}</div>
+                <div className="text-xs text-slate-500">
                   {formatDate(p.payment_date)} · via {CHANNEL_LABELS[p.channel]}
                   {p.category && ` · ${p.category}`}
                   {p.note && ` · ${p.note}`}
@@ -201,27 +201,27 @@ export default function ProjectDetail() {
               </div>
             </div>
           ))}
-          <div className="text-xs text-gray-500 text-right">
+          <div className="text-xs text-slate-500 text-right">
             Received {formatMoney(project.totalReceived)}
             {project.totalDue > 0 && <span className="text-due"> · {formatMoney(project.totalDue)} remaining</span>}
           </div>
         </div>
       )}
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Transactions</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Transactions</h2>
       <div className="space-y-2">
-        {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions linked yet.</p>}
+        {transactions.length === 0 && <p className="text-sm text-slate-500">No transactions linked yet.</p>}
         {transactions.map((t) => {
           const { status } = computeBalances(t);
           return (
             <div
               key={t.id}
               onClick={() => navigate(`/ledger/${t.id}`)}
-              className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
             >
               <div>
-                <div className="text-sm text-gray-900">{t.category || 'Uncategorized'}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
+                <div className="text-xs text-slate-500">
                   {t.type === 'income' ? t.clients?.name : t.employees?.name ?? 'General'} · {formatDate(t.transaction_date)}
                 </div>
               </div>

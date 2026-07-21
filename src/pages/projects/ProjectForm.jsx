@@ -135,13 +135,13 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
               <button
                 type="button"
                 onClick={() => setShowNewCategory(true)}
-                className="shrink-0 px-3 rounded-md text-sm border border-gray-300 text-gray-700 hover:text-gray-900"
+                className="shrink-0 px-3 rounded-md text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
               >
                 + New
               </button>
             </div>
           ) : (
-            <div className="border border-gray-300 rounded-md p-3 space-y-2">
+            <div className="border border-slate-300 rounded-md p-3 space-y-2">
               <input
                 className={inputClass}
                 placeholder="Category name"
@@ -153,14 +153,14 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
                   type="button"
                   disabled={savingCategory}
                   onClick={handleSaveNewCategory}
-                  className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
                 >
                   {savingCategory ? 'Saving…' : 'Save'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowNewCategory(false)}
-                  className="px-3 py-1.5 rounded-md text-sm border border-gray-300 text-gray-700"
+                  className="px-3 py-1.5 rounded-md text-sm border border-slate-300 text-slate-700"
                 >
                   Cancel
                 </button>
@@ -203,7 +203,7 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
+          className="w-full py-2.5 rounded-md text-sm font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
         >
           {saving ? 'Saving…' : project ? 'Save changes' : 'Add project'}
         </button>

@@ -13,7 +13,7 @@ export function formatDate(dateStr) {
 export const STATUS_STYLES = {
   paid: 'bg-income/15 text-income border-income/30',
   partial: 'bg-due/15 text-due border-due/30',
-  pending: 'bg-gray-500/15 text-gray-500 border-gray-500/30',
+  pending: 'bg-slate-500/15 text-slate-500 border-slate-500/30',
 };
 
 export const STATUS_LABELS = {
@@ -31,17 +31,17 @@ export const CHANNEL_LABELS = {
 };
 
 export const PROJECT_STATUS_STYLES = {
-  running: 'bg-income/15 text-income border-income/30',
+  running: 'bg-primary/15 text-primary border-primary/30',
   hold: 'bg-due/15 text-due border-due/30',
   cancelled: 'bg-expense/15 text-expense border-expense/30',
-  completed: 'bg-surfaceRaised text-gray-700 border-gray-300',
+  completed: 'bg-income/15 text-income border-income/30',
 };
 
 // Payment-progress bucket — separate from a project's own active/completed/
 // stalled status, this is purely about how much of the contract value has
 // actually been collected.
 export const PAYMENT_BUCKET_STYLES = {
-  due: 'bg-gray-500/15 text-gray-500 border-gray-500/30',
+  due: 'bg-slate-500/15 text-slate-500 border-slate-500/30',
   partial: 'bg-due/15 text-due border-due/30',
   complete: 'bg-income/15 text-income border-income/30',
 };

@@ -16,7 +16,7 @@ export default function AppShell({ userEmail, onSignOut }) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-surface text-gray-900 md:flex">
+    <div className="min-h-screen bg-surface text-slate-900 md:flex">
       <Sidebar userEmail={userEmail} onSignOut={onSignOut} />
 
       <div className="flex-1 min-w-0">

@@ -116,14 +116,14 @@ export default function InvoiceForm({ open, onClose, onSaved, invoice = null }) 
             <button
               type="button"
               onClick={() => setRefType('transaction')}
-              className={`py-2 rounded-md text-sm border ${refType === 'transaction' ? 'bg-surfaceRaised border-gray-500 text-gray-900' : 'border-gray-300 text-gray-500'}`}
+              className={`py-2 rounded-md text-sm border ${refType === 'transaction' ? 'bg-surfaceRaised border-slate-500 text-slate-900' : 'border-slate-300 text-slate-500'}`}
             >
               A transaction
             </button>
             <button
               type="button"
               onClick={() => setRefType('project')}
-              className={`py-2 rounded-md text-sm border ${refType === 'project' ? 'bg-surfaceRaised border-gray-500 text-gray-900' : 'border-gray-300 text-gray-500'}`}
+              className={`py-2 rounded-md text-sm border ${refType === 'project' ? 'bg-surfaceRaised border-slate-500 text-slate-900' : 'border-slate-300 text-slate-500'}`}
             >
               A project
             </button>
@@ -172,7 +172,7 @@ export default function InvoiceForm({ open, onClose, onSaved, invoice = null }) 
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
+          className="w-full py-2.5 rounded-md text-sm font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
         >
           {saving ? 'Saving…' : invoice ? 'Save changes' : 'Create invoice'}
         </button>

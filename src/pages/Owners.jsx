@@ -29,20 +29,20 @@ export default function Owners() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-900">Owners</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
+        <h1 className="text-lg font-semibold text-slate-900">Owners</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover">
           + New owner
         </button>
       </div>
-      <p className="text-xs text-gray-500 mb-4">
+      <p className="text-xs text-slate-500 mb-4">
         Partner-level balances — how much each owner has personally received vs. given on the company's behalf, plus capital invested.
       </p>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && owners.length === 0 && (
-        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">No owners yet.</div>
+        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">No owners yet.</div>
       )}
 
       {!loading && owners.length > 0 && (
@@ -51,16 +51,16 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surface"
+              className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer hover:bg-surface"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-gray-900 font-medium">{o.name}</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-slate-900 font-medium">{o.name}</span>
+                <span className="text-xs text-slate-500">
                   {o.role || 'Partner'}
                   {o.company_share_percent != null && ` · ${o.company_share_percent}% share`}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500">
+              <div className="flex justify-between text-sm text-slate-500">
                 <span>Received {formatMoney(o.totalReceived)}</span>
                 <span>Given {formatMoney(o.totalGiven)}</span>
                 <span>Invested {formatMoney(o.totalInvested)}</span>
