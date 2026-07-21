@@ -91,7 +91,6 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
             <SummaryCard
               label="Total Project Value"
-              sub="Contract value, all projects"
               value={formatMoney(projectValue.total)}
               accent="text-gray-900"
               active={expandedCard === 'value'}
@@ -99,7 +98,6 @@ export default function Dashboard() {
             />
             <SummaryCard
               label="Total Payment Received"
-              sub="Any source — project, studio rent, edit…"
               value={formatMoney(paymentsReceived.total)}
               accent="text-income"
               active={expandedCard === 'received'}
@@ -107,7 +105,6 @@ export default function Dashboard() {
             />
             <SummaryCard
               label="Total Expense"
-              sub="Rent, salary, equipment, bills…"
               value={formatMoney(expense.total)}
               accent="text-expense"
               active={expandedCard === 'expense'}
@@ -115,7 +112,6 @@ export default function Dashboard() {
             />
             <SummaryCard
               label="Project Profit"
-              sub="Completed projects only"
               value={formatMoney(projectProfit.total)}
               accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
               active={expandedCard === 'profit'}
@@ -253,19 +249,16 @@ function SortButton({ active, label, onClick }) {
   );
 }
 
-function SummaryCard({ label, sub, value, accent, active, onClick }) {
+function SummaryCard({ label, value, accent, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-lg p-4 hover:border-gray-300 ${
+      className={`text-left bg-surfaceRaised border rounded-lg px-3 py-2.5 hover:border-gray-300 ${
         active ? 'border-gray-900' : 'border-gray-200'
       }`}
     >
-      <div className="text-xs text-gray-500">
-        {label}
-        {sub && <span className="text-gray-600"> ({sub})</span>}
-      </div>
-      <div className={`text-xl font-semibold mt-1 ${accent}`}>{value}</div>
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className={`text-lg font-semibold mt-0.5 ${accent}`}>{value}</div>
     </button>
   );
 }
