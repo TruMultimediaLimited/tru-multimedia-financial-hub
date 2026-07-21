@@ -63,7 +63,10 @@ function friendlyDeleteError(error) {
     projects: 'this client still has a linked project. Remove or reassign that project first.',
     transactions: 'this client still has linked transactions. Remove those first.',
   };
-  return new Error(`Cannot delete: ${reasons[table] ?? 'this client still has linked records. Remove those first.'}`);
+  const fallback = table
+    ? `this client still has a linked record in "${table}". Remove that first.`
+    : 'this client still has linked records. Remove those first.';
+  return new Error(`Cannot delete: ${reasons[table] ?? fallback}`);
 }
 
 export async function deleteClient(id) {
