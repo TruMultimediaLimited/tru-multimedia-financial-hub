@@ -14,6 +14,8 @@ const paths = {
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   close: 'M6 6l12 12M18 6L6 18',
   chevron: 'M9 6l6 6-6 6',
+  search: 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35',
+  check: 'M5 13l4 4L19 7',
 };
 
 export default function Icon({ name, className = 'w-5 h-5' }) {

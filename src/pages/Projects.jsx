@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import Icon from '../layout/Icon.jsx';
+import { formatMoney } from '../lib/format.js';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 
@@ -19,6 +20,26 @@ const PAYMENT_TABS = [
   { key: 'partial', label: 'Partial' },
   { key: 'due', label: 'Due' },
 ];
+
+const AVATAR_COLORS = [
+  'bg-blue-100 text-blue-700',
+  'bg-orange-100 text-orange-700',
+  'bg-green-100 text-green-700',
+  'bg-purple-100 text-purple-700',
+  'bg-pink-100 text-pink-700',
+  'bg-teal-100 text-teal-700',
+];
+
+function initials(name) {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase();
+}
+
+function avatarColor(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
 
 // New projects are added from a client's own page — this page is purely
 // for browsing, grouped by client rather than listing every project flatly.
@@ -76,6 +97,26 @@ export default function Projects() {
     label: `${t.label} (${t.key === 'all' ? projects.length : projects.filter((p) => paymentBucket(p) === t.key).length})`,
   }));
 
+  const outstandingDue = projects.reduce((sum, p) => sum + Number(p.totalDue || 0), 0);
+  const stats = [
+    { key: 'total', icon: 'projects', color: 'bg-gray-100 text-gray-600', label: 'Total Projects', value: projects.length },
+    {
+      key: 'running',
+      icon: 'income',
+      color: 'bg-income/10 text-income',
+      label: 'Running',
+      value: projects.filter((p) => p.status === 'running').length,
+    },
+    {
+      key: 'completed',
+      icon: 'check',
+      color: 'bg-gray-900/5 text-gray-700',
+      label: 'Completed',
+      value: projects.filter((p) => p.status === 'completed').length,
+    },
+    { key: 'due', icon: 'invoices', color: 'bg-due/15 text-due', label: 'Outstanding Due', value: formatMoney(outstandingDue) },
+  ];
+
   return (
     <div>
       <div className="flex items-center gap-2.5 mb-5">
@@ -88,12 +129,19 @@ export default function Projects() {
         </div>
       </div>
 
-      <div className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5 space-y-3 mb-5">
-        <div>
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Project status</span>
-          <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
-        </div>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {stats.map((s) => (
+          <div key={s.key} className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${s.color}`}>
+              <Icon name={s.icon} className="w-4 h-4" />
+            </div>
+            <div className="text-lg font-semibold text-gray-900 leading-tight">{s.value}</div>
+            <div className="text-xs text-gray-500">{s.label}</div>
+          </div>
+        ))}
+      </div>
 
+      <div className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5 space-y-3 mb-5">
         <div>
           <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Client</span>
           <SearchSelect
@@ -104,9 +152,15 @@ export default function Projects() {
           />
         </div>
 
-        <div>
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Payment status</span>
-          <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Project status</span>
+            <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+          </div>
+          <div>
+            <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Payment status</span>
+            <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
+          </div>
         </div>
       </div>
 
@@ -129,8 +183,8 @@ export default function Projects() {
             onClick={() => navigate(`/clients/${c.id}`)}
             className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5 cursor-pointer hover:border-gray-300 hover:bg-surface flex items-center gap-3"
           >
-            <div className="w-10 h-10 shrink-0 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center">
-              <Icon name="clients" className="w-5 h-5" />
+            <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-sm font-semibold ${avatarColor(c.id)}`}>
+              {initials(c.name)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-gray-900 font-medium truncate">{c.name}</div>
