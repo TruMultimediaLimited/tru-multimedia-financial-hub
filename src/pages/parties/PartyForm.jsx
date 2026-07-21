@@ -89,7 +89,7 @@ export default function PartyForm({ open, onClose, onSaved, party = null }) {
                 type="button"
                 onClick={() => toggleConcern(c.id)}
                 className={`px-3 py-1.5 rounded-md text-xs border ${
-                  concernIds.includes(c.id) ? 'bg-gray-900 border-gray-900 text-white' : 'border-gray-300 text-gray-700'
+                  concernIds.includes(c.id) ? 'bg-primary border-primary text-white' : 'border-slate-300 text-slate-700'
                 }`}
               >
                 {c.name}
@@ -103,7 +103,7 @@ export default function PartyForm({ open, onClose, onSaved, party = null }) {
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
+          className="w-full py-2.5 rounded-md text-sm font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
         >
           {saving ? 'Saving…' : party ? 'Save changes' : 'Add client'}
         </button>

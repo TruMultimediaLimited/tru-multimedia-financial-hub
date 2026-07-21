@@ -56,7 +56,7 @@ export default function ClientDetail() {
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
   if (error && !client) return <p className="text-sm text-expense">{error}</p>;
   if (!client) return null;
 
@@ -66,21 +66,21 @@ export default function ClientDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/clients')} className="text-xs text-gray-500 mb-3">
+      <button onClick={() => navigate('/clients')} className="text-xs text-slate-500 mb-3">
         ← Back to Clients
       </button>
 
-      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-gray-900">{client.name}</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-lg font-semibold text-slate-900">{client.name}</div>
+            <div className="text-xs text-slate-500">
               {[client.phone, client.email, client.address].filter(Boolean).join(' · ') || 'No contact info'}
             </div>
             {client.concerns?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {client.concerns.map((c) => (
-                  <Badge key={c.id} className="bg-surfaceRaised text-gray-700 border-gray-300">
+                  <Badge key={c.id} className="bg-surfaceRaised text-slate-700 border-slate-300">
                     {c.name}
                   </Badge>
                 ))}
@@ -88,7 +88,7 @@ export default function ClientDetail() {
             )}
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
+            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
               Edit
             </button>
             <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
@@ -97,20 +97,20 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {client.notes && <p className="text-sm text-gray-500 mb-3">{client.notes}</p>}
+        {client.notes && <p className="text-sm text-slate-500 mb-3">{client.notes}</p>}
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div>
-            <div className="text-xs text-gray-500">Billed</div>
-            <div className="text-gray-900">{formatMoney(totalBilled)}</div>
+            <div className="text-xs text-slate-500">Billed</div>
+            <div className="text-slate-900">{formatMoney(totalBilled)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Paid</div>
-            <div className="text-gray-900">{formatMoney(totalPaid)}</div>
+            <div className="text-xs text-slate-500">Paid</div>
+            <div className="text-slate-900">{formatMoney(totalPaid)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Due</div>
-            <div className={totalDue > 0 ? 'text-due' : 'text-gray-900'}>{formatMoney(totalDue)}</div>
+            <div className="text-xs text-slate-500">Due</div>
+            <div className={totalDue > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(totalDue)}</div>
           </div>
         </div>
       </div>
@@ -118,20 +118,20 @@ export default function ClientDetail() {
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium text-gray-700">Projects</h2>
+        <h2 className="text-sm font-medium text-slate-700">Projects</h2>
         <button
           onClick={() => setProjectFormOpen(true)}
-          className="px-2.5 py-1 rounded-md text-xs border border-gray-300 text-gray-700"
+          className="px-2.5 py-1 rounded-md text-xs border border-slate-300 text-slate-700"
         >
           + New project
         </button>
       </div>
 
-      {projects.length === 0 && <p className="text-sm text-gray-500 mb-4">No projects yet.</p>}
+      {projects.length === 0 && <p className="text-sm text-slate-500 mb-4">No projects yet.</p>}
 
       {projects.length > 0 && (
         <>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-2">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mb-2">
             <span>{projects.length} total</span>
             <span>{projects.filter((p) => p.status === 'completed').length} completed</span>
             <span>{projects.filter((p) => paymentBucket(p) === 'complete').length} paid</span>
@@ -142,11 +142,11 @@ export default function ClientDetail() {
               <div
                 key={p.id}
                 onClick={() => navigate(`/projects/${p.id}`)}
-                className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+                className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
                 <div>
-                  <div className="text-sm text-gray-900">{p.title}</div>
-                  <div className="text-xs text-gray-500">{p.concerns?.name}</div>
+                  <div className="text-sm text-slate-900">{p.title}</div>
+                  <div className="text-xs text-slate-500">{p.concerns?.name}</div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
@@ -160,24 +160,24 @@ export default function ClientDetail() {
 
       {invoices.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-700 mb-2">Invoices</h2>
+          <h2 className="text-sm font-medium text-slate-700 mb-2">Invoices</h2>
           <div className="space-y-2 mb-4">
             {invoices.map((inv) => (
               <div
                 key={inv.id}
                 onClick={() => navigate(`/invoices/${inv.id}`)}
-                className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+                className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
-                <div className="text-sm text-gray-900">{inv.invoice_number}</div>
-                <div className="text-xs text-gray-500">{formatDate(inv.issued_date)}</div>
+                <div className="text-sm text-slate-900">{inv.invoice_number}</div>
+                <div className="text-xs text-slate-500">{formatDate(inv.issued_date)}</div>
               </div>
             ))}
           </div>
         </>
       )}
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Transaction history</h2>
-      {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions yet.</p>}
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Transaction history</h2>
+      {transactions.length === 0 && <p className="text-sm text-slate-500">No transactions yet.</p>}
       <div className="space-y-2">
         {transactions.map((t) => {
           const { paidAmount, dueAmount, status } = computeBalances(t);
@@ -185,17 +185,17 @@ export default function ClientDetail() {
             <div
               key={t.id}
               onClick={() => navigate(`/ledger/${t.id}`)}
-              className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
             >
               <div>
-                <div className="text-sm text-gray-900">{t.category || 'Uncategorized'}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
+                <div className="text-xs text-slate-500">
                   {t.concerns?.name} · {formatDate(t.transaction_date)}
                   {t.projects?.title && ` · ${t.projects.title}`}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-900">{formatMoney(t.total_amount)}</div>
+                <div className="text-sm text-slate-900">{formatMoney(t.total_amount)}</div>
                 <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
               </div>
             </div>

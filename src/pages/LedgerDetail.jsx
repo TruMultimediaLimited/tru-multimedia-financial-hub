@@ -65,7 +65,7 @@ export default function LedgerDetail() {
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
   if (error && !transaction) return <p className="text-sm text-expense">{error}</p>;
   if (!transaction) return null;
 
@@ -74,15 +74,15 @@ export default function LedgerDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate(-1)} className="text-xs text-gray-500 mb-3">
+      <button onClick={() => navigate(-1)} className="text-xs text-slate-500 mb-3">
         ← Back
       </button>
 
-      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-gray-900">{party}</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-lg font-semibold text-slate-900">{party}</div>
+            <div className="text-xs text-slate-500">
               {transaction.concerns?.name} · {transaction.category || 'Uncategorized'} ·{' '}
               {formatDate(transaction.transaction_date)}
               {transaction.projects?.title && ` · ${transaction.projects.title}`}
@@ -91,27 +91,27 @@ export default function LedgerDetail() {
           <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
         </div>
 
-        {transaction.description && <p className="text-sm text-gray-500 mb-3">{transaction.description}</p>}
+        {transaction.description && <p className="text-sm text-slate-500 mb-3">{transaction.description}</p>}
 
         <div className="grid grid-cols-3 gap-3 text-sm mb-3">
           <div>
-            <div className="text-xs text-gray-500">Total</div>
-            <div className="text-gray-900">{formatMoney(transaction.total_amount)}</div>
+            <div className="text-xs text-slate-500">Total</div>
+            <div className="text-slate-900">{formatMoney(transaction.total_amount)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Paid</div>
-            <div className="text-gray-900">{formatMoney(paidAmount)}</div>
+            <div className="text-xs text-slate-500">Paid</div>
+            <div className="text-slate-900">{formatMoney(paidAmount)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Due</div>
-            <div className={dueAmount > 0 ? 'text-due' : 'text-gray-900'}>{formatMoney(dueAmount)}</div>
+            <div className="text-xs text-slate-500">Due</div>
+            <div className={dueAmount > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(dueAmount)}</div>
           </div>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={() => setEditOpen(true)}
-            className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700"
+            className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700"
           >
             Edit
           </button>
@@ -123,10 +123,10 @@ export default function LedgerDetail() {
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Payments</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Payments</h2>
       <div className="space-y-2 mb-4">
         {(transaction.payments ?? []).length === 0 && (
-          <p className="text-sm text-gray-500">No payments recorded yet.</p>
+          <p className="text-sm text-slate-500">No payments recorded yet.</p>
         )}
         {(transaction.payments ?? [])
           .slice()
@@ -142,7 +142,7 @@ export default function LedgerDetail() {
           ))}
       </div>
 
-      <h2 className="text-sm font-medium text-gray-700 mb-2">Add payment</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Add payment</h2>
       <PaymentForm
         transactionId={transaction.id}
         concernId={transaction.concern_id}
@@ -204,7 +204,7 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
 
   if (editing) {
     return (
-      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 space-y-2">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
@@ -226,11 +226,11 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-3 py-1.5 rounded-md text-xs bg-gray-900 text-white disabled:opacity-50"
+            className="px-3 py-1.5 rounded-md text-xs bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
-          <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
+          <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
             Cancel
           </button>
         </div>
@@ -239,19 +239,19 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
   }
 
   return (
-    <div className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
+    <div className="flex items-center justify-between border border-slate-200 rounded-lg p-3">
       <div>
-        <div className="text-gray-900 text-sm">
+        <div className="text-slate-900 text-sm">
           {formatMoney(payment.amount)}{' '}
-          <span className="text-xs text-gray-500">via {CHANNEL_LABELS[payment.channel]}</span>
+          <span className="text-xs text-slate-500">via {CHANNEL_LABELS[payment.channel]}</span>
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-slate-500">
           {formatDate(payment.payment_date)} · Handled by {handledByLabel}
           {payment.note && ` · ${payment.note}`}
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
-        <button onClick={() => setEditing(true)} className="text-xs text-gray-500">
+        <button onClick={() => setEditing(true)} className="text-xs text-slate-500">
           Edit
         </button>
         <button onClick={handleDelete} className="text-xs text-expense">

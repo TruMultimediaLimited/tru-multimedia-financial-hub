@@ -81,10 +81,10 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900 mb-4">Dashboard</h1>
+      <h1 className="text-lg font-semibold text-slate-900 mb-4">Dashboard</h1>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && (
         <>
@@ -92,7 +92,7 @@ export default function Dashboard() {
             <SummaryCard
               label="Total Project Value"
               value={formatMoney(projectValue.total)}
-              accent="text-gray-900"
+              accent="text-slate-900"
               active={expandedCard === 'value'}
               onClick={() => toggleCard('value')}
             />
@@ -179,7 +179,7 @@ export default function Dashboard() {
           )}
 
           <div className="flex items-center justify-between mb-2 mt-4">
-            <h2 className="text-sm font-medium text-gray-700">Due list</h2>
+            <h2 className="text-sm font-medium text-slate-700">Due list</h2>
             <div className="flex gap-1">
               <SortButton active={dueSort === 'amount'} onClick={() => setDueSort('amount')} label="By amount" />
               <SortButton active={dueSort === 'age'} onClick={() => setDueSort('age')} label="By age" />
@@ -201,14 +201,14 @@ export default function Dashboard() {
             />
           </div>
 
-          <h2 className="text-sm font-medium text-gray-700 mb-2">Channel breakdown</h2>
+          <h2 className="text-sm font-medium text-slate-700 mb-2">Channel breakdown</h2>
           {channels.length === 0 ? (
-            <p className="text-sm text-gray-500">No payments recorded yet.</p>
+            <p className="text-sm text-slate-500">No payments recorded yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-200">
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
                     <th className="py-2 pr-3 font-normal">Channel</th>
                     <th className="py-2 pr-3 font-normal">Handled by</th>
                     <th className="py-2 pr-3 font-normal text-right">Total</th>
@@ -217,15 +217,15 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {channels.map((row) => (
-                    <tr key={`${row.channel}|${row.handler}`} className="border-b border-gray-200/60">
+                    <tr key={`${row.channel}|${row.handler}`} className="border-b border-slate-200/60">
                       <td className="py-2 pr-3">
-                        <Badge className="bg-surfaceRaised text-gray-700 border-gray-300">
+                        <Badge className="bg-surfaceRaised text-slate-700 border-slate-300">
                           {CHANNEL_LABELS[row.channel] ?? row.channel}
                         </Badge>
                       </td>
-                      <td className="py-2 pr-3 text-gray-700">{row.handler}</td>
-                      <td className="py-2 pr-3 text-right text-gray-900">{formatMoney(row.total)}</td>
-                      <td className="py-2 pr-3 text-right text-gray-500">{row.count}</td>
+                      <td className="py-2 pr-3 text-slate-700">{row.handler}</td>
+                      <td className="py-2 pr-3 text-right text-slate-900">{formatMoney(row.total)}</td>
+                      <td className="py-2 pr-3 text-right text-slate-500">{row.count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -242,7 +242,7 @@ function SortButton({ active, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 py-1 rounded-md text-xs ${active ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'}`}
+      className={`px-2.5 py-1 rounded-md text-xs ${active ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
     >
       {label}
     </button>
@@ -253,11 +253,11 @@ function SummaryCard({ label, value, accent, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-lg px-3 py-2.5 hover:border-gray-300 ${
-        active ? 'border-gray-900' : 'border-gray-200'
+      className={`text-left bg-surfaceRaised border rounded-lg px-3 py-2.5 hover:border-slate-300 ${
+        active ? 'border-slate-900' : 'border-slate-200'
       }`}
     >
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xs text-slate-500">{label}</div>
       <div className={`text-lg font-semibold mt-0.5 ${accent}`}>{value}</div>
     </button>
   );
@@ -266,21 +266,21 @@ function SummaryCard({ label, value, accent, active, onClick }) {
 function BreakdownPanel({ children, emptyText }) {
   const isEmpty = !children || (Array.isArray(children) && children.length === 0);
   return (
-    <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 mb-4">
-      {isEmpty ? <p className="text-sm text-gray-500">{emptyText}</p> : <div className="space-y-1">{children}</div>}
+    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 mb-4">
+      {isEmpty ? <p className="text-sm text-slate-500">{emptyText}</p> : <div className="space-y-1">{children}</div>}
     </div>
   );
 }
 
-function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-gray-900' }) {
+function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate-900' }) {
   return (
     <div
       onClick={onClick}
       className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
     >
       <div>
-        <div className="text-sm text-gray-900">{title}</div>
-        {sub && <div className="text-xs text-gray-500">{sub}</div>}
+        <div className="text-sm text-slate-900">{title}</div>
+        {sub && <div className="text-xs text-slate-500">{sub}</div>}
       </div>
       <div className={`text-sm ${valueClassName}`}>{value}</div>
     </div>
@@ -289,9 +289,9 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-gray-
 
 function DueColumn({ title, rows, onRowClick, emptyText }) {
   return (
-    <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-3">
-      <div className="text-xs text-gray-500 mb-2">{title}</div>
-      {rows.length === 0 && <p className="text-sm text-gray-500">{emptyText}</p>}
+    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3">
+      <div className="text-xs text-slate-500 mb-2">{title}</div>
+      {rows.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
       <div className="space-y-1">
         {rows.map((r) => (
           <div
@@ -300,8 +300,8 @@ function DueColumn({ title, rows, onRowClick, emptyText }) {
             className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
           >
             <div>
-              <div className="text-sm text-gray-900">{r.name}</div>
-              <div className="text-xs text-gray-500">since {formatDate(r.oldestDate)}</div>
+              <div className="text-sm text-slate-900">{r.name}</div>
+              <div className="text-xs text-slate-500">since {formatDate(r.oldestDate)}</div>
             </div>
             <div className="text-sm text-due">{formatMoney(r.due)}</div>
           </div>

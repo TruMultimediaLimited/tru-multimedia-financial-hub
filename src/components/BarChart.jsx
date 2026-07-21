@@ -2,7 +2,7 @@
 // just two bars per category, not worth a charting library dependency
 // (CLAUDE.md: keep bundle small, no heavy component libraries).
 export default function BarChart({ data, xKey, series, height = 160 }) {
-  if (data.length === 0) return <p className="text-sm text-gray-500">No data for this range.</p>;
+  if (data.length === 0) return <p className="text-sm text-slate-500">No data for this range.</p>;
 
   const max = Math.max(1, ...data.flatMap((d) => series.map((s) => Number(d[s.key]) || 0)));
   const barGroupWidth = 100 / data.length;
@@ -30,14 +30,14 @@ export default function BarChart({ data, xKey, series, height = 160 }) {
           </g>
         ))}
       </svg>
-      <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+      <div className="flex justify-between text-[10px] text-slate-500 mt-1">
         {data.map((d) => (
           <span key={d[xKey]}>{d[xKey]}</span>
         ))}
       </div>
       <div className="flex gap-3 mt-2">
         {series.map((s) => (
-          <div key={s.key} className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div key={s.key} className="flex items-center gap-1.5 text-xs text-slate-500">
             <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: s.color }} />
             {s.label}
           </div>

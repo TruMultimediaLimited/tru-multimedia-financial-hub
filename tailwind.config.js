@@ -5,10 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        income: '#22c55e',
-        expense: '#ef4444',
+        primary: '#2563EB',
+        primaryHover: '#1D4ED8',
+        income: '#16A34A',
+        expense: '#DC2626',
         due: '#f59e0b',
-        surface: '#f5f4f0',
+        info: '#0EA5E9',
+        surface: '#F8FAFC',
         surfaceRaised: '#ffffff',
       },
     },

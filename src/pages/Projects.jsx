@@ -106,21 +106,21 @@ export default function Projects() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900 mb-0.5">Projects</h1>
-      <p className="text-xs text-gray-500 mb-4">Browse by client</p>
+      <h1 className="text-lg font-semibold text-slate-900 mb-0.5">Projects</h1>
+      <p className="text-xs text-slate-500 mb-4">Browse by client</p>
 
       <div className="grid grid-cols-2 gap-2 mb-4">
         {stats.map((s) => (
-          <div key={s.key} className="bg-surfaceRaised border border-gray-200 rounded-lg px-3 py-2">
-            <div className="text-base font-semibold text-gray-900 leading-tight">{s.value}</div>
-            <div className="text-xs text-gray-500">{s.label}</div>
+          <div key={s.key} className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm px-3 py-2">
+            <div className="text-base font-semibold text-slate-900 leading-tight">{s.value}</div>
+            <div className="text-xs text-slate-500">{s.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 space-y-2.5 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 space-y-2.5 mb-4">
         <div>
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1">Client</span>
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Client</span>
           <SearchSelect
             value={search}
             onChange={setSearch}
@@ -131,11 +131,11 @@ export default function Projects() {
 
         <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1">Project status</span>
+            <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Project status</span>
             <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
           </div>
           <div>
-            <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1">Payment status</span>
+            <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Payment status</span>
             <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
           </div>
         </div>
@@ -144,10 +144,10 @@ export default function Projects() {
       {error && (
         <div className="bg-expense/10 border border-expense/20 text-expense text-sm rounded-lg px-3 py-2 mb-3">{error}</div>
       )}
-      {loading && <p className="text-sm text-gray-500 text-center py-6">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500 text-center py-6">Loading…</p>}
 
       {!loading && clientRows.length === 0 && noClientCount === 0 && (
-        <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm">
+        <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center text-slate-500 text-sm">
           No clients match these filters.
         </div>
       )}
@@ -157,21 +157,21 @@ export default function Projects() {
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-gray-300 hover:bg-surface flex items-center gap-3"
+            className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3"
           >
             <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
               {initials(c.name)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-gray-900 font-medium truncate">{c.name}</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-slate-900 font-medium truncate">{c.name}</div>
+              <div className="text-xs text-slate-500">
                 {c.count} project{c.count !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
         ))}
         {noClientCount > 0 && (
-          <div className="border border-dashed border-gray-300 rounded-lg p-3 text-xs text-gray-500 text-center">
+          <div className="border border-dashed border-slate-300 rounded-lg p-3 text-xs text-slate-500 text-center">
             {noClientCount} project{noClientCount !== 1 ? 's' : ''} with no client attached.
           </div>
         )}

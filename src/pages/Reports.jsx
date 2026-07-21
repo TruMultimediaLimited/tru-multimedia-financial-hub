@@ -91,7 +91,7 @@ export default function Reports() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900 mb-4">Reports</h1>
+      <h1 className="text-lg font-semibold text-slate-900 mb-4">Reports</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
         <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>
@@ -115,7 +115,7 @@ export default function Reports() {
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && (
         <>
@@ -129,14 +129,14 @@ export default function Reports() {
               data={incomeExpense.byMonth}
               xKey="month"
               series={[
-                { key: 'income', label: 'Income', color: '#22c55e' },
-                { key: 'expense', label: 'Expense', color: '#ef4444' },
+                { key: 'income', label: 'Income', color: '#16A34A' },
+                { key: 'expense', label: 'Expense', color: '#DC2626' },
               ]}
             />
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-200">
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
                     <th className="py-2 pr-3 font-normal">Category</th>
                     <th className="py-2 pr-3 font-normal text-right">Income</th>
                     <th className="py-2 pr-3 font-normal text-right">Expense</th>
@@ -144,8 +144,8 @@ export default function Reports() {
                 </thead>
                 <tbody>
                   {incomeExpense.byCategory.map((c) => (
-                    <tr key={c.category} className="border-b border-gray-200/60">
-                      <td className="py-2 pr-3 text-gray-900">{c.category}</td>
+                    <tr key={c.category} className="border-b border-slate-200/60">
+                      <td className="py-2 pr-3 text-slate-900">{c.category}</td>
                       <td className="py-2 pr-3 text-right text-income">{c.income > 0 ? formatMoney(c.income) : '—'}</td>
                       <td className="py-2 pr-3 text-right text-expense">{c.expense > 0 ? formatMoney(c.expense) : '—'}</td>
                     </tr>
@@ -162,7 +162,7 @@ export default function Reports() {
                 <button
                   key={p}
                   onClick={() => setPlPeriod(p)}
-                  className={`px-2.5 py-1 rounded-md text-xs capitalize ${plPeriod === p ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'}`}
+                  className={`px-2.5 py-1 rounded-md text-xs capitalize ${plPeriod === p ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
                 >
                   {p}ly
                 </button>
@@ -171,7 +171,7 @@ export default function Reports() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-200">
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
                     <th className="py-2 pr-3 font-normal">Period</th>
                     <th className="py-2 pr-3 font-normal text-right">Income</th>
                     <th className="py-2 pr-3 font-normal text-right">Expense</th>
@@ -180,16 +180,16 @@ export default function Reports() {
                 </thead>
                 <tbody>
                   {plRows.map((r) => (
-                    <tr key={r.period} className="border-b border-gray-200/60">
-                      <td className="py-2 pr-3 text-gray-900">{r.period}</td>
-                      <td className="py-2 pr-3 text-right text-gray-700">{formatMoney(r.income)}</td>
-                      <td className="py-2 pr-3 text-right text-gray-700">{formatMoney(r.expense)}</td>
+                    <tr key={r.period} className="border-b border-slate-200/60">
+                      <td className="py-2 pr-3 text-slate-900">{r.period}</td>
+                      <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(r.income)}</td>
+                      <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(r.expense)}</td>
                       <td className={`py-2 pr-3 text-right ${r.netPl >= 0 ? 'text-income' : 'text-expense'}`}>{formatMoney(r.netPl)}</td>
                     </tr>
                   ))}
                   {plRows.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-3 text-center text-gray-500">
+                      <td colSpan={4} className="py-3 text-center text-slate-500">
                         No transactions in this range.
                       </td>
                     </tr>
@@ -206,17 +206,17 @@ export default function Reports() {
               <div className="flex gap-1">
                 <button
                   onClick={() => setDueSort('amount')}
-                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'amount' ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'}`}
+                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'amount' ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
                 >
                   By amount
                 </button>
                 <button
                   onClick={() => setDueSort('age')}
-                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'age' ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'}`}
+                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'age' ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
                 >
                   By age
                 </button>
-                <button onClick={exportDueCsv} className="px-2 py-1 rounded-md text-xs border border-gray-300 text-gray-700">
+                <button onClick={exportDueCsv} className="px-2 py-1 rounded-md text-xs border border-slate-300 text-slate-700">
                   Export CSV
                 </button>
               </div>
@@ -231,12 +231,12 @@ export default function Reports() {
           {/* Payment channel report */}
           <Section title="Payment channel report">
             {channels.length === 0 ? (
-              <p className="text-sm text-gray-500">No payments in this range.</p>
+              <p className="text-sm text-slate-500">No payments in this range.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-500 border-b border-gray-200">
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
                       <th className="py-2 pr-3 font-normal">Channel</th>
                       <th className="py-2 pr-3 font-normal">Handled by</th>
                       <th className="py-2 pr-3 font-normal text-right">Total</th>
@@ -244,10 +244,10 @@ export default function Reports() {
                   </thead>
                   <tbody>
                     {channels.map((row) => (
-                      <tr key={`${row.channel}|${row.handler}`} className="border-b border-gray-200/60">
-                        <td className="py-2 pr-3 text-gray-700">{CHANNEL_LABELS[row.channel] ?? row.channel}</td>
-                        <td className="py-2 pr-3 text-gray-700">{row.handler}</td>
-                        <td className="py-2 pr-3 text-right text-gray-900">{formatMoney(row.total)}</td>
+                      <tr key={`${row.channel}|${row.handler}`} className="border-b border-slate-200/60">
+                        <td className="py-2 pr-3 text-slate-700">{CHANNEL_LABELS[row.channel] ?? row.channel}</td>
+                        <td className="py-2 pr-3 text-slate-700">{row.handler}</td>
+                        <td className="py-2 pr-3 text-right text-slate-900">{formatMoney(row.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -259,12 +259,12 @@ export default function Reports() {
           {/* Employee cost report */}
           <Section title="Employee cost report">
             {employeeCosts.length === 0 ? (
-              <p className="text-sm text-gray-500">No employee expenses in this range.</p>
+              <p className="text-sm text-slate-500">No employee expenses in this range.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-500 border-b border-gray-200">
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
                       <th className="py-2 pr-3 font-normal">Employee</th>
                       <th className="py-2 pr-3 font-normal">Role</th>
                       <th className="py-2 pr-3 font-normal text-right">Total paid</th>
@@ -275,11 +275,11 @@ export default function Reports() {
                       <tr
                         key={r.employeeId}
                         onClick={() => navigate(`/employees/${r.employeeId}`)}
-                        className="border-b border-gray-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                        className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
                       >
-                        <td className="py-2 pr-3 text-gray-900">{r.name}</td>
-                        <td className="py-2 pr-3 text-gray-500">{r.role || '—'}</td>
-                        <td className="py-2 pr-3 text-right text-gray-900">{formatMoney(r.total)}</td>
+                        <td className="py-2 pr-3 text-slate-900">{r.name}</td>
+                        <td className="py-2 pr-3 text-slate-500">{r.role || '—'}</td>
+                        <td className="py-2 pr-3 text-right text-slate-900">{formatMoney(r.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -297,7 +297,7 @@ function Section({ title, action, children }) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium text-gray-700">{title}</h2>
+        <h2 className="text-sm font-medium text-slate-700">{title}</h2>
         {action}
       </div>
       {children}
@@ -307,9 +307,9 @@ function Section({ title, action, children }) {
 
 function DueList({ title, rows, onRowClick }) {
   return (
-    <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-3">
-      <div className="text-xs text-gray-500 mb-2">{title}</div>
-      {rows.length === 0 && <p className="text-sm text-gray-500">None.</p>}
+    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3">
+      <div className="text-xs text-slate-500 mb-2">{title}</div>
+      {rows.length === 0 && <p className="text-sm text-slate-500">None.</p>}
       <div className="space-y-1">
         {rows.map((r) => (
           <div
@@ -317,7 +317,7 @@ function DueList({ title, rows, onRowClick }) {
             onClick={() => onRowClick(r.id)}
             className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
           >
-            <span className="text-sm text-gray-900">{r.name}</span>
+            <span className="text-sm text-slate-900">{r.name}</span>
             <span className="text-sm text-due">{formatMoney(r.due)}</span>
           </div>
         ))}

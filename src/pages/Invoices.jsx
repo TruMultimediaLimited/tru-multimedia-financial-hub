@@ -28,17 +28,17 @@ export default function Invoices() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-900">Invoices</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
+        <h1 className="text-lg font-semibold text-slate-900">Invoices</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover">
           + New invoice
         </button>
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && invoices.length === 0 && (
-        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">No invoices yet.</div>
+        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">No invoices yet.</div>
       )}
 
       {!loading && invoices.length > 0 && (
@@ -47,17 +47,17 @@ export default function Invoices() {
             <div
               key={inv.id}
               onClick={() => navigate(`/invoices/${inv.id}`)}
-              className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
             >
               <div>
-                <div className="text-sm text-gray-900">{inv.invoice_number}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm text-slate-900">{inv.invoice_number}</div>
+                <div className="text-xs text-slate-500">
                   {inv.clients?.name} · {formatDate(inv.issued_date)}
                   {inv.due_date && ` · due ${formatDate(inv.due_date)}`}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-900">{formatMoney(inv.amount)}</div>
+                <div className="text-sm text-slate-900">{formatMoney(inv.amount)}</div>
                 <Badge className={STATUS_STYLES[inv.status]}>{STATUS_LABELS[inv.status]}</Badge>
               </div>
             </div>
