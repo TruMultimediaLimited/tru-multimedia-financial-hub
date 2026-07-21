@@ -146,7 +146,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="h-11 px-4 flex items-center gap-1.5 rounded-xl text-sm font-medium bg-income text-white hover:bg-income/90 active:scale-[0.98] transition-all"
+              className="h-11 px-5 flex items-center gap-1.5 rounded-full text-sm font-medium bg-income text-white hover:bg-income/90 active:scale-[0.98] transition-all"
             >
               <Plus className="w-4 h-4" />
               Add Income
@@ -155,7 +155,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="h-11 px-4 flex items-center gap-1.5 rounded-xl text-sm font-medium bg-expense text-white hover:bg-expense/90 active:scale-[0.98] transition-all"
+              className="h-11 px-5 flex items-center gap-1.5 rounded-full text-sm font-medium bg-expense text-white hover:bg-expense/90 active:scale-[0.98] transition-all"
             >
               <Plus className="w-4 h-4" />
               Add Expense
@@ -171,12 +171,12 @@ export default function Ledger({ fixedType = null }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search transactions..."
-            className="w-full h-11 bg-white border border-slate-200 rounded-xl pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full h-11 bg-white border border-slate-200 rounded-full pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
         </div>
         <button
           onClick={() => setFiltersOpen(true)}
-          className="relative w-11 h-11 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:border-slate-300 transition-colors"
+          className="relative w-11 h-11 shrink-0 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:border-slate-300 transition-colors"
           aria-label="Filters"
         >
           <Filter className="w-4 h-4" />
@@ -329,7 +329,7 @@ function TransactionCard({ t, onClick, isExpense }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-[18px] shadow-card p-4 cursor-pointer active:scale-[0.98] transition-transform"
+      className="bg-white rounded-[24px] shadow-card p-4 cursor-pointer active:scale-[0.98] transition-transform"
     >
       <div className="flex items-start gap-3">
         <span

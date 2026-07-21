@@ -12,7 +12,7 @@ export default function EmptyState({ icon: Icon, message, subtitle, action, larg
       {action && (
         <button
           onClick={action.onClick}
-          className={`mt-4 h-11 px-5 rounded-xl text-sm font-medium transition-colors ${
+          className={`mt-4 h-11 px-5 rounded-full text-sm font-medium transition-colors ${
             action.className ?? 'bg-primary text-white hover:bg-primaryHover'
           }`}
         >
