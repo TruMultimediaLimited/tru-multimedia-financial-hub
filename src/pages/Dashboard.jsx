@@ -8,8 +8,7 @@ import { fetchConcernPL, fetchDueSummary, fetchChannelBreakdown, fetchTotalProje
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { concerns, selectedConcernId, setSelectedConcernId } = useConcern();
-  const realConcerns = concerns;
+  const { selectedConcernId } = useConcern();
 
   const [pl, setPl] = useState({ totalIncome: 0, totalExpense: 0, netPl: 0 });
   const [totalProjectValue, setTotalProjectValue] = useState(0);
@@ -62,18 +61,6 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="text-lg font-semibold text-gray-100 mb-4">Dashboard</h1>
-
-      <div className="flex flex-wrap gap-2 mb-5">
-        <ConcernChip active={!selectedConcernId} label="সকল (Consolidated)" onClick={() => setSelectedConcernId(null)} />
-        {realConcerns.map((c) => (
-          <ConcernChip
-            key={c.id}
-            active={selectedConcernId === c.id}
-            label={c.name}
-            onClick={() => setSelectedConcernId(c.id)}
-          />
-        ))}
-      </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
@@ -165,19 +152,6 @@ export default function Dashboard() {
         </>
       )}
     </div>
-  );
-}
-
-function ConcernChip({ active, label, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs border ${
-        active ? 'bg-gray-100 text-gray-900 border-gray-100' : 'border-gray-700 text-gray-400'
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
