@@ -59,7 +59,7 @@ export default function LedgerDetail() {
     if (!window.confirm('Delete this transaction? Its payments will be deleted too.')) return;
     try {
       await deleteTransaction(id);
-      navigate('/ledger');
+      navigate(-1);
     } catch (e) {
       setError(e.message);
     }
@@ -74,8 +74,8 @@ export default function LedgerDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/ledger')} className="text-xs text-gray-500 mb-3">
-        ← Back to Ledger
+      <button onClick={() => navigate(-1)} className="text-xs text-gray-500 mb-3">
+        ← Back
       </button>
 
       <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">

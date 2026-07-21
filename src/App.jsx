@@ -41,7 +41,8 @@ export default function App() {
           <Route element={<AppShell userEmail={userEmail} onSignOut={() => supabase.auth.signOut()} />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/ledger" element={<Ledger />} />
+            <Route path="/income" element={<Ledger fixedType="income" />} />
+            <Route path="/expense" element={<Ledger fixedType="expense" />} />
             <Route path="/ledger/:id" element={<LedgerDetail />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
