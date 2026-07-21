@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Inbox } from 'lucide-react';
+import { Inbox, Filter } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import Sheet from '../components/Sheet.jsx';
+import Dropdown from '../components/Dropdown.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
@@ -12,8 +14,7 @@ import TransactionForm from './ledger/TransactionForm.jsx';
 
 export default function Ledger({ fixedType = null }) {
   const navigate = useNavigate();
-  const { selectedConcernId, concerns } = useConcern();
-  const realConcerns = concerns;
+  const { selectedConcernId } = useConcern();
 
   const [concernFilter, setConcernFilter] = useState(selectedConcernId ?? '');
   const [projectFilter, setProjectFilter] = useState('');
@@ -21,6 +22,7 @@ export default function Ledger({ fixedType = null }) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [typeTab, setTypeTab] = useState('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -90,7 +92,24 @@ export default function Ledger({ fixedType = null }) {
     setReloadKey((k) => k + 1);
   }
 
+  function clearSecondaryFilters() {
+    setHandledByFilter('');
+    setDateFrom('');
+    setDateTo('');
+  }
+
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
+  const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
+  const activeSecondaryFilters = [handledByFilter, dateFrom, dateTo].filter(Boolean).length;
+  const projectOptions = [
+    { value: '', label: 'All projects' },
+    ...projects.map((p) => ({ value: p.id, label: p.title })),
+  ];
+  const handledByOptions = [
+    { value: '', label: 'Anyone' },
+    ...(currentUser ? [{ value: 'self', label: 'Myself' }] : []),
+    ...employees.map((emp) => ({ value: `employee:${emp.id}`, label: emp.name })),
+  ];
 
   return (
     <div>
@@ -132,51 +151,22 @@ export default function Ledger({ fixedType = null }) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        <select className={inputClass} value={concernFilter} onChange={(e) => setConcernFilter(e.target.value)}>
-          <option value="">All concerns</option>
-          {realConcerns.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
-        <select className={inputClass} value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
-          <option value="">All projects</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
-            </option>
-          ))}
-        </select>
-
-        <select className={inputClass} value={handledByFilter} onChange={(e) => setHandledByFilter(e.target.value)}>
-          <option value="">Anyone (handled by)</option>
-          {currentUser && <option value="self">Myself</option>}
-          {employees.map((emp) => (
-            <option key={emp.id} value={`employee:${emp.id}`}>
-              {emp.name}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex gap-2">
-          <input
-            type="date"
-            className={inputClass}
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            aria-label="From date"
-          />
-          <input
-            type="date"
-            className={inputClass}
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            aria-label="To date"
-          />
+      <div className="flex gap-2 mb-4">
+        <div className="flex-1 min-w-0">
+          <Dropdown value={projectFilter} onChange={setProjectFilter} options={projectOptions} />
         </div>
+        <button
+          onClick={() => setFiltersOpen(true)}
+          className="relative w-11 h-11 shrink-0 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:border-slate-300 transition-colors"
+          aria-label="Filters"
+        >
+          <Filter className="w-4 h-4" />
+          {activeSecondaryFilters > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-white text-[10px] leading-4 flex items-center justify-center">
+              {activeSecondaryFilters}
+            </span>
+          )}
+        </button>
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
@@ -220,6 +210,48 @@ export default function Ledger({ fixedType = null }) {
           </div>
         </>
       )}
+
+      <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
+        <div className="space-y-4">
+          <div>
+            <span className="block text-xs font-medium text-slate-500 mb-1.5">{handledByLabel}</span>
+            <Dropdown value={handledByFilter} onChange={setHandledByFilter} options={handledByOptions} />
+          </div>
+          <div>
+            <span className="block text-xs font-medium text-slate-500 mb-1.5">Date Range</span>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                className={inputClass}
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                aria-label="From date"
+              />
+              <input
+                type="date"
+                className={inputClass}
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                aria-label="To date"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={clearSecondaryFilters}
+              className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-surface transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setFiltersOpen(false)}
+              className="flex-1 h-11 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primaryHover transition-colors"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </Sheet>
 
       <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={refresh} defaultType={formType} fixedType={fixedType} />
     </div>
