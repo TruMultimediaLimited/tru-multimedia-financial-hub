@@ -399,8 +399,14 @@ left join payments p on p.transaction_id = t.id
 group by t.id, t.concern_id, t.type, t.total_amount;
 
 -- Per-project rollup: received vs. contract value, expenses, due, profit.
--- Profit is cash-basis (received - expense paid), not accrual — matches
--- how every other due/paid figure in this app is computed.
+-- Contract value is the ceiling on what a project can ever earn — the app
+-- blocks income transactions on a project from summing past it. So "due"
+-- is contract_value minus what's actually been received (not the sum of
+-- individual transaction dues, which would understate due if the full
+-- contract hasn't been invoiced as transactions yet), and profit is
+-- contract_value minus expense paid — accrual against the committed deal
+-- value, not cash-basis, since income/expense on a project routinely
+-- settle months apart but the contract value itself doesn't change.
 create or replace view project_balances as
 select
   pr.id as project_id,
@@ -408,10 +414,12 @@ select
   pr.concern_id,
   pr.contract_value,
   coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0) as total_received,
-  coalesce(sum(case when t.type = 'income' then tb.due_amount else 0 end), 0) as total_due,
+  greatest(
+    pr.contract_value - coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0),
+    0
+  ) as total_due,
   coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid,
-  coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0)
-    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
+  pr.contract_value - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
 from projects pr
 left join transactions t on t.project_id = pr.id
 left join transaction_balances tb on tb.transaction_id = t.id

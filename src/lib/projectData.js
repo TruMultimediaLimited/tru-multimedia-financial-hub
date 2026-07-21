@@ -71,6 +71,21 @@ export async function deleteProject(id) {
   if (error) throw friendlyDeleteError(error);
 }
 
+// Once a project's total received reaches its contract value, it's
+// finished — flip it to completed automatically instead of relying on the
+// owner to remember to do it by hand. No-op for projects without a
+// contract value set (nothing to reach).
+export async function syncProjectCompletion(projectId) {
+  if (!projectId) return;
+  const { data, error } = await supabase.from('project_balances').select('project_id, contract_value, total_received');
+  if (error) throw error;
+  const balance = (data ?? []).find((b) => b.project_id === projectId);
+  if (!balance) return;
+  if (Number(balance.contract_value) > 0 && Number(balance.total_received) >= Number(balance.contract_value)) {
+    await supabase.from('projects').update({ status: 'completed' }).eq('id', projectId);
+  }
+}
+
 export async function fetchProjectsForClient(clientId) {
   const { data, error } = await supabase.from('projects').select('id, title').eq('client_id', clientId).order('title');
   if (error) throw error;

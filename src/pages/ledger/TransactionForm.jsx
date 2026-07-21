@@ -8,9 +8,11 @@ import {
   fetchClients,
   fetchProjects,
   fetchEmployees,
+  fetchProjectIncomeTotal,
   createClient,
 } from '../../lib/ledgerData.js';
 import { createEmployee } from '../../lib/employeeData.js';
+import { formatMoney } from '../../lib/format.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -142,6 +144,21 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     if (type === 'income' && !clientId) return setError('Client is required.');
     const amount = Number(totalAmount);
     if (!(amount > 0)) return setError('Total amount must be greater than 0.');
+
+    if (type === 'income' && projectId) {
+      const project = projects.find((p) => p.id === projectId);
+      if (project && Number(project.contract_value) > 0) {
+        try {
+          const existing = await fetchProjectIncomeTotal(projectId, transaction?.id ?? null);
+          const remaining = Number(project.contract_value) - existing;
+          if (amount > remaining) {
+            return setError(`Amount exceeds this project's remaining value (${formatMoney(Math.max(remaining, 0))}).`);
+          }
+        } catch (e) {
+          return setError(e.message);
+        }
+      }
+    }
 
     const payload = {
       concern_id: concernId,
