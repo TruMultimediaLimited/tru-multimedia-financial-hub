@@ -4,7 +4,7 @@ import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
-import { fetchConcernPL, fetchDueSummary, fetchChannelBreakdown } from '../lib/dashboardData.js';
+import { fetchConcernPL, fetchDueSummary, fetchChannelBreakdown, fetchTotalProjectValue } from '../lib/dashboardData.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const realConcerns = concerns;
 
   const [pl, setPl] = useState({ totalIncome: 0, totalExpense: 0, netPl: 0 });
+  const [totalProjectValue, setTotalProjectValue] = useState(0);
   const [dueSummary, setDueSummary] = useState({ receivables: [], payables: [] });
   const [channels, setChannels] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -32,12 +33,14 @@ export default function Dashboard() {
       fetchConcernPL(selectedConcernId || null),
       fetchDueSummary(selectedConcernId || null),
       fetchChannelBreakdown({ concernId: selectedConcernId || null, currentUserId: currentUser?.id ?? null }),
+      fetchTotalProjectValue(selectedConcernId || null),
     ])
-      .then(([plResult, dueResult, channelResult]) => {
+      .then(([plResult, dueResult, channelResult, projectValueResult]) => {
         if (cancelled) return;
         setPl(plResult);
         setDueSummary(dueResult);
         setChannels(channelResult);
+        setTotalProjectValue(projectValueResult);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -77,16 +80,23 @@ export default function Dashboard() {
 
       {!loading && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <SummaryCard
-              label="Total Income"
-              sub="Received + Due"
-              value={formatMoney(pl.totalIncome)}
+              label="Total Project Value"
+              sub="Contract value, all projects"
+              value={formatMoney(totalProjectValue)}
+              accent="text-gray-100"
+            />
+            <SummaryCard
+              label="Total Payment Received"
+              sub="Any source — project, studio rent, edit…"
+              value={formatMoney(pl.totalIncome - totalReceivable)}
               accent="text-income"
-              footnote={totalReceivable > 0 ? `${formatMoney(totalReceivable)} due` : null}
+              footnote={totalReceivable > 0 ? `${formatMoney(totalReceivable)} still due` : null}
             />
             <SummaryCard
               label="Total Expense"
+              sub="Rent, salary, equipment, bills…"
               value={formatMoney(pl.totalExpense)}
               accent="text-expense"
               footnote={totalPayable > 0 ? `${formatMoney(totalPayable)} due` : null}

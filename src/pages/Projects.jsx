@@ -13,12 +13,28 @@ const STATUS_BADGE = {
   stalled: 'bg-due/15 text-due border-due/30',
 };
 
+// Payment-progress bucket — separate from the project's own active/
+// completed/stalled status field, this is purely about how much of the
+// contract value has actually been collected.
+function paymentBucket(p) {
+  if (p.totalReceived <= 0) return 'due';
+  if (p.totalDue <= 0) return 'complete';
+  return 'partial';
+}
+
+const BUCKETS = [
+  { key: 'due', label: 'Due' },
+  { key: 'partial', label: 'Partial' },
+  { key: 'complete', label: 'Complete' },
+];
+
 export default function Projects() {
   const navigate = useNavigate();
   const { concerns } = useConcern();
   const realConcerns = concerns;
 
   const [concernFilter, setConcernFilter] = useState('');
+  const [bucketFilter, setBucketFilter] = useState('due');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,15 +71,34 @@ export default function Projects() {
         ))}
       </select>
 
+      <div className="flex gap-1 mb-4">
+        {BUCKETS.map((b) => {
+          const count = projects.filter((p) => paymentBucket(p) === b.key).length;
+          return (
+            <button
+              key={b.key}
+              onClick={() => setBucketFilter(b.key)}
+              className={`px-3 py-1.5 rounded-md text-xs ${
+                bucketFilter === b.key ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'
+              }`}
+            >
+              {b.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
-      {!loading && projects.length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">No projects yet.</div>
+      {!loading && projects.filter((p) => paymentBucket(p) === bucketFilter).length === 0 && (
+        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">
+          No {BUCKETS.find((b) => b.key === bucketFilter)?.label.toLowerCase()} projects.
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {projects.map((p) => {
+        {projects.filter((p) => paymentBucket(p) === bucketFilter).map((p) => {
           const progress = p.contract_value > 0 ? Math.min(100, (p.totalReceived / p.contract_value) * 100) : 0;
           return (
             <div
