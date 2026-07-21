@@ -4,7 +4,7 @@ const PROJECT_SELECT = 'id, concern_id, client_id, title, contract_value, status
 
 function friendlyDeleteError(error) {
   if (error.message?.includes('foreign key') || error.code === '23503') {
-    return new Error('Cannot delete: this project still has linked transactions or work logs. Remove those first.');
+    return new Error('Cannot delete: this project still has linked transactions. Remove those first.');
   }
   return error;
 }
@@ -59,16 +59,6 @@ export async function updateProject(id, payload) {
 export async function deleteProject(id) {
   const { error } = await supabase.from('projects').delete().eq('id', id);
   if (error) throw friendlyDeleteError(error);
-}
-
-export async function fetchWorkLogsForProject(projectId) {
-  const { data, error } = await supabase
-    .from('work_logs')
-    .select('id, task_description, amount, work_date, paid, employees(id, name)')
-    .eq('project_id', projectId)
-    .order('work_date', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
 }
 
 export async function fetchProjectsForClient(clientId) {

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
-import { fetchProject, deleteProject, fetchWorkLogsForProject } from '../lib/projectData.js';
+import { fetchProject, deleteProject } from '../lib/projectData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
 
 const STATUS_BADGE = {
@@ -18,8 +18,6 @@ export default function ProjectDetail() {
 
   const [project, setProject] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [workLogs, setWorkLogs] = useState([]);
-  const [tab, setTab] = useState('transactions');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
@@ -28,12 +26,11 @@ export default function ProjectDetail() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchProject(id), fetchTransactions({ projectId: id }), fetchWorkLogsForProject(id)])
-      .then(([p, txns, logs]) => {
+    Promise.all([fetchProject(id), fetchTransactions({ projectId: id })])
+      .then(([p, txns]) => {
         if (cancelled) return;
         setProject(p);
         setTransactions(txns);
-        setWorkLogs(logs);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -109,69 +106,31 @@ export default function ProjectDetail() {
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
-      <div className="flex gap-1 mb-3">
-        <button
-          onClick={() => setTab('transactions')}
-          className={`px-3 py-1.5 rounded-md text-xs ${tab === 'transactions' ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'}`}
-        >
-          Transactions
-        </button>
-        <button
-          onClick={() => setTab('worklog')}
-          className={`px-3 py-1.5 rounded-md text-xs ${tab === 'worklog' ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'}`}
-        >
-          Work Log
-        </button>
-      </div>
-
-      {tab === 'transactions' && (
-        <div className="space-y-2">
-          {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions linked yet.</p>}
-          {transactions.map((t) => {
-            const { status } = computeBalances(t);
-            return (
-              <div
-                key={t.id}
-                onClick={() => navigate(`/ledger/${t.id}`)}
-                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
-              >
-                <div>
-                  <div className="text-sm text-gray-100">{t.category || 'Uncategorized'}</div>
-                  <div className="text-xs text-gray-500">
-                    {t.type === 'income' ? t.clients?.name : t.vendors?.name} · {formatDate(t.transaction_date)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-sm ${t.type === 'income' ? 'text-income' : 'text-expense'}`}>{formatMoney(t.total_amount)}</div>
-                  <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {tab === 'worklog' && (
-        <div className="space-y-2">
-          {workLogs.length === 0 && <p className="text-sm text-gray-500">No work logged yet.</p>}
-          {workLogs.map((log) => (
-            <div key={log.id} className="flex items-center justify-between border border-gray-800 rounded-lg p-3">
+      <h2 className="text-sm font-medium text-gray-300 mb-2">Transactions</h2>
+      <div className="space-y-2">
+        {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions linked yet.</p>}
+        {transactions.map((t) => {
+          const { status } = computeBalances(t);
+          return (
+            <div
+              key={t.id}
+              onClick={() => navigate(`/ledger/${t.id}`)}
+              className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+            >
               <div>
-                <div className="text-sm text-gray-100">{log.task_description}</div>
+                <div className="text-sm text-gray-100">{t.category || 'Uncategorized'}</div>
                 <div className="text-xs text-gray-500">
-                  {log.employees?.name ?? 'Unassigned'} · {formatDate(log.work_date)}
+                  {t.type === 'income' ? t.clients?.name : t.employees?.name ?? t.vendors?.name ?? 'General'} · {formatDate(t.transaction_date)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-100">{formatMoney(log.amount)}</div>
-                <Badge className={log.paid ? 'bg-income/15 text-income border-income/30' : 'bg-due/15 text-due border-due/30'}>
-                  {log.paid ? 'Paid' : 'Unpaid'}
-                </Badge>
+                <div className={`text-sm ${t.type === 'income' ? 'text-income' : 'text-expense'}`}>{formatMoney(t.total_amount)}</div>
+                <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       <ProjectForm open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} project={project} />
     </div>

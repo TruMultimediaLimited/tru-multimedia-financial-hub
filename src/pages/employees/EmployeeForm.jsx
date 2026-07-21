@@ -20,41 +20,29 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
   const { concerns } = useConcern();
   const parentConcern = concerns.find((c) => c.parent_concern_id === null);
 
-  const [concernId, setConcernId] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
-  const [type, setType] = useState('fixed');
-  const [monthlySalary, setMonthlySalary] = useState('');
-  const [status, setStatus] = useState('active');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    setConcernId(employee?.concern_id ?? parentConcern?.id ?? '');
     setName(employee?.name ?? '');
     setRole(employee?.role ?? '');
-    setType(employee?.type ?? 'fixed');
-    setMonthlySalary(employee?.monthly_salary != null ? String(employee.monthly_salary) : '');
-    setStatus(employee?.status ?? 'active');
     setError('');
-  }, [open, employee, parentConcern]);
+  }, [open, employee]);
 
   if (!open) return null;
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!concernId) return setError('Concern is required.');
     if (!name.trim()) return setError('Name is required.');
 
     const payload = {
-      concern_id: concernId,
       name: name.trim(),
-      role: role.trim() || null,
-      type,
-      monthly_salary: monthlySalary ? Number(monthlySalary) : null,
-      status,
+      role: role || null,
     };
+    if (!employee) payload.concern_id = parentConcern?.id;
 
     setSaving(true);
     setError('');
@@ -73,17 +61,6 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
   return (
     <Sheet open={open} onClose={onClose} title={employee ? 'Edit employee' : 'New employee'}>
       <form onSubmit={handleSubmit}>
-        <Field label="Concern" required>
-          <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>
-            <option value="">Select concern</option>
-            {concerns.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-
         <Field label="Name" required>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
@@ -96,33 +73,6 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
                 {r}
               </option>
             ))}
-          </select>
-        </Field>
-
-        <Field label="Type" required>
-          <select className={inputClass} value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="fixed">Fixed</option>
-            <option value="remote">Remote</option>
-            <option value="project_based">Project-based</option>
-          </select>
-        </Field>
-
-        <Field label="Monthly salary" hint={type === 'project_based' ? 'Usually left blank — paid per project instead' : 'Optional'}>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            className={inputClass}
-            value={monthlySalary}
-            onChange={(e) => setMonthlySalary(e.target.value)}
-          />
-        </Field>
-
-        <Field label="Status" required>
-          <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="active">Active</option>
-            <option value="on_leave">On leave</option>
-            <option value="inactive">Inactive</option>
           </select>
         </Field>
 

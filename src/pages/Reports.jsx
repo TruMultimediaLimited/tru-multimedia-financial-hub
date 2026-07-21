@@ -10,8 +10,6 @@ import { fetchDueSummary } from '../lib/dashboardData.js';
 import { fetchChannelBreakdown } from '../lib/dashboardData.js';
 import { fetchIncomeExpenseReport, fetchPLByPeriod, fetchEmployeeCostReport, toCsv, downloadCsv } from '../lib/reportsData.js';
 
-const TYPE_LABELS = { fixed: 'Fixed', remote: 'Remote', project_based: 'Project-based' };
-
 export default function Reports() {
   const navigate = useNavigate();
   const { concerns } = useConcern();
@@ -261,15 +259,14 @@ export default function Reports() {
           {/* Employee cost report */}
           <Section title="Employee cost report">
             {employeeCosts.length === 0 ? (
-              <p className="text-sm text-gray-500">No paid work logs in this range.</p>
+              <p className="text-sm text-gray-500">No employee expenses in this range.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-gray-500 border-b border-gray-800">
                       <th className="py-2 pr-3 font-normal">Employee</th>
-                      <th className="py-2 pr-3 font-normal">Type</th>
-                      <th className="py-2 pr-3 font-normal">Concern</th>
+                      <th className="py-2 pr-3 font-normal">Role</th>
                       <th className="py-2 pr-3 font-normal text-right">Total paid</th>
                     </tr>
                   </thead>
@@ -281,8 +278,7 @@ export default function Reports() {
                         className="border-b border-gray-800/60 cursor-pointer hover:bg-surfaceRaised/60"
                       >
                         <td className="py-2 pr-3 text-gray-100">{r.name}</td>
-                        <td className="py-2 pr-3 text-gray-400">{TYPE_LABELS[r.type]}</td>
-                        <td className="py-2 pr-3 text-gray-400">{r.concernName}</td>
+                        <td className="py-2 pr-3 text-gray-400">{r.role || '—'}</td>
                         <td className="py-2 pr-3 text-right text-gray-100">{formatMoney(r.total)}</td>
                       </tr>
                     ))}

@@ -8,7 +8,6 @@ const AUDIT_TABLES = [
   'projects',
   'transactions',
   'payments',
-  'work_logs',
   'invoices',
 ];
 
