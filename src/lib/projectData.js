@@ -2,11 +2,17 @@ import { supabase } from './supabase.js';
 
 const PROJECT_SELECT = 'id, concern_id, client_id, title, contract_value, status, start_date, end_date, concerns(id, name), clients(id, name)';
 
+// Both transactions and invoices carry a project_id foreign key — name
+// the actual blocker instead of always blaming "transactions", which is
+// misleading when the real link is an invoice the UI doesn't show here.
 function friendlyDeleteError(error) {
-  if (error.message?.includes('foreign key') || error.code === '23503') {
-    return new Error('Cannot delete: this project still has linked transactions. Remove those first.');
-  }
-  return error;
+  if (!error.message?.includes('foreign key') && error.code !== '23503') return error;
+  const table = error.details?.match(/referenced from table "(\w+)"/)?.[1];
+  const reasons = {
+    invoices: 'this project still has a linked invoice. Remove or reassign that invoice first.',
+    transactions: 'this project still has linked transactions. Remove those first.',
+  };
+  return new Error(`Cannot delete: ${reasons[table] ?? 'this project still has linked records. Remove those first.'}`);
 }
 
 async function fetchBalancesMap() {

@@ -51,11 +51,19 @@ export async function updateClient(id, payload) {
   return data;
 }
 
+// Several tables can block deleting a client (transactions, projects,
+// invoices all carry a client_id foreign key) — name the actual blocker
+// instead of always blaming "transactions", which is misleading when
+// the real link is an invoice or project the UI doesn't show here.
 function friendlyDeleteError(error) {
-  if (error.message?.includes('foreign key') || error.code === '23503') {
-    return new Error('Cannot delete: this record still has linked transactions. Remove those first.');
-  }
-  return error;
+  if (!error.message?.includes('foreign key') && error.code !== '23503') return error;
+  const table = error.details?.match(/referenced from table "(\w+)"/)?.[1];
+  const reasons = {
+    invoices: 'this client still has a linked invoice. Remove or reassign that invoice first.',
+    projects: 'this client still has a linked project. Remove or reassign that project first.',
+    transactions: 'this client still has linked transactions. Remove those first.',
+  };
+  return new Error(`Cannot delete: ${reasons[table] ?? 'this client still has linked records. Remove those first.'}`);
 }
 
 export async function deleteClient(id) {
