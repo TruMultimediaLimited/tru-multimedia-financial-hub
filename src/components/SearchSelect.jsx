@@ -33,7 +33,7 @@ export default function SearchSelect({ value, onChange, options, placeholder }) 
       />
 
       {open && filtered.length > 0 && (
-        <div className="absolute z-20 mt-1 w-full bg-surfaceRaised border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-20 mt-1.5 w-full bg-surfaceRaised border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto py-1">
           {filtered.map((name) => (
             <button
               type="button"
