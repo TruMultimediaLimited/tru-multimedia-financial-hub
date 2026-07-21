@@ -12,6 +12,7 @@ const STATUS_TABS = [
 ];
 
 const PAYMENT_TABS = [
+  { key: 'all', label: 'All' },
   { key: 'complete', label: 'Paid' },
   { key: 'partial', label: 'Partial' },
   { key: 'due', label: 'Due' },
@@ -43,7 +44,7 @@ export default function Projects() {
   }, [selectedConcernId]);
 
   const matching = projects.filter(
-    (p) => (statusFilter === 'all' || p.status === statusFilter) && paymentBucket(p) === paymentFilter
+    (p) => (statusFilter === 'all' || p.status === statusFilter) && (paymentFilter === 'all' || paymentBucket(p) === paymentFilter)
   );
 
   const clientMap = new Map();
@@ -54,7 +55,11 @@ export default function Projects() {
     entry.count += 1;
     clientMap.set(p.clients.id, entry);
   }
-  let clientRows = [...clientMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  // Alphabetical list of every client matching the two dropdowns above —
+  // powers both the datalist (browse) and, once narrowed by typing, the
+  // visible cards below.
+  const matchedClients = [...clientMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  let clientRows = matchedClients;
   if (search.trim()) {
     const q = search.trim().toLowerCase();
     clientRows = clientRows.filter((c) => c.name.toLowerCase().includes(q));
@@ -66,46 +71,40 @@ export default function Projects() {
         <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
       </div>
 
-      <div className="flex gap-1 mb-4">
+      <select className={`${inputClass} mb-3`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
         {STATUS_TABS.map((t) => {
           const count = t.key === 'all' ? projects.length : projects.filter((p) => p.status === t.key).length;
           return (
-            <button
-              key={t.key}
-              onClick={() => setStatusFilter(t.key)}
-              className={`px-3 py-1.5 rounded-md text-xs ${
-                statusFilter === t.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
-              }`}
-            >
+            <option key={t.key} value={t.key}>
               {t.label} ({count})
-            </button>
+            </option>
           );
         })}
-      </div>
+      </select>
 
       <input
+        list="project-client-options"
         placeholder="Search clients"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className={`${inputClass} mb-4`}
+        className={`${inputClass} mb-3`}
       />
+      <datalist id="project-client-options">
+        {matchedClients.map((c) => (
+          <option key={c.id} value={c.name} />
+        ))}
+      </datalist>
 
-      <div className="flex gap-1 mb-4">
+      <select className={`${inputClass} mb-4`} value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
         {PAYMENT_TABS.map((t) => {
-          const count = projects.filter((p) => paymentBucket(p) === t.key).length;
+          const count = t.key === 'all' ? projects.length : projects.filter((p) => paymentBucket(p) === t.key).length;
           return (
-            <button
-              key={t.key}
-              onClick={() => setPaymentFilter(t.key)}
-              className={`px-3 py-1.5 rounded-md text-xs ${
-                paymentFilter === t.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
-              }`}
-            >
+            <option key={t.key} value={t.key}>
               {t.label} ({count})
-            </button>
+            </option>
           );
         })}
-      </div>
+      </select>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
