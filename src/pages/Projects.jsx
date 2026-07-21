@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
+import Icon from '../layout/Icon.jsx';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 
@@ -77,36 +78,47 @@ export default function Projects() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className="w-9 h-9 shrink-0 rounded-lg bg-gray-900 text-white flex items-center justify-center">
+          <Icon name="projects" className="w-4 h-4" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900 leading-tight">Projects</h1>
+          <p className="text-xs text-gray-500">Browse by client</p>
+        </div>
       </div>
 
-      <div className="mb-3">
-        <span className="block text-xs text-gray-500 mb-1">Project status</span>
-        <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+      <div className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5 space-y-3 mb-5">
+        <div>
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Project status</span>
+          <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+        </div>
+
+        <div>
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Client</span>
+          <SearchSelect
+            value={search}
+            onChange={setSearch}
+            options={matchedClients.map((c) => c.name)}
+            placeholder="Search clients"
+          />
+        </div>
+
+        <div>
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1.5">Payment status</span>
+          <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
+        </div>
       </div>
 
-      <div className="mb-3">
-        <span className="block text-xs text-gray-500 mb-1">Client</span>
-        <SearchSelect
-          value={search}
-          onChange={setSearch}
-          options={matchedClients.map((c) => c.name)}
-          placeholder="Search clients"
-        />
-      </div>
-
-      <div className="mb-4">
-        <span className="block text-xs text-gray-500 mb-1">Payment status</span>
-        <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
-      </div>
-
-      {error && <p className="text-sm text-expense mb-3">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {error && (
+        <div className="bg-expense/10 border border-expense/20 text-expense text-sm rounded-lg px-3 py-2 mb-3">{error}</div>
+      )}
+      {loading && <p className="text-sm text-gray-500 text-center py-6">Loading…</p>}
 
       {!loading && clientRows.length === 0 && noClientCount === 0 && (
-        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
-          No clients match these filters.
+        <div className="border border-dashed border-gray-300 rounded-xl p-10 text-center">
+          <Icon name="clients" className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+          <p className="text-sm text-gray-500">No clients match these filters.</p>
         </div>
       )}
 
@@ -115,16 +127,22 @@ export default function Projects() {
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surface flex items-center justify-between"
+            className="bg-surfaceRaised border border-gray-200 rounded-xl p-3.5 cursor-pointer hover:border-gray-300 hover:bg-surface flex items-center gap-3"
           >
-            <span className="text-gray-900 font-medium">{c.name}</span>
-            <span className="text-xs text-gray-500">
-              {c.count} project{c.count !== 1 ? 's' : ''}
-            </span>
+            <div className="w-10 h-10 shrink-0 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center">
+              <Icon name="clients" className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-gray-900 font-medium truncate">{c.name}</div>
+              <div className="text-xs text-gray-500">
+                {c.count} project{c.count !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <Icon name="chevron" className="w-4 h-4 text-gray-400 shrink-0" />
           </div>
         ))}
         {noClientCount > 0 && (
-          <div className="border border-dashed border-gray-300 rounded-lg p-3 text-xs text-gray-500">
+          <div className="border border-dashed border-gray-300 rounded-xl p-3 text-xs text-gray-500 text-center">
             {noClientCount} project{noClientCount !== 1 ? 's' : ''} with no client attached.
           </div>
         )}
