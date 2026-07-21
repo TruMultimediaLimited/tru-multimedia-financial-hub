@@ -123,9 +123,22 @@ export async function fetchProjects(concernId) {
   return data ?? [];
 }
 
+// Staff work across every concern day-to-day and are recorded under the
+// parent concern (Tru Multimedia Limited), so a filter for one specific
+// concern must still include parent-assigned employees, not just exact
+// concern_id matches.
+async function fetchParentConcernId() {
+  const { data } = await supabase.from('concerns').select('id').is('parent_concern_id', null).single();
+  return data?.id ?? null;
+}
+
 export async function fetchEmployees(concernId) {
   let query = supabase.from('employees').select('id, name, role').order('name');
-  if (concernId) query = query.eq('concern_id', concernId);
+  if (concernId) {
+    const parentId = await fetchParentConcernId();
+    const ids = parentId && parentId !== concernId ? [concernId, parentId] : [concernId];
+    query = query.in('concern_id', ids);
+  }
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];

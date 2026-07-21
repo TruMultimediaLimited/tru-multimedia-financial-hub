@@ -4,9 +4,21 @@ import Field, { inputClass } from '../../components/Field.jsx';
 import { useConcern } from '../../context/ConcernContext.jsx';
 import { createEmployee, updateEmployee } from '../../lib/employeeData.js';
 
+const ROLES = [
+  'Camera Operator',
+  'Photographer',
+  'Videographer',
+  'Editor',
+  'Graphic Designer',
+  'Sound Engineer',
+  'Assistant',
+  'Accountant',
+  'Office Staff',
+];
+
 export default function EmployeeForm({ open, onClose, onSaved, employee = null }) {
   const { concerns } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const parentConcern = concerns.find((c) => c.parent_concern_id === null);
 
   const [concernId, setConcernId] = useState('');
   const [name, setName] = useState('');
@@ -19,14 +31,14 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
 
   useEffect(() => {
     if (!open) return;
-    setConcernId(employee?.concern_id ?? '');
+    setConcernId(employee?.concern_id ?? parentConcern?.id ?? '');
     setName(employee?.name ?? '');
     setRole(employee?.role ?? '');
     setType(employee?.type ?? 'fixed');
     setMonthlySalary(employee?.monthly_salary != null ? String(employee.monthly_salary) : '');
     setStatus(employee?.status ?? 'active');
     setError('');
-  }, [open, employee]);
+  }, [open, employee, parentConcern]);
 
   if (!open) return null;
 
@@ -64,7 +76,7 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
         <Field label="Concern" required>
           <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>
             <option value="">Select concern</option>
-            {realConcerns.map((c) => (
+            {concerns.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -77,7 +89,14 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
         </Field>
 
         <Field label="Role">
-          <input className={inputClass} value={role} onChange={(e) => setRole(e.target.value)} />
+          <select className={inputClass} value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="">Select role</option>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Type" required>
