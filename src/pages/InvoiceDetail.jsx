@@ -53,7 +53,7 @@ export default function InvoiceDetail() {
         ← Back to Invoices
       </button>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-6 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-6 mb-4">
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-xs text-slate-500">Tru Multimedia Limited</div>
@@ -77,7 +77,7 @@ export default function InvoiceDetail() {
           </div>
         </div>
 
-        <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
+        <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
           <div className="text-xs text-slate-500 mb-1">For</div>
           <div className="text-slate-900 mb-3">{referenceLabel}</div>
           <div className="grid grid-cols-3 gap-3 text-sm">
@@ -105,13 +105,13 @@ export default function InvoiceDetail() {
       </div>
 
       <div className="flex gap-2 print:hidden">
-        <button onClick={() => window.print()} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
+        <button onClick={() => window.print()} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
           Print
         </button>
-        <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
+        <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
           Edit
         </button>
-        <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
+        <button onClick={handleDelete} className="px-3 py-1.5 rounded-xl text-xs border border-expense/40 text-expense">
           Delete
         </button>
       </div>

@@ -72,7 +72,7 @@ export default function OwnerForm({ open, onClose, onSaved, owner = null }) {
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+          className="w-full h-12 flex items-center justify-center rounded-xl text-sm font-medium bg-primary text-white hover:bg-primaryHover active:bg-primaryHover disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving…' : owner ? 'Save changes' : 'Add owner'}
         </button>

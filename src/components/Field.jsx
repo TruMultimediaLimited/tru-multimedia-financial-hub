@@ -1,5 +1,5 @@
 export const inputClass =
-  'w-full bg-surfaceRaised border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15';
+  'w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15';
 
 export default function Field({ label, required, hint, children }) {
   return (

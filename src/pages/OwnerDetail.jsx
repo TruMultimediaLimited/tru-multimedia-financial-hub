@@ -67,20 +67,20 @@ export default function OwnerDetail() {
         ← Back to Owners
       </button>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-slate-900">{owner.name}</div>
+            <div className="text-2xl font-bold text-slate-900">{owner.name}</div>
             <div className="text-xs text-slate-500">
               {owner.role || 'Partner'}
               {owner.company_share_percent != null && ` · ${owner.company_share_percent}% share`}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
+            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
               Edit
             </button>
-            <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
+            <button onClick={handleDelete} className="px-3 py-1.5 rounded-xl text-xs border border-expense/40 text-expense">
               Delete
             </button>
           </div>

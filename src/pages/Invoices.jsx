@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FileText } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchInvoices } from '../lib/invoiceData.js';
 import InvoiceForm from './invoices/InvoiceForm.jsx';
@@ -28,8 +30,8 @@ export default function Invoices() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-slate-900">Invoices</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover">
+        <h1 className="text-2xl font-bold text-slate-900">Invoices</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">
           + New invoice
         </button>
       </div>
@@ -38,7 +40,9 @@ export default function Invoices() {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && invoices.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">No invoices yet.</div>
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={FileText} message="No invoices yet." />
+        </div>
       )}
 
       {!loading && invoices.length > 0 && (

@@ -78,10 +78,10 @@ export default function LedgerDetail() {
         ← Back
       </button>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-slate-900">{party}</div>
+            <div className="text-2xl font-bold text-slate-900">{party}</div>
             <div className="text-xs text-slate-500">
               {transaction.concerns?.name} · {transaction.category || 'Uncategorized'} ·{' '}
               {formatDate(transaction.transaction_date)}
@@ -111,11 +111,11 @@ export default function LedgerDetail() {
         <div className="flex gap-2">
           <button
             onClick={() => setEditOpen(true)}
-            className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700"
+            className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700"
           >
             Edit
           </button>
-          <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
+          <button onClick={handleDelete} className="px-3 py-1.5 rounded-xl text-xs border border-expense/40 text-expense">
             Delete
           </button>
         </div>
@@ -204,7 +204,7 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
 
   if (editing) {
     return (
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 space-y-2">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
@@ -226,11 +226,11 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-3 py-1.5 rounded-md text-xs bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl text-xs bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
-          <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
+          <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
             Cancel
           </button>
         </div>

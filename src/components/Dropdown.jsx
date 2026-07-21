@@ -22,7 +22,7 @@ export default function Dropdown({ value, onChange, options }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between bg-surfaceRaised border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 hover:border-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="w-full flex items-center justify-between bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 transition-colors hover:border-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
       >
         <span>{selected?.label}</span>
         <svg
@@ -37,7 +37,7 @@ export default function Dropdown({ value, onChange, options }) {
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-1.5 w-full bg-surfaceRaised border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto py-1">
+        <div className="absolute z-20 mt-1.5 w-full bg-surfaceRaised border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto py-1">
           {options.map((o) => (
             <button
               type="button"

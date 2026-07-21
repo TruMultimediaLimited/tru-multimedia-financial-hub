@@ -91,7 +91,7 @@ export default function Reports() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-4">Reports</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Reports</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
         <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>
@@ -162,7 +162,9 @@ export default function Reports() {
                 <button
                   key={p}
                   onClick={() => setPlPeriod(p)}
-                  className={`px-2.5 py-1 rounded-md text-xs capitalize ${plPeriod === p ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize border ${
+                    plPeriod === p ? 'bg-primary text-white border-primary' : 'bg-surfaceRaised text-slate-600 border-slate-200'
+                  }`}
                 >
                   {p}ly
                 </button>
@@ -206,17 +208,21 @@ export default function Reports() {
               <div className="flex gap-1">
                 <button
                   onClick={() => setDueSort('amount')}
-                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'amount' ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+                    dueSort === 'amount' ? 'bg-primary text-white border-primary' : 'bg-surfaceRaised text-slate-600 border-slate-200'
+                  }`}
                 >
                   By amount
                 </button>
                 <button
                   onClick={() => setDueSort('age')}
-                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'age' ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+                    dueSort === 'age' ? 'bg-primary text-white border-primary' : 'bg-surfaceRaised text-slate-600 border-slate-200'
+                  }`}
                 >
                   By age
                 </button>
-                <button onClick={exportDueCsv} className="px-2 py-1 rounded-md text-xs border border-slate-300 text-slate-700">
+                <button onClick={exportDueCsv} className="px-2 py-1 rounded-xl text-xs border border-slate-300 text-slate-700">
                   Export CSV
                 </button>
               </div>
@@ -307,7 +313,7 @@ function Section({ title, action, children }) {
 
 function DueList({ title, rows, onRowClick }) {
   return (
-    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3">
+    <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
       <div className="text-xs text-slate-500 mb-2">{title}</div>
       {rows.length === 0 && <p className="text-sm text-slate-500">None.</p>}
       <div className="space-y-1">
@@ -315,7 +321,7 @@ function DueList({ title, rows, onRowClick }) {
           <div
             key={r.id}
             onClick={() => onRowClick(r.id)}
-            className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
+            className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
           >
             <span className="text-sm text-slate-900">{r.name}</span>
             <span className="text-sm text-due">{formatMoney(r.due)}</span>

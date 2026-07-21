@@ -49,7 +49,7 @@ function ClientPicker({
 }) {
   if (showNewClient) {
     return (
-      <div className="border border-slate-300 rounded-md p-3 space-y-2">
+      <div className="border border-slate-300 rounded-xl p-3 space-y-2">
         <input className={inputClass} placeholder="Client name" value={newClientName} onChange={(e) => setNewClientName(e.target.value)} />
         <input
           className={inputClass}
@@ -62,14 +62,14 @@ function ClientPicker({
             type="button"
             disabled={savingClient}
             onClick={onSave}
-            className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
           >
             {savingClient ? 'Saving…' : 'Save'}
           </button>
           <button
             type="button"
             onClick={() => setShowNewClient(false)}
-            className="px-3 py-1.5 rounded-md text-sm border border-slate-300 text-slate-700"
+            className="px-3 py-1.5 rounded-xl text-sm border border-slate-300 text-slate-700"
           >
             Cancel
           </button>
@@ -90,7 +90,7 @@ function ClientPicker({
       <button
         type="button"
         onClick={() => setShowNewClient(true)}
-        className="shrink-0 px-3 rounded-md text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
+        className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
       >
         + New
       </button>
@@ -100,18 +100,18 @@ function ClientPicker({
 
 function NewEmployeeMiniForm({ name, setName, saving, onSave, onCancel }) {
   return (
-    <div className="border border-slate-300 rounded-md p-3 space-y-2">
+    <div className="border border-slate-300 rounded-xl p-3 space-y-2">
       <input className={inputClass} placeholder="Employee name" value={name} onChange={(e) => setName(e.target.value)} />
       <div className="flex gap-2">
         <button
           type="button"
           disabled={saving}
           onClick={onSave}
-          className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+          className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-md text-sm border border-slate-300 text-slate-700">
+        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-xl text-sm border border-slate-300 text-slate-700">
           Cancel
         </button>
       </div>
@@ -401,7 +401,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
               <button
                 type="button"
                 onClick={() => setType('income')}
-                className={`py-2 rounded-md text-sm border ${
+                className={`py-2 rounded-xl text-sm border ${
                   type === 'income' ? 'bg-income/15 border-income text-income' : 'border-slate-300 text-slate-500'
                 }`}
               >
@@ -410,7 +410,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
               <button
                 type="button"
                 onClick={() => setType('expense')}
-                className={`py-2 rounded-md text-sm border ${
+                className={`py-2 rounded-xl text-sm border ${
                   type === 'expense' ? 'bg-expense/15 border-expense text-expense' : 'border-slate-300 text-slate-500'
                 }`}
               >
@@ -517,7 +517,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                   <button
                     type="button"
                     onClick={() => setShowNewEmployee(true)}
-                    className="shrink-0 px-3 rounded-md text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
+                    className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
                   >
                     + New
                   </button>
@@ -579,7 +579,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                     <button
                       type="button"
                       onClick={() => setShowNewEmployee(true)}
-                      className="shrink-0 px-3 rounded-md text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
+                      className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
                     >
                       + New
                     </button>
@@ -653,7 +653,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+          className="w-full h-12 flex items-center justify-center rounded-xl text-sm font-medium bg-primary text-white hover:bg-primaryHover active:bg-primaryHover disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving…' : transaction ? 'Save changes' : `Save ${type}`}
         </button>

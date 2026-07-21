@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { fetchAuditLog, AUDIT_TABLES } from '../lib/auditData.js';
 
@@ -53,7 +55,7 @@ export default function AuditLog() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-4">Audit Log</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Log</h1>
       <p className="text-xs text-slate-500 mb-4">
         Read-only. Every entry here is written automatically by database triggers when a record is created, edited, or
         deleted — nothing can be changed or removed from this page.
@@ -84,20 +86,22 @@ export default function AuditLog() {
         placeholder="Search table, action, or field values"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
+        className="w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && filtered.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">No entries match.</div>
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={ClipboardList} message="No entries match." />
+        </div>
       )}
 
       {!loading && filtered.length > 0 && (
         <div className="space-y-1">
           {filtered.map((e) => (
-            <div key={e.id} className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm">
+            <div key={e.id} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card">
               <div
                 onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
                 className="flex items-center justify-between p-3 cursor-pointer hover:bg-surfaceRaised/60"
@@ -116,13 +120,13 @@ export default function AuditLog() {
                 <div className="border-t border-slate-200 p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <div className="text-xs text-slate-500 mb-1">Old value</div>
-                    <pre className="text-xs text-slate-500 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
                       {e.old_data ? JSON.stringify(e.old_data, null, 2) : '—'}
                     </pre>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500 mb-1">New value</div>
-                    <pre className="text-xs text-slate-500 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
                       {e.new_data ? JSON.stringify(e.new_data, null, 2) : '—'}
                     </pre>
                   </div>
@@ -136,7 +140,7 @@ export default function AuditLog() {
       {!loading && entries.length >= limit && (
         <button
           onClick={() => setLimit((l) => l + 100)}
-          className="w-full mt-3 py-2 rounded-md text-sm border border-slate-300 text-slate-700"
+          className="w-full mt-3 py-2 rounded-xl text-sm border border-slate-300 text-slate-700"
         >
           Load more
         </button>

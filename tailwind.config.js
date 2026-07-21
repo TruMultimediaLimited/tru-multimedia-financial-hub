@@ -14,6 +14,9 @@ export default {
         surface: '#F8FAFC',
         surfaceRaised: '#ffffff',
       },
+      boxShadow: {
+        card: '0 2px 10px rgba(15, 23, 42, 0.05)',
+      },
     },
   },
   plugins: [],

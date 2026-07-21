@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
@@ -106,19 +108,19 @@ export default function Projects() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-0.5">Projects</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Projects</h1>
       <p className="text-xs text-slate-500 mb-4">Browse by client</p>
 
       <div className="grid grid-cols-2 gap-2 mb-4">
         {stats.map((s) => (
-          <div key={s.key} className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm px-3 py-2">
+          <div key={s.key} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card px-3 py-2">
             <div className="text-base font-semibold text-slate-900 leading-tight">{s.value}</div>
             <div className="text-xs text-slate-500">{s.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 space-y-2.5 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 space-y-2.5 mb-4">
         <div>
           <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Client</span>
           <SearchSelect
@@ -147,8 +149,8 @@ export default function Projects() {
       {loading && <p className="text-sm text-slate-500 text-center py-6">Loading…</p>}
 
       {!loading && clientRows.length === 0 && noClientCount === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center text-slate-500 text-sm">
-          No clients match these filters.
+        <div className="border border-dashed border-slate-300 rounded-2xl p-6">
+          <EmptyState icon={Users} message="No clients match these filters." />
         </div>
       )}
 
@@ -157,7 +159,7 @@ export default function Projects() {
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3"
+            className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3"
           >
             <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
               {initials(c.name)}
