@@ -170,6 +170,8 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
 
   const handledByLabel = payment.employees?.name
     ? payment.employees.name
+    : payment.owners?.name
+    ? `${payment.owners.name} (Owner)`
     : payment.handled_by_user_id
     ? payment.handled_by_user_id === currentUser?.id
       ? 'Myself'

@@ -7,7 +7,7 @@ const TRANSACTION_SELECT = `
   clients(id, name),
   employees(id, name, role),
   projects(id, title),
-  payments(id, amount, channel, payment_date, note, handled_by_employee_id, handled_by_user_id, employees(id, name))
+  payments(id, amount, channel, payment_date, note, handled_by_employee_id, handled_by_user_id, handled_by_owner_id, employees(id, name), owners(id, name))
 `;
 
 async function currentUserId() {

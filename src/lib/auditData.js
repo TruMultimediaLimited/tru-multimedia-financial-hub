@@ -4,6 +4,8 @@ const AUDIT_TABLES = [
   'concerns',
   'clients',
   'employees',
+  'owners',
+  'owner_investments',
   'projects',
   'transactions',
   'payments',

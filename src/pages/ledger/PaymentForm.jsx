@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Field, { inputClass } from '../../components/Field.jsx';
 import { supabase } from '../../lib/supabase.js';
 import { addPayment, fetchEmployees, createEmployee } from '../../lib/ledgerData.js';
+import { fetchOwners } from '../../lib/ownerData.js';
 import { formatMoney } from '../../lib/format.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -14,6 +15,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
   const [note, setNote] = useState('');
 
   const [employees, setEmployees] = useState([]);
+  const [owners, setOwners] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   const [showNewEmployee, setShowNewEmployee] = useState(false);
@@ -26,6 +28,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
 
   useEffect(() => {
     if (concernId) fetchEmployees(concernId).then(setEmployees).catch((e) => setError(e.message));
+    fetchOwners().then(setOwners).catch((e) => setError(e.message));
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
   }, [concernId]);
 
@@ -66,6 +69,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
       note: note.trim() || null,
       handled_by_employee_id: handledBy.startsWith('employee:') ? handledBy.split(':')[1] : null,
       handled_by_user_id: handledBy === 'self' ? currentUser?.id ?? null : null,
+      handled_by_owner_id: handledBy.startsWith('owner:') ? handledBy.split(':')[1] : null,
     };
 
     setSaving(true);
@@ -118,6 +122,11 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
             <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
               <option value="">Select</option>
               {currentUser && <option value="self">Myself ({currentUser.email})</option>}
+              {owners.map((o) => (
+                <option key={o.id} value={`owner:${o.id}`}>
+                  {o.name} (Owner)
+                </option>
+              ))}
               {employees.map((emp) => (
                 <option key={emp.id} value={`employee:${emp.id}`}>
                   {emp.name}

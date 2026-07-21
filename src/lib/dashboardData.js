@@ -11,8 +11,9 @@ const DUE_SELECT = `
 `;
 
 const CHANNEL_SELECT = `
-  amount, channel, payment_date, handled_by_employee_id, handled_by_user_id,
+  amount, channel, payment_date, handled_by_employee_id, handled_by_user_id, handled_by_owner_id,
   employees(id, name),
+  owners(id, name),
   transactions(concern_id)
 `;
 
@@ -111,6 +112,8 @@ export async function fetchChannelBreakdown({ concernId, currentUserId, dateFrom
   for (const p of rows) {
     const handlerLabel = p.employees?.name
       ? p.employees.name
+      : p.owners?.name
+      ? `${p.owners.name} (Owner)`
       : p.handled_by_user_id
       ? p.handled_by_user_id === currentUserId
         ? 'Myself'

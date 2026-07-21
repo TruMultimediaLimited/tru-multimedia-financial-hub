@@ -83,6 +83,9 @@ export default function Projects() {
                 <span className="text-income">Received {formatMoney(p.totalReceived)}</span>
                 {p.totalDue > 0 && <span className="text-due">Due {formatMoney(p.totalDue)}</span>}
               </div>
+              <div className="text-xs text-gray-500 mb-2">
+                Profit <span className={p.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(p.profit)}</span>
+              </div>
               <div className="h-1.5 rounded-full bg-surfaceRaised overflow-hidden">
                 <div className="h-full bg-income" style={{ width: `${progress}%` }} />
               </div>
