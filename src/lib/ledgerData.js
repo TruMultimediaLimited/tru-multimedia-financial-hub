@@ -30,6 +30,8 @@ export async function fetchTransactions(filters = {}) {
 
   if (filters.concernId) query = query.eq('concern_id', filters.concernId);
   if (filters.projectId) query = query.eq('project_id', filters.projectId);
+  if (filters.clientId) query = query.eq('client_id', filters.clientId);
+  if (filters.vendorId) query = query.eq('vendor_id', filters.vendorId);
   if (filters.type) query = query.eq('type', filters.type);
   if (filters.dateFrom) query = query.gte('transaction_date', filters.dateFrom);
   if (filters.dateTo) query = query.lte('transaction_date', filters.dateTo);
