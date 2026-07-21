@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
-import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
+import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchProject, deleteProject } from '../lib/projectData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
@@ -54,6 +54,27 @@ export default function ProjectDetail() {
   if (!project) return null;
 
   const progress = project.contract_value > 0 ? Math.min(100, (project.totalReceived / project.contract_value) * 100) : 0;
+
+  // "Who worked on this project" is derived straight from the Ledger — an
+  // employee shows up here the moment an expense transaction links both
+  // this project and that employee, no separate assignment step needed.
+  const team = [];
+  const teamById = new Map();
+  for (const t of transactions) {
+    if (t.type !== 'expense' || !t.employees) continue;
+    const { paidAmount, dueAmount } = computeBalances(t);
+    const existing = teamById.get(t.employees.id) ?? { id: t.employees.id, name: t.employees.name, total: 0, paid: 0, due: 0 };
+    existing.total += Number(t.total_amount);
+    existing.paid += paidAmount;
+    existing.due += dueAmount;
+    teamById.set(t.employees.id, existing);
+    if (!team.includes(existing)) team.push(existing);
+  }
+
+  const clientPayments = transactions
+    .filter((t) => t.type === 'income')
+    .flatMap((t) => (t.payments ?? []).map((p) => ({ ...p, category: t.category })))
+    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
 
   return (
     <div>
@@ -109,6 +130,60 @@ export default function ProjectDetail() {
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
+
+      <h2 className="text-sm font-medium text-gray-300 mb-2">Team</h2>
+      {team.length === 0 && <p className="text-sm text-gray-500 mb-4">No employee expenses linked to this project yet.</p>}
+      {team.length > 0 && (
+        <div className="overflow-x-auto mb-6">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b border-gray-800">
+                <th className="py-2 pr-3 font-normal">Employee</th>
+                <th className="py-2 pr-3 font-normal text-right">Total</th>
+                <th className="py-2 pr-3 font-normal text-right">Paid</th>
+                <th className="py-2 pr-3 font-normal text-right">Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {team.map((m) => (
+                <tr
+                  key={m.id}
+                  onClick={() => navigate(`/employees/${m.id}`)}
+                  className="border-b border-gray-800/60 cursor-pointer hover:bg-surfaceRaised/60"
+                >
+                  <td className="py-2 pr-3 text-gray-100">{m.name}</td>
+                  <td className="py-2 pr-3 text-right text-gray-300">{formatMoney(m.total)}</td>
+                  <td className="py-2 pr-3 text-right text-gray-300">{formatMoney(m.paid)}</td>
+                  <td className="py-2 pr-3 text-right">{m.due > 0 ? <span className="text-due">{formatMoney(m.due)}</span> : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 className="text-sm font-medium text-gray-300 mb-2">Client payments</h2>
+      {clientPayments.length === 0 && <p className="text-sm text-gray-500 mb-4">No client payments recorded yet.</p>}
+      {clientPayments.length > 0 && (
+        <div className="space-y-2 mb-6">
+          {clientPayments.map((p) => (
+            <div key={p.id} className="flex items-center justify-between border border-gray-800 rounded-lg p-3">
+              <div>
+                <div className="text-sm text-gray-100">{formatMoney(p.amount)}</div>
+                <div className="text-xs text-gray-500">
+                  {formatDate(p.payment_date)} · via {CHANNEL_LABELS[p.channel]}
+                  {p.category && ` · ${p.category}`}
+                  {p.note && ` · ${p.note}`}
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="text-xs text-gray-500 text-right">
+            Received {formatMoney(project.totalReceived)}
+            {project.totalDue > 0 && <span className="text-due"> · {formatMoney(project.totalDue)} remaining</span>}
+          </div>
+        </div>
+      )}
 
       <h2 className="text-sm font-medium text-gray-300 mb-2">Transactions</h2>
       <div className="space-y-2">

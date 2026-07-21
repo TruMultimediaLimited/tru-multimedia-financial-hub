@@ -52,6 +52,18 @@ export async function fetchConcernPL(concernId) {
   );
 }
 
+// Total value of projects landed — distinct from Total Income (which is
+// booked amounts on income transactions, whatever their source/category).
+// A project's contract_value is set once when the project is won; this
+// sums that across every project, not what's actually been invoiced yet.
+export async function fetchTotalProjectValue(concernId) {
+  let query = supabase.from('projects').select('contract_value');
+  if (concernId) query = query.eq('concern_id', concernId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).reduce((sum, p) => sum + Number(p.contract_value), 0);
+}
+
 async function fetchDueRows(type, concernId) {
   let query = supabase.from('transactions').select(DUE_SELECT).eq('type', type);
   if (concernId) query = query.eq('concern_id', concernId);
