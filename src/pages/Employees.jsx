@@ -33,8 +33,8 @@ export default function Employees() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-100">Employees</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900">
+        <h1 className="text-lg font-semibold text-gray-900">Employees</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
           + New employee
         </button>
       </div>
@@ -43,14 +43,14 @@ export default function Employees() {
         placeholder="Search by name or role"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100 mb-4"
+        className="w-full bg-surfaceRaised border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
       {!loading && filtered.length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
           No employees found.
         </div>
       )}
@@ -61,9 +61,9 @@ export default function Employees() {
             <div
               key={emp.id}
               onClick={() => navigate(`/employees/${emp.id}`)}
-              className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
             >
-              <span className="text-gray-100 font-medium">{emp.name}</span>
+              <span className="text-gray-900 font-medium">{emp.name}</span>
               <span className="text-sm text-gray-500">{emp.role || 'No role set'}</span>
             </div>
           ))}

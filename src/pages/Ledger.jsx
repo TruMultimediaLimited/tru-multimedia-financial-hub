@@ -91,7 +91,7 @@ export default function Ledger() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-100">Ledger</h1>
+        <h1 className="text-lg font-semibold text-gray-900">Ledger</h1>
         <div className="flex gap-2">
           <button
             onClick={() => openAdd('income')}
@@ -114,7 +114,7 @@ export default function Ledger() {
             key={t}
             onClick={() => setTypeTab(t)}
             className={`px-3 py-1.5 rounded-md text-xs capitalize ${
-              typeTab === t ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'
+              typeTab === t ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
             }`}
           >
             {t}
@@ -173,7 +173,7 @@ export default function Ledger() {
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
       {!loading && transactions.length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
           No transactions match these filters.
         </div>
       )}
@@ -184,7 +184,7 @@ export default function Ledger() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="py-2 pr-3 font-normal">Concern</th>
                   <th className="py-2 pr-3 font-normal">Party</th>
                   <th className="py-2 pr-3 font-normal text-right">Total</th>
@@ -223,12 +223,12 @@ function partyName(t) {
 function TransactionRow({ t, onClick }) {
   const { paidAmount, dueAmount, status } = computeBalances(t);
   return (
-    <tr onClick={onClick} className="border-b border-gray-800/60 cursor-pointer hover:bg-surfaceRaised/60">
-      <td className="py-2.5 pr-3 text-gray-300">{t.concerns?.name}</td>
-      <td className="py-2.5 pr-3 text-gray-100">{partyName(t)}</td>
-      <td className="py-2.5 pr-3 text-right text-gray-300">{formatMoney(t.total_amount)}</td>
-      <td className="py-2.5 pr-3 text-right text-gray-300">{formatMoney(paidAmount)}</td>
-      <td className="py-2.5 pr-3 text-right text-gray-300">{dueAmount > 0 ? formatMoney(dueAmount) : '—'}</td>
+    <tr onClick={onClick} className="border-b border-gray-200/60 cursor-pointer hover:bg-surfaceRaised/60">
+      <td className="py-2.5 pr-3 text-gray-700">{t.concerns?.name}</td>
+      <td className="py-2.5 pr-3 text-gray-900">{partyName(t)}</td>
+      <td className="py-2.5 pr-3 text-right text-gray-700">{formatMoney(t.total_amount)}</td>
+      <td className="py-2.5 pr-3 text-right text-gray-700">{formatMoney(paidAmount)}</td>
+      <td className="py-2.5 pr-3 text-right text-gray-700">{dueAmount > 0 ? formatMoney(dueAmount) : '—'}</td>
       <td className="py-2.5 pr-3">
         <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
       </td>
@@ -242,18 +242,18 @@ function TransactionCard({ t, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="border border-gray-800 rounded-lg p-3 cursor-pointer active:bg-surfaceRaised/60"
+      className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer active:bg-surface"
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-gray-100 font-medium">{partyName(t)}</span>
+        <span className="text-gray-900 font-medium">{partyName(t)}</span>
         <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
       </div>
       <div className="text-xs text-gray-500 mb-2">
         {t.concerns?.name} · {formatDate(t.transaction_date)}
       </div>
       <div className="flex justify-between text-sm">
-        <span className="text-gray-400">Total {formatMoney(t.total_amount)}</span>
-        <span className="text-gray-400">Paid {formatMoney(paidAmount)}</span>
+        <span className="text-gray-500">Total {formatMoney(t.total_amount)}</span>
+        <span className="text-gray-500">Paid {formatMoney(paidAmount)}</span>
         {dueAmount > 0 && <span className="text-due">Due {formatMoney(dueAmount)}</span>}
       </div>
     </div>

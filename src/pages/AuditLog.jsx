@@ -53,7 +53,7 @@ export default function AuditLog() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-100 mb-4">Audit Log</h1>
+      <h1 className="text-lg font-semibold text-gray-900 mb-4">Audit Log</h1>
       <p className="text-xs text-gray-500 mb-4">
         Read-only. Every entry here is written automatically by database triggers when a record is created, edited, or
         deleted — nothing can be changed or removed from this page.
@@ -84,45 +84,45 @@ export default function AuditLog() {
         placeholder="Search table, action, or field values"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100 mb-4"
+        className="w-full bg-surfaceRaised border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
       {!loading && filtered.length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">No entries match.</div>
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">No entries match.</div>
       )}
 
       {!loading && filtered.length > 0 && (
         <div className="space-y-1">
           {filtered.map((e) => (
-            <div key={e.id} className="border border-gray-800 rounded-lg">
+            <div key={e.id} className="bg-surfaceRaised border border-gray-200 rounded-lg">
               <div
                 onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
                 className="flex items-center justify-between p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Badge className={ACTION_STYLES[e.action]}>{e.action}</Badge>
-                  <span className="text-sm text-gray-100 truncate">{e.table_name}</span>
+                  <span className="text-sm text-gray-900 truncate">{e.table_name}</span>
                   <span className="text-xs text-gray-500 truncate hidden md:inline">#{e.record_id?.slice(0, 8)}</span>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-xs text-gray-400">{e.changed_by_email ?? 'System'}</div>
+                  <div className="text-xs text-gray-500">{e.changed_by_email ?? 'System'}</div>
                   <div className="text-xs text-gray-500">{formatTimestamp(e.changed_at)}</div>
                 </div>
               </div>
               {expandedId === e.id && (
-                <div className="border-t border-gray-800 p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="border-t border-gray-200 p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Old value</div>
-                    <pre className="text-xs text-gray-400 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-xs text-gray-500 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
                       {e.old_data ? JSON.stringify(e.old_data, null, 2) : '—'}
                     </pre>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">New value</div>
-                    <pre className="text-xs text-gray-400 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-xs text-gray-500 bg-surface rounded-md p-2 overflow-x-auto whitespace-pre-wrap">
                       {e.new_data ? JSON.stringify(e.new_data, null, 2) : '—'}
                     </pre>
                   </div>
@@ -136,7 +136,7 @@ export default function AuditLog() {
       {!loading && entries.length >= limit && (
         <button
           onClick={() => setLimit((l) => l + 100)}
-          className="w-full mt-3 py-2 rounded-md text-sm border border-gray-700 text-gray-300"
+          className="w-full mt-3 py-2 rounded-md text-sm border border-gray-300 text-gray-700"
         >
           Load more
         </button>

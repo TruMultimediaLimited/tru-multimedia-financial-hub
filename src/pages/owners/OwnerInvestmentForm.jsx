@@ -37,7 +37,7 @@ export default function OwnerInvestmentForm({ ownerId, onSaved }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border border-gray-800 rounded-lg p-4 bg-surfaceRaised">
+    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-gray-200 rounded-lg p-4">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Amount" required>
           <input type="number" min="0" step="0.01" className={inputClass} value={amount} onChange={(e) => setAmount(e.target.value)} />
@@ -55,7 +55,7 @@ export default function OwnerInvestmentForm({ ownerId, onSaved }) {
       <button
         type="submit"
         disabled={saving}
-        className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-100 text-gray-900 disabled:opacity-50"
+        className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
       >
         {saving ? 'Adding…' : '+ Add investment'}
       </button>

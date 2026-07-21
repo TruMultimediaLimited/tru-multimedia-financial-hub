@@ -53,11 +53,11 @@ export default function InvoiceDetail() {
         ← Back to Invoices
       </button>
 
-      <div className="border border-gray-800 rounded-lg p-6 mb-4">
+      <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-6 mb-4">
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-xs text-gray-500">Tru Multimedia Limited</div>
-            <div className="text-xl font-semibold text-gray-100">{invoice.invoice_number}</div>
+            <div className="text-xl font-semibold text-gray-900">{invoice.invoice_number}</div>
           </div>
           <Badge className={STATUS_STYLES[invoice.status]}>{STATUS_LABELS[invoice.status]}</Badge>
         </div>
@@ -65,25 +65,25 @@ export default function InvoiceDetail() {
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
           <div>
             <div className="text-xs text-gray-500 mb-1">Billed to</div>
-            <div className="text-gray-100">{invoice.clients?.name}</div>
+            <div className="text-gray-900">{invoice.clients?.name}</div>
             <div className="text-gray-500 text-xs">
               {[invoice.clients?.phone, invoice.clients?.email, invoice.clients?.address].filter(Boolean).join(' · ')}
             </div>
           </div>
           <div>
             <div className="text-xs text-gray-500 mb-1">Dates</div>
-            <div className="text-gray-300">Issued {formatDate(invoice.issued_date)}</div>
-            {invoice.due_date && <div className="text-gray-300">Due {formatDate(invoice.due_date)}</div>}
+            <div className="text-gray-700">Issued {formatDate(invoice.issued_date)}</div>
+            {invoice.due_date && <div className="text-gray-700">Due {formatDate(invoice.due_date)}</div>}
           </div>
         </div>
 
-        <div className="border border-gray-800 rounded-lg p-4 mb-4">
+        <div className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 mb-4">
           <div className="text-xs text-gray-500 mb-1">For</div>
-          <div className="text-gray-100 mb-3">{referenceLabel}</div>
+          <div className="text-gray-900 mb-3">{referenceLabel}</div>
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="text-xs text-gray-500">Amount</div>
-              <div className="text-gray-100">{formatMoney(invoice.amount)}</div>
+              <div className="text-gray-900">{formatMoney(invoice.amount)}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500">Received</div>
@@ -91,7 +91,7 @@ export default function InvoiceDetail() {
             </div>
             <div>
               <div className="text-xs text-gray-500">Due</div>
-              <div className={invoice.due > 0 ? 'text-due' : 'text-gray-100'}>{formatMoney(invoice.due)}</div>
+              <div className={invoice.due > 0 ? 'text-due' : 'text-gray-900'}>{formatMoney(invoice.due)}</div>
             </div>
           </div>
         </div>
@@ -99,16 +99,16 @@ export default function InvoiceDetail() {
         {invoice.notes && (
           <div>
             <div className="text-xs text-gray-500 mb-1">Notes</div>
-            <p className="text-sm text-gray-300">{invoice.notes}</p>
+            <p className="text-sm text-gray-700">{invoice.notes}</p>
           </div>
         )}
       </div>
 
       <div className="flex gap-2 print:hidden">
-        <button onClick={() => window.print()} className="px-3 py-1.5 rounded-md text-xs border border-gray-700 text-gray-300">
+        <button onClick={() => window.print()} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
           Print
         </button>
-        <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-700 text-gray-300">
+        <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
           Edit
         </button>
         <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">

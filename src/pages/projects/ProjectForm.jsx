@@ -126,7 +126,7 @@ export default function ProjectForm({ open, onClose, onSaved, project = null }) 
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-100 text-gray-900 disabled:opacity-50"
+          className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-900 text-white disabled:opacity-50"
         >
           {saving ? 'Saving…' : project ? 'Save changes' : 'Add project'}
         </button>

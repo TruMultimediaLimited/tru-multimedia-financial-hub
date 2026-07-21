@@ -29,8 +29,8 @@ export default function Owners() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-100">Owners</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900">
+        <h1 className="text-lg font-semibold text-gray-900">Owners</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
           + New owner
         </button>
       </div>
@@ -42,7 +42,7 @@ export default function Owners() {
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
       {!loading && owners.length === 0 && (
-        <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-500">No owners yet.</div>
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">No owners yet.</div>
       )}
 
       {!loading && owners.length > 0 && (
@@ -51,16 +51,16 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className="border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surface"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-gray-100 font-medium">{o.name}</span>
+                <span className="text-gray-900 font-medium">{o.name}</span>
                 <span className="text-xs text-gray-500">
                   {o.role || 'Partner'}
                   {o.company_share_percent != null && ` · ${o.company_share_percent}% share`}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-400">
+              <div className="flex justify-between text-sm text-gray-500">
                 <span>Received {formatMoney(o.totalReceived)}</span>
                 <span>Given {formatMoney(o.totalGiven)}</span>
                 <span>Invested {formatMoney(o.totalInvested)}</span>

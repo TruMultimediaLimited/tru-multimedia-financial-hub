@@ -13,7 +13,7 @@ export function formatDate(dateStr) {
 export const STATUS_STYLES = {
   paid: 'bg-income/15 text-income border-income/30',
   partial: 'bg-due/15 text-due border-due/30',
-  pending: 'bg-gray-500/15 text-gray-400 border-gray-500/30',
+  pending: 'bg-gray-500/15 text-gray-500 border-gray-500/30',
 };
 
 export const STATUS_LABELS = {

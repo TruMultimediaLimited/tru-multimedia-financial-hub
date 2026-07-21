@@ -37,7 +37,7 @@ export default function BarChart({ data, xKey, series, height = 160 }) {
       </div>
       <div className="flex gap-3 mt-2">
         {series.map((s) => (
-          <div key={s.key} className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div key={s.key} className="flex items-center gap-1.5 text-xs text-gray-500">
             <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: s.color }} />
             {s.label}
           </div>

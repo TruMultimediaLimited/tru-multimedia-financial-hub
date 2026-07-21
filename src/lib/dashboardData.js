@@ -22,46 +22,87 @@ function dueAmount(t) {
   return Number(t.total_amount) - paid;
 }
 
-// concern_pl_view already sums total_amount by type per concern in
-// Postgres (sql/schema.sql §11) — this just picks/sums the small
-// resulting row set (5 rows total), not raw transactions.
-export async function fetchConcernPL(concernId) {
-  const { data, error } = await supabase
-    .from('concern_pl_view')
-    .select('concern_id, concern_name, parent_concern_id, total_income, total_expense, net_pl');
-  if (error) throw error;
-  const rows = data ?? [];
+// The 4 Dashboard headline cards each return { total, rows } — one query
+// backs both the summary number and its click-to-expand breakdown, so
+// there's never a second round-trip when a card is opened.
 
-  if (concernId) {
-    const row = rows.find((r) => r.concern_id === concernId);
-    return row
-      ? { totalIncome: Number(row.total_income), totalExpense: Number(row.total_expense), netPl: Number(row.net_pl) }
-      : { totalIncome: 0, totalExpense: 0, netPl: 0 };
-  }
-
-  // Sum every concern's row, including the parent's own — Tru Multimedia
-  // Limited can now hold transactions directly (general/company-wide
-  // expenses), so consolidated must include them, not just the 4 concerns.
-  return rows.reduce(
-    (acc, r) => ({
-      totalIncome: acc.totalIncome + Number(r.total_income),
-      totalExpense: acc.totalExpense + Number(r.total_expense),
-      netPl: acc.netPl + Number(r.net_pl),
-    }),
-    { totalIncome: 0, totalExpense: 0, netPl: 0 }
-  );
-}
-
-// Total value of projects landed — distinct from Total Income (which is
-// booked amounts on income transactions, whatever their source/category).
-// A project's contract_value is set once when the project is won; this
-// sums that across every project, not what's actually been invoiced yet.
-export async function fetchTotalProjectValue(concernId) {
-  let query = supabase.from('projects').select('contract_value');
+// Total value of projects landed — distinct from Total Payment Received
+// (booked contract value vs. actual cash collected).
+export async function fetchProjectValueBreakdown(concernId) {
+  let query = supabase.from('projects').select('id, title, contract_value, concerns(name)');
   if (concernId) query = query.eq('concern_id', concernId);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).reduce((sum, p) => sum + Number(p.contract_value), 0);
+  const rows = (data ?? [])
+    .map((p) => ({ id: p.id, title: p.title, concernName: p.concerns?.name, contractValue: Number(p.contract_value) }))
+    .sort((a, b) => b.contractValue - a.contractValue);
+  return { total: rows.reduce((sum, r) => sum + r.contractValue, 0), rows };
+}
+
+// Money actually received, from any source (project, studio rent, edit,
+// etc.) — every payment logged against an income transaction, not the
+// booked/billed amount. Payment timing is irregular for this business
+// (settles months after the fact either way), so this is deliberately
+// a flat list of real payments, not a period-bound figure.
+export async function fetchPaymentsReceivedBreakdown(concernId) {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, clients(name))');
+  if (error) throw error;
+  let rows = (data ?? []).filter((p) => p.transactions?.type === 'income');
+  if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
+  const mapped = rows
+    .map((p) => ({
+      id: p.id,
+      transactionId: p.transaction_id,
+      amount: Number(p.amount),
+      date: p.payment_date,
+      channel: p.channel,
+      source: p.transactions?.clients?.name ?? p.transactions?.category ?? 'Uncategorized',
+    }))
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  return { total: mapped.reduce((sum, r) => sum + r.amount, 0), rows: mapped };
+}
+
+// Every expense transaction — rent, salary, equipment, bills, etc.
+export async function fetchExpenseBreakdown(concernId) {
+  let query = supabase
+    .from('transactions')
+    .select('id, category, total_amount, transaction_date, concerns(name)')
+    .eq('type', 'expense');
+  if (concernId) query = query.eq('concern_id', concernId);
+  const { data, error } = await query;
+  if (error) throw error;
+  const rows = (data ?? [])
+    .map((t) => ({
+      id: t.id,
+      category: t.category || 'Uncategorized',
+      amount: Number(t.total_amount),
+      date: t.transaction_date,
+      concernName: t.concerns?.name,
+    }))
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  return { total: rows.reduce((sum, r) => sum + r.amount, 0), rows };
+}
+
+// Profit only means something once a project is actually wrapped — this
+// business routinely collects/pays out months after the fact, so a
+// same-period net figure would be meaningless. Scoped to
+// status = 'completed' only.
+export async function fetchProjectProfitBreakdown(concernId) {
+  let query = supabase.from('projects').select('id, title, status, concerns(name)').eq('status', 'completed');
+  if (concernId) query = query.eq('concern_id', concernId);
+  const [{ data, error }, { data: balances, error: balError }] = await Promise.all([
+    query,
+    supabase.from('project_balances').select('project_id, profit'),
+  ]);
+  if (error) throw error;
+  if (balError) throw balError;
+  const profitMap = new Map((balances ?? []).map((b) => [b.project_id, Number(b.profit)]));
+  const rows = (data ?? [])
+    .map((p) => ({ id: p.id, title: p.title, concernName: p.concerns?.name, profit: profitMap.get(p.id) ?? 0 }))
+    .sort((a, b) => b.profit - a.profit);
+  return { total: rows.reduce((sum, r) => sum + r.profit, 0), rows };
 }
 
 async function fetchDueRows(type, concernId) {
