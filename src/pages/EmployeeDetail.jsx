@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import { formatMoney, formatDate } from '../lib/format.js';
-import { fetchEmployee, deleteEmployee, fetchWorkLogs, updateWorkLog, deleteWorkLog } from '../lib/employeeData.js';
+import { inputClass } from '../components/Field.jsx';
+import {
+  fetchEmployee,
+  deleteEmployee,
+  fetchWorkLogs,
+  updateWorkLog,
+  deleteWorkLog,
+  bundleWorkLogsIntoPayroll,
+} from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
 import WorkLogForm from './employees/WorkLogForm.jsx';
 
@@ -18,6 +26,10 @@ export default function EmployeeDetail() {
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bundleChannel, setBundleChannel] = useState('bkash');
+  const [bundling, setBundling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +47,10 @@ export default function EmployeeDetail() {
     };
   }, [id, reloadKey]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [reloadKey]);
+
   async function handleDelete() {
     if (!window.confirm(`Delete ${employee.name}?`)) return;
     try {
@@ -45,6 +61,25 @@ export default function EmployeeDetail() {
     }
   }
 
+  function toggleSelect(logId) {
+    setSelectedIds((prev) => (prev.includes(logId) ? prev.filter((x) => x !== logId) : [...prev, logId]));
+  }
+
+  async function handleBundle() {
+    const selectedLogs = workLogs.filter((l) => selectedIds.includes(l.id));
+    if (selectedLogs.length === 0) return;
+    setBundling(true);
+    setError('');
+    try {
+      await bundleWorkLogsIntoPayroll(employee, selectedLogs, bundleChannel);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBundling(false);
+    }
+  }
+
   if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
   if (error && !employee) return <p className="text-sm text-expense">{error}</p>;
   if (!employee) return null;
@@ -52,6 +87,7 @@ export default function EmployeeDetail() {
   const isProjectBased = employee.type === 'project_based';
   const totalPaid = workLogs.filter((l) => l.paid).reduce((s, l) => s + Number(l.amount), 0);
   const totalUnpaid = workLogs.filter((l) => !l.paid).reduce((s, l) => s + Number(l.amount), 0);
+  const selectedTotal = workLogs.filter((l) => selectedIds.includes(l.id)).reduce((s, l) => s + Number(l.amount), 0);
 
   const projectGroups = isProjectBased
     ? Array.from(
@@ -67,6 +103,8 @@ export default function EmployeeDetail() {
         }, new Map())
       ).map(([key, val]) => ({ key, ...val }))
     : [];
+
+  const rowProps = { selectedIds, onToggleSelect: toggleSelect, onChanged: () => setReloadKey((k) => k + 1) };
 
   return (
     <div>
@@ -128,7 +166,7 @@ export default function EmployeeDetail() {
                 </div>
                 <div className="space-y-1">
                   {g.logs.map((log) => (
-                    <WorkLogRow key={log.id} log={log} onChanged={() => setReloadKey((k) => k + 1)} />
+                    <WorkLogRow key={log.id} log={log} {...rowProps} />
                   ))}
                 </div>
               </div>
@@ -141,10 +179,31 @@ export default function EmployeeDetail() {
           {workLogs.length === 0 && <p className="text-sm text-gray-500 mb-4">No payments logged yet.</p>}
           <div className="space-y-2 mb-4">
             {workLogs.map((log) => (
-              <WorkLogRow key={log.id} log={log} onChanged={() => setReloadKey((k) => k + 1)} />
+              <WorkLogRow key={log.id} log={log} {...rowProps} />
             ))}
           </div>
         </>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="border border-gray-800 rounded-lg p-3 mb-4 bg-surfaceRaised flex flex-wrap items-center gap-3">
+          <span className="text-sm text-gray-200">
+            {selectedIds.length} selected · {formatMoney(selectedTotal)}
+          </span>
+          <select className={`${inputClass} w-auto`} value={bundleChannel} onChange={(e) => setBundleChannel(e.target.value)}>
+            <option value="bkash">bKash</option>
+            <option value="nagad">Nagad</option>
+            <option value="bank">Bank</option>
+            <option value="cash">Cash</option>
+          </select>
+          <button
+            onClick={handleBundle}
+            disabled={bundling}
+            className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
+          >
+            {bundling ? 'Creating…' : `Bundle into a payroll payment (${formatMoney(selectedTotal)})`}
+          </button>
+        </div>
       )}
 
       <h2 className="text-sm font-medium text-gray-300 mb-2">{isProjectBased ? 'Log project work' : 'Log payment'}</h2>
@@ -160,7 +219,7 @@ export default function EmployeeDetail() {
   );
 }
 
-function WorkLogRow({ log, onChanged }) {
+function WorkLogRow({ log, selectedIds, onToggleSelect, onChanged }) {
   async function togglePaid() {
     await updateWorkLog(log.id, { paid: !log.paid });
     onChanged();
@@ -174,10 +233,20 @@ function WorkLogRow({ log, onChanged }) {
 
   return (
     <div className="flex items-center justify-between border border-gray-800 rounded-lg p-3">
-      <div>
-        <div className="text-gray-100 text-sm">{log.task_description}</div>
-        <div className="text-xs text-gray-500">
-          {formatDate(log.work_date)} · {formatMoney(log.amount)}
+      <div className="flex items-center gap-3">
+        {!log.paid && (
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(log.id)}
+            onChange={() => onToggleSelect(log.id)}
+            className="shrink-0"
+          />
+        )}
+        <div>
+          <div className="text-gray-100 text-sm">{log.task_description}</div>
+          <div className="text-xs text-gray-500">
+            {formatDate(log.work_date)} · {formatMoney(log.amount)}
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
