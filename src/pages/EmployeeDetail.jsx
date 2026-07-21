@@ -1,44 +1,30 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
-import { formatMoney, formatDate } from '../lib/format.js';
-import { inputClass } from '../components/Field.jsx';
-import {
-  fetchEmployee,
-  deleteEmployee,
-  fetchWorkLogs,
-  updateWorkLog,
-  deleteWorkLog,
-  bundleWorkLogsIntoPayroll,
-} from '../lib/employeeData.js';
+import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
+import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
+import { fetchEmployee, deleteEmployee } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
-import WorkLogForm from './employees/WorkLogForm.jsx';
-
-const TYPE_LABELS = { fixed: 'Fixed', remote: 'Remote', project_based: 'Project-based' };
 
 export default function EmployeeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [employee, setEmployee] = useState(null);
-  const [workLogs, setWorkLogs] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [bundleChannel, setBundleChannel] = useState('bkash');
-  const [bundling, setBundling] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchEmployee(id), fetchWorkLogs(id)])
-      .then(([emp, logs]) => {
+    Promise.all([fetchEmployee(id), fetchTransactions({ employeeId: id })])
+      .then(([emp, txns]) => {
         if (cancelled) return;
         setEmployee(emp);
-        setWorkLogs(logs);
+        setTransactions(txns);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -46,10 +32,6 @@ export default function EmployeeDetail() {
       cancelled = true;
     };
   }, [id, reloadKey]);
-
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [reloadKey]);
 
   async function handleDelete() {
     if (!window.confirm(`Delete ${employee.name}?`)) return;
@@ -61,50 +43,12 @@ export default function EmployeeDetail() {
     }
   }
 
-  function toggleSelect(logId) {
-    setSelectedIds((prev) => (prev.includes(logId) ? prev.filter((x) => x !== logId) : [...prev, logId]));
-  }
-
-  async function handleBundle() {
-    const selectedLogs = workLogs.filter((l) => selectedIds.includes(l.id));
-    if (selectedLogs.length === 0) return;
-    setBundling(true);
-    setError('');
-    try {
-      await bundleWorkLogsIntoPayroll(employee, selectedLogs, bundleChannel);
-      setReloadKey((k) => k + 1);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBundling(false);
-    }
-  }
-
   if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
   if (error && !employee) return <p className="text-sm text-expense">{error}</p>;
   if (!employee) return null;
 
-  const isProjectBased = employee.type === 'project_based';
-  const totalPaid = workLogs.filter((l) => l.paid).reduce((s, l) => s + Number(l.amount), 0);
-  const totalUnpaid = workLogs.filter((l) => !l.paid).reduce((s, l) => s + Number(l.amount), 0);
-  const selectedTotal = workLogs.filter((l) => selectedIds.includes(l.id)).reduce((s, l) => s + Number(l.amount), 0);
-
-  const projectGroups = isProjectBased
-    ? Array.from(
-        workLogs.reduce((map, log) => {
-          const key = log.project_id ?? 'none';
-          const label = log.projects?.title ?? 'No project';
-          const entry = map.get(key) ?? { label, logs: [], total: 0, unpaid: 0 };
-          entry.logs.push(log);
-          entry.total += Number(log.amount);
-          if (!log.paid) entry.unpaid += Number(log.amount);
-          map.set(key, entry);
-          return map;
-        }, new Map())
-      ).map(([key, val]) => ({ key, ...val }))
-    : [];
-
-  const rowProps = { selectedIds, onToggleSelect: toggleSelect, onChanged: () => setReloadKey((k) => k + 1) };
+  const totalPaid = transactions.reduce((s, t) => s + computeBalances(t).paidAmount, 0);
+  const totalDue = transactions.reduce((s, t) => s + computeBalances(t).dueAmount, 0);
 
   return (
     <div>
@@ -116,9 +60,7 @@ export default function EmployeeDetail() {
         <div className="flex items-start justify-between mb-2">
           <div>
             <div className="text-lg font-semibold text-gray-100">{employee.name}</div>
-            <div className="text-xs text-gray-500">
-              {employee.role || 'No role set'} · {employee.concerns?.name}
-            </div>
+            <div className="text-xs text-gray-500">{employee.role || 'No role set'}</div>
           </div>
           <div className="flex gap-2 shrink-0">
             <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-700 text-gray-300">
@@ -130,138 +72,51 @@ export default function EmployeeDetail() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-3">
-          <Badge className="bg-surfaceRaised text-gray-300 border-gray-700">{TYPE_LABELS[employee.type]}</Badge>
-          <Badge className="bg-surfaceRaised text-gray-300 border-gray-700">{employee.status.replace('_', ' ')}</Badge>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div>
-            <div className="text-xs text-gray-500">Salary/Rate</div>
-            <div className="text-gray-100">{employee.monthly_salary ? `${formatMoney(employee.monthly_salary)}/mo` : 'Per-project'}</div>
-          </div>
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <div className="text-xs text-gray-500">Paid to date</div>
             <div className="text-gray-100">{formatMoney(totalPaid)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500">Unpaid</div>
-            <div className={totalUnpaid > 0 ? 'text-due' : 'text-gray-100'}>{formatMoney(totalUnpaid)}</div>
+            <div className="text-xs text-gray-500">Due</div>
+            <div className={totalDue > 0 ? 'text-due' : 'text-gray-100'}>{formatMoney(totalDue)}</div>
           </div>
         </div>
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
-      {isProjectBased ? (
-        <>
-          <h2 className="text-sm font-medium text-gray-300 mb-2">Linked projects</h2>
-          {projectGroups.length === 0 && <p className="text-sm text-gray-500 mb-4">No work logged yet.</p>}
-          <div className="space-y-3 mb-4">
-            {projectGroups.map((g) => (
-              <div key={g.key} className="border border-gray-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-100">{g.label}</span>
-                  <span className="text-sm text-gray-300">{formatMoney(g.total)}</span>
-                </div>
-                <div className="space-y-1">
-                  {g.logs.map((log) => (
-                    <WorkLogRow key={log.id} log={log} {...rowProps} />
-                  ))}
+      <h2 className="text-sm font-medium text-gray-300 mb-2">Expense history</h2>
+      <p className="text-xs text-gray-500 mb-2">
+        Who was given how much and when — add a new entry from Ledger → + Add expense with this employee selected.
+      </p>
+      {transactions.length === 0 && <p className="text-sm text-gray-500">No expenses recorded for this employee yet.</p>}
+      <div className="space-y-2">
+        {transactions.map((t) => {
+          const { status } = computeBalances(t);
+          return (
+            <div
+              key={t.id}
+              onClick={() => navigate(`/ledger/${t.id}`)}
+              className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+            >
+              <div>
+                <div className="text-sm text-gray-100">{t.category || 'Uncategorized'}</div>
+                <div className="text-xs text-gray-500">
+                  {t.concerns?.name} · {formatDate(t.transaction_date)}
+                  {t.projects?.title && ` · ${t.projects.title}`}
                 </div>
               </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <h2 className="text-sm font-medium text-gray-300 mb-2">Salary history</h2>
-          {workLogs.length === 0 && <p className="text-sm text-gray-500 mb-4">No payments logged yet.</p>}
-          <div className="space-y-2 mb-4">
-            {workLogs.map((log) => (
-              <WorkLogRow key={log.id} log={log} {...rowProps} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {selectedIds.length > 0 && (
-        <div className="border border-gray-800 rounded-lg p-3 mb-4 bg-surfaceRaised flex flex-wrap items-center gap-3">
-          <span className="text-sm text-gray-200">
-            {selectedIds.length} selected · {formatMoney(selectedTotal)}
-          </span>
-          <select className={`${inputClass} w-auto`} value={bundleChannel} onChange={(e) => setBundleChannel(e.target.value)}>
-            <option value="bkash">bKash</option>
-            <option value="nagad">Nagad</option>
-            <option value="bank">Bank</option>
-            <option value="cash">Cash</option>
-          </select>
-          <button
-            onClick={handleBundle}
-            disabled={bundling}
-            className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
-          >
-            {bundling ? 'Creating…' : `Bundle into a payroll payment (${formatMoney(selectedTotal)})`}
-          </button>
-        </div>
-      )}
-
-      <h2 className="text-sm font-medium text-gray-300 mb-2">{isProjectBased ? 'Log project work' : 'Log payment'}</h2>
-      <WorkLogForm
-        employeeId={employee.id}
-        concernId={employee.concern_id}
-        isProjectBased={isProjectBased}
-        onSaved={() => setReloadKey((k) => k + 1)}
-      />
+              <div className="text-right">
+                <div className="text-sm text-gray-100">{formatMoney(t.total_amount)}</div>
+                <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <EmployeeForm open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} employee={employee} />
-    </div>
-  );
-}
-
-function WorkLogRow({ log, selectedIds, onToggleSelect, onChanged }) {
-  async function togglePaid() {
-    await updateWorkLog(log.id, { paid: !log.paid });
-    onChanged();
-  }
-
-  async function handleDelete() {
-    if (!window.confirm('Delete this entry?')) return;
-    await deleteWorkLog(log.id);
-    onChanged();
-  }
-
-  return (
-    <div className="flex items-center justify-between border border-gray-800 rounded-lg p-3">
-      <div className="flex items-center gap-3">
-        {!log.paid && (
-          <input
-            type="checkbox"
-            checked={selectedIds.includes(log.id)}
-            onChange={() => onToggleSelect(log.id)}
-            className="shrink-0"
-          />
-        )}
-        <div>
-          <div className="text-gray-100 text-sm">{log.task_description}</div>
-          <div className="text-xs text-gray-500">
-            {formatDate(log.work_date)} · {formatMoney(log.amount)}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={togglePaid}
-          className={`px-2 py-0.5 rounded-full text-xs border ${
-            log.paid ? 'bg-income/15 text-income border-income/30' : 'bg-due/15 text-due border-due/30'
-          }`}
-        >
-          {log.paid ? 'Paid' : 'Unpaid'}
-        </button>
-        <button onClick={handleDelete} className="text-xs text-expense">
-          Delete
-        </button>
-      </div>
     </div>
   );
 }

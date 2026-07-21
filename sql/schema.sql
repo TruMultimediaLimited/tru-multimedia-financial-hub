@@ -180,6 +180,7 @@ create table transactions (
   project_id uuid references projects(id),
   client_id uuid references clients(id),
   vendor_id uuid references vendors(id),
+  employee_id uuid references employees(id),
   type transaction_type not null,
   category text,
   total_amount numeric not null check (total_amount > 0),
@@ -188,8 +189,8 @@ create table transactions (
   created_by uuid references auth.users(id),
   created_at timestamptz not null default now(),
   constraint transactions_party_check check (
-    (type = 'income' and vendor_id is null)
-    or (type = 'expense' and client_id is null)
+    (type = 'income' and vendor_id is null and employee_id is null)
+    or (type = 'expense' and client_id is null and not (vendor_id is not null and employee_id is not null))
   )
 );
 
@@ -197,6 +198,7 @@ create index idx_transactions_concern on transactions(concern_id);
 create index idx_transactions_project on transactions(project_id);
 create index idx_transactions_client on transactions(client_id);
 create index idx_transactions_vendor on transactions(vendor_id);
+create index idx_transactions_employee on transactions(employee_id);
 create index idx_transactions_date on transactions(transaction_date);
 
 
@@ -227,29 +229,7 @@ create index idx_payments_transaction on payments(transaction_id);
 
 
 -- ============================================================================
--- 8. WORK LOGS
--- Project-based employee work; gets bundled into a payroll transaction
--- at payout time (transaction_id set once that happens, paid flips true).
--- ============================================================================
-
-create table work_logs (
-  id uuid primary key default gen_random_uuid(),
-  employee_id uuid not null references employees(id),
-  project_id uuid references projects(id),
-  task_description text not null,
-  amount numeric not null check (amount > 0),
-  work_date date not null default current_date,
-  paid boolean not null default false,
-  transaction_id uuid references transactions(id),
-  created_at timestamptz not null default now()
-);
-
-create index idx_work_logs_employee on work_logs(employee_id);
-create index idx_work_logs_project on work_logs(project_id);
-
-
--- ============================================================================
--- 9. INVOICES
+-- 8. INVOICES
 -- Presentational layer over a transaction or project — never itself a
 -- source of due-amount truth (that always comes from payments).
 -- ============================================================================
@@ -271,7 +251,7 @@ create index idx_invoices_client on invoices(client_id);
 
 
 -- ============================================================================
--- 9b. RLS — explicitly OFF for now
+-- 8b. RLS — explicitly OFF for now
 -- Supabase enables Row Level Security by default on some project setups;
 -- since no policies exist yet, that silently blocks every read/write from
 -- the anon key ("new row violates row-level security policy"). RLS is a
@@ -287,12 +267,11 @@ alter table employees disable row level security;
 alter table projects disable row level security;
 alter table transactions disable row level security;
 alter table payments disable row level security;
-alter table work_logs disable row level security;
 alter table invoices disable row level security;
 
 
 -- ============================================================================
--- 10. AUDIT LOG — generic, trigger-populated
+-- 9. AUDIT LOG — generic, trigger-populated
 -- Logging happens at the database level (not app code), so it can't be
 -- silently skipped by a missed call site as a new module is added.
 -- ============================================================================
@@ -340,7 +319,6 @@ create trigger audit_employees after insert or update or delete on employees for
 create trigger audit_projects after insert or update or delete on projects for each row execute function log_audit_event();
 create trigger audit_transactions after insert or update or delete on transactions for each row execute function log_audit_event();
 create trigger audit_payments after insert or update or delete on payments for each row execute function log_audit_event();
-create trigger audit_work_logs after insert or update or delete on work_logs for each row execute function log_audit_event();
 create trigger audit_invoices after insert or update or delete on invoices for each row execute function log_audit_event();
 
 -- Resolves changed_by to an email without exposing the rest of auth.users.
@@ -353,7 +331,7 @@ grant select on audit_log_with_user to authenticated;
 
 
 -- ============================================================================
--- 11. REPORTING VIEWS
+-- 10. REPORTING VIEWS
 -- All "how much is due / what's the P&L" logic lives here, computed from
 -- transactions + payments, so there is never a cached figure to fall out
 -- of sync.

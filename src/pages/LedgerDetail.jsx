@@ -70,7 +70,7 @@ export default function LedgerDetail() {
   if (!transaction) return null;
 
   const { paidAmount, dueAmount, status } = computeBalances(transaction);
-  const party = transaction.clients?.name ?? transaction.vendors?.name ?? '—';
+  const party = transaction.clients?.name ?? transaction.employees?.name ?? transaction.vendors?.name ?? '—';
 
   return (
     <div>

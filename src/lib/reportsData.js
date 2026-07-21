@@ -77,35 +77,29 @@ export async function fetchPLByPeriod({ dateFrom, dateTo, concernId, period = 'm
     .sort((a, b) => a.period.localeCompare(b.period));
 }
 
-// Total paid per employee (from work_logs marked paid — the record of
-// actual salary/project disbursement, distinct from payments.handled_by
-// which tracks who processed someone else's payment, not their own pay).
+// Total paid per employee, sourced directly from Ledger expense
+// transactions carrying employee_id (paid amount via their payments),
+// rather than a separate payroll-tracking table.
 export async function fetchEmployeeCostReport({ dateFrom, dateTo, concernId } = {}) {
   let query = supabase
-    .from('work_logs')
-    .select('employee_id, amount, work_date, paid, employees(id, name, type, concern_id, concerns(name))')
-    .eq('paid', true);
-  if (dateFrom) query = query.gte('work_date', dateFrom);
-  if (dateTo) query = query.lte('work_date', dateTo);
+    .from('transactions')
+    .select('total_amount, transaction_date, concern_id, employees(id, name, role), payments(amount)')
+    .eq('type', 'expense')
+    .not('employee_id', 'is', null);
+  if (concernId) query = query.eq('concern_id', concernId);
+  if (dateFrom) query = query.gte('transaction_date', dateFrom);
+  if (dateTo) query = query.lte('transaction_date', dateTo);
 
   const { data, error } = await query;
   if (error) throw error;
 
-  let rows = data ?? [];
-  if (concernId) rows = rows.filter((r) => r.employees?.concern_id === concernId);
-
   const groups = new Map();
-  for (const r of rows) {
-    const emp = r.employees;
+  for (const t of data ?? []) {
+    const emp = t.employees;
     if (!emp) continue;
-    const g = groups.get(emp.id) ?? {
-      employeeId: emp.id,
-      name: emp.name,
-      type: emp.type,
-      concernName: emp.concerns?.name,
-      total: 0,
-    };
-    g.total += Number(r.amount);
+    const paid = (t.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+    const g = groups.get(emp.id) ?? { employeeId: emp.id, name: emp.name, role: emp.role, total: 0 };
+    g.total += paid;
     groups.set(emp.id, g);
   }
 

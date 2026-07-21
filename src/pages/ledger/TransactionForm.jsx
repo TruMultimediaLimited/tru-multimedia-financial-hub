@@ -6,13 +6,26 @@ import {
   createTransaction,
   updateTransaction,
   fetchClients,
-  fetchVendors,
   fetchProjects,
+  fetchEmployees,
   createClient,
-  createVendor,
 } from '../../lib/ledgerData.js';
+import { createEmployee } from '../../lib/employeeData.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+const EXPENSE_CATEGORIES = [
+  'Salary/Payroll',
+  'Office Rent',
+  'Electricity Bill',
+  'Equipment',
+  'Food & Refreshments',
+  'Guest Entertainment',
+  'Transport',
+  'Internet & Phone',
+  'Maintenance',
+  'Other',
+];
 
 export default function TransactionForm({ open, onClose, onSaved, defaultType = 'income', transaction = null }) {
   const { concerns, selectedConcernId } = useConcern();
@@ -20,7 +33,8 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   const [concernId, setConcernId] = useState('');
   const [type, setType] = useState(defaultType);
-  const [partyId, setPartyId] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [category, setCategory] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
   const [date, setDate] = useState(todayStr());
@@ -28,13 +42,17 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   const [projectId, setProjectId] = useState('');
 
   const [clients, setClients] = useState([]);
-  const [vendors, setVendors] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
 
-  const [showNewParty, setShowNewParty] = useState(false);
-  const [newPartyName, setNewPartyName] = useState('');
-  const [newPartyPhone, setNewPartyPhone] = useState('');
-  const [savingParty, setSavingParty] = useState(false);
+  const [showNewClient, setShowNewClient] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [savingClient, setSavingClient] = useState(false);
+
+  const [showNewEmployee, setShowNewEmployee] = useState(false);
+  const [newEmployeeName, setNewEmployeeName] = useState('');
+  const [savingEmployee, setSavingEmployee] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -42,12 +60,13 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   useEffect(() => {
     if (!open) return;
     fetchClients().then(setClients).catch((e) => setError(e.message));
-    fetchVendors().then(setVendors).catch((e) => setError(e.message));
+    fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
 
     if (transaction) {
       setConcernId(transaction.concern_id ?? '');
       setType(transaction.type);
-      setPartyId(transaction.client_id ?? transaction.vendor_id ?? '');
+      setClientId(transaction.client_id ?? '');
+      setEmployeeId(transaction.employee_id ?? '');
       setCategory(transaction.category ?? '');
       setTotalAmount(String(transaction.total_amount ?? ''));
       setDate(transaction.transaction_date ?? todayStr());
@@ -56,14 +75,16 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     } else {
       setConcernId(selectedConcernId ?? '');
       setType(defaultType);
-      setPartyId('');
+      setClientId('');
+      setEmployeeId('');
       setCategory('');
       setTotalAmount('');
       setDate(todayStr());
       setDescription('');
       setProjectId('');
     }
-    setShowNewParty(false);
+    setShowNewClient(false);
+    setShowNewEmployee(false);
     setError('');
   }, [open, transaction, defaultType, selectedConcernId]);
 
@@ -77,30 +98,39 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   if (!open) return null;
 
-  const partyOptions = type === 'income' ? clients : vendors;
-  const partyLabel = type === 'income' ? 'Client' : 'Vendor';
-
-  async function handleSaveNewParty() {
-    if (!newPartyName.trim()) return;
-    setSavingParty(true);
+  async function handleSaveNewClient() {
+    if (!newClientName.trim()) return;
+    setSavingClient(true);
     setError('');
     try {
-      const row =
-        type === 'income'
-          ? await createClient({ name: newPartyName.trim(), phone: newPartyPhone.trim() || null })
-          : await createVendor({ name: newPartyName.trim(), phone: newPartyPhone.trim() || null });
-
-      if (type === 'income') setClients((prev) => [...prev, row]);
-      else setVendors((prev) => [...prev, row]);
-
-      setPartyId(row.id);
-      setShowNewParty(false);
-      setNewPartyName('');
-      setNewPartyPhone('');
+      const row = await createClient({ name: newClientName.trim(), phone: newClientPhone.trim() || null });
+      setClients((prev) => [...prev, row]);
+      setClientId(row.id);
+      setShowNewClient(false);
+      setNewClientName('');
+      setNewClientPhone('');
     } catch (e) {
       setError(e.message);
     } finally {
-      setSavingParty(false);
+      setSavingClient(false);
+    }
+  }
+
+  async function handleSaveNewEmployee() {
+    if (!newEmployeeName.trim()) return;
+    setSavingEmployee(true);
+    setError('');
+    try {
+      const parentConcern = concerns.find((c) => c.parent_concern_id === null);
+      const row = await createEmployee({ concern_id: parentConcern?.id, name: newEmployeeName.trim() });
+      setEmployees((prev) => [...prev, row]);
+      setEmployeeId(row.id);
+      setShowNewEmployee(false);
+      setNewEmployeeName('');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSavingEmployee(false);
     }
   }
 
@@ -109,15 +139,16 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     setError('');
 
     if (!concernId) return setError('Concern is required.');
-    if (!partyId) return setError(`${partyLabel} is required.`);
+    if (type === 'income' && !clientId) return setError('Client is required.');
     const amount = Number(totalAmount);
     if (!(amount > 0)) return setError('Total amount must be greater than 0.');
 
     const payload = {
       concern_id: concernId,
       project_id: projectId || null,
-      client_id: type === 'income' ? partyId : null,
-      vendor_id: type === 'expense' ? partyId : null,
+      client_id: type === 'income' ? clientId : null,
+      vendor_id: null,
+      employee_id: type === 'expense' ? employeeId || null : null,
       type,
       category: category.trim() || null,
       total_amount: amount,
@@ -160,10 +191,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setType('income');
-                  setPartyId('');
-                }}
+                onClick={() => setType('income')}
                 className={`py-2 rounded-md text-sm border ${
                   type === 'income' ? 'bg-income/15 border-income text-income' : 'border-gray-700 text-gray-400'
                 }`}
@@ -172,10 +200,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setType('expense');
-                  setPartyId('');
-                }}
+                onClick={() => setType('expense')}
                 className={`py-2 rounded-md text-sm border ${
                   type === 'expense' ? 'bg-expense/15 border-expense text-expense' : 'border-gray-700 text-gray-400'
                 }`}
@@ -186,62 +211,123 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
           </Field>
         )}
 
-        <Field label={partyLabel} required>
-          {!showNewParty ? (
-            <div className="flex gap-2">
-              <select className={inputClass} value={partyId} onChange={(e) => setPartyId(e.target.value)}>
-                <option value="">Select {partyLabel.toLowerCase()}</option>
-                {partyOptions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowNewParty(true)}
-                className="shrink-0 px-3 rounded-md text-sm border border-gray-700 text-gray-300 hover:text-gray-100"
-              >
-                + New
-              </button>
-            </div>
-          ) : (
-            <div className="border border-gray-700 rounded-md p-3 space-y-2">
-              <input
-                className={inputClass}
-                placeholder={`${partyLabel} name`}
-                value={newPartyName}
-                onChange={(e) => setNewPartyName(e.target.value)}
-              />
-              <input
-                className={inputClass}
-                placeholder="Phone (optional)"
-                value={newPartyPhone}
-                onChange={(e) => setNewPartyPhone(e.target.value)}
-              />
+        {type === 'income' ? (
+          <Field label="Client" required>
+            {!showNewClient ? (
               <div className="flex gap-2">
+                <select className={inputClass} value={clientId} onChange={(e) => setClientId(e.target.value)}>
+                  <option value="">Select client</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
-                  disabled={savingParty}
-                  onClick={handleSaveNewParty}
-                  className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
+                  onClick={() => setShowNewClient(true)}
+                  className="shrink-0 px-3 rounded-md text-sm border border-gray-700 text-gray-300 hover:text-gray-100"
                 >
-                  {savingParty ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowNewParty(false)}
-                  className="px-3 py-1.5 rounded-md text-sm border border-gray-700 text-gray-300"
-                >
-                  Cancel
+                  + New
                 </button>
               </div>
-            </div>
-          )}
-        </Field>
+            ) : (
+              <div className="border border-gray-700 rounded-md p-3 space-y-2">
+                <input
+                  className={inputClass}
+                  placeholder="Client name"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                />
+                <input
+                  className={inputClass}
+                  placeholder="Phone (optional)"
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={savingClient}
+                    onClick={handleSaveNewClient}
+                    className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
+                  >
+                    {savingClient ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewClient(false)}
+                    className="px-3 py-1.5 rounded-md text-sm border border-gray-700 text-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </Field>
+        ) : (
+          <Field label="Employee" hint="Optional — leave blank for expenses not tied to a specific person">
+            {!showNewEmployee ? (
+              <div className="flex gap-2">
+                <select className={inputClass} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
+                  <option value="">No employee</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNewEmployee(true)}
+                  className="shrink-0 px-3 rounded-md text-sm border border-gray-700 text-gray-300 hover:text-gray-100"
+                >
+                  + New
+                </button>
+              </div>
+            ) : (
+              <div className="border border-gray-700 rounded-md p-3 space-y-2">
+                <input
+                  className={inputClass}
+                  placeholder="Employee name"
+                  value={newEmployeeName}
+                  onChange={(e) => setNewEmployeeName(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={savingEmployee}
+                    onClick={handleSaveNewEmployee}
+                    className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-900 disabled:opacity-50"
+                  >
+                    {savingEmployee ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewEmployee(false)}
+                    className="px-3 py-1.5 rounded-md text-sm border border-gray-700 text-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </Field>
+        )}
 
-        <Field label="Category" hint="e.g. Photography, Equipment, Payroll">
-          <input className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)} />
+        <Field label="Category">
+          {type === 'expense' ? (
+            <select className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">Select category</option>
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Photography" />
+          )}
         </Field>
 
         <Field label="Total amount" required>
