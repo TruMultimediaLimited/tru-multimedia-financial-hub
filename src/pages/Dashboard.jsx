@@ -265,19 +265,19 @@ function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onCl
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card p-4 min-h-[112px] flex flex-col justify-between gap-2 transition-colors hover:border-slate-300 ${
+      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-4 transition-colors hover:border-slate-300 ${
         active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-slate-500">{label}</span>
         {Icon && (
-          <span className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center ${iconClass}`}>
-            <Icon className="w-4 h-4" />
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center ${iconClass}`}>
+            <Icon className="w-3.5 h-3.5" />
           </span>
         )}
-        <span className="text-sm font-medium text-slate-500 leading-snug">{label}</span>
       </div>
-      <span className={`block text-xl leading-[1.15] font-bold ${accent}`}>{value}</span>
+      <div className={`text-xl font-bold ${accent}`}>{value}</div>
     </button>
   );
 }
