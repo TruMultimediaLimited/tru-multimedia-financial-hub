@@ -47,7 +47,7 @@ drop view if exists concern_pl_view;
 drop view if exists client_balances;
 drop view if exists vendor_balances;
 
-drop function if exists log_audit_event();
+drop function if exists log_audit_event() cascade;
 
 drop type if exists transaction_type cascade;
 drop type if exists payment_channel cascade;
