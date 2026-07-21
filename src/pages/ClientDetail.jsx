@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
-import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
+import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, PROJECT_STATUS_STYLES, PAYMENT_BUCKET_STYLES, PAYMENT_BUCKET_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchClient, deleteClient } from '../lib/partyData.js';
 import { fetchInvoicesForClient } from '../lib/invoiceData.js';
-import { fetchProjectsForClient } from '../lib/projectData.js';
+import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 import PartyForm from './parties/PartyForm.jsx';
+import ProjectForm from './projects/ProjectForm.jsx';
 
 export default function ClientDetail() {
   const { id } = useParams();
@@ -19,12 +20,18 @@ export default function ClientDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+  const [projectFormOpen, setProjectFormOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchClient(id), fetchTransactions({ clientId: id }), fetchInvoicesForClient(id), fetchProjectsForClient(id)])
+    Promise.all([
+      fetchClient(id),
+      fetchTransactions({ clientId: id }),
+      fetchInvoicesForClient(id),
+      fetchProjectsWithTotals({ clientId: id }),
+    ])
       .then(([c, txns, invs, projs]) => {
         if (cancelled) return;
         setClient(c);
@@ -70,6 +77,15 @@ export default function ClientDetail() {
             <div className="text-xs text-gray-500">
               {[client.phone, client.email, client.address].filter(Boolean).join(' · ') || 'No contact info'}
             </div>
+            {client.concerns?.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {client.concerns.map((c) => (
+                  <Badge key={c.id} className="bg-surfaceRaised text-gray-700 border-gray-300">
+                    {c.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 shrink-0">
             <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
@@ -101,9 +117,26 @@ export default function ClientDetail() {
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-medium text-gray-700">Projects</h2>
+        <button
+          onClick={() => setProjectFormOpen(true)}
+          className="px-2.5 py-1 rounded-md text-xs border border-gray-300 text-gray-700"
+        >
+          + New project
+        </button>
+      </div>
+
+      {projects.length === 0 && <p className="text-sm text-gray-500 mb-4">No projects yet.</p>}
+
       {projects.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-700 mb-2">Projects</h2>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-2">
+            <span>{projects.length} total</span>
+            <span>{projects.filter((p) => p.status === 'completed').length} completed</span>
+            <span>{projects.filter((p) => paymentBucket(p) === 'complete').length} paid</span>
+            <span>{projects.filter((p) => paymentBucket(p) !== 'complete').length} due</span>
+          </div>
           <div className="space-y-2 mb-4">
             {projects.map((p) => (
               <div
@@ -111,7 +144,14 @@ export default function ClientDetail() {
                 onClick={() => navigate(`/projects/${p.id}`)}
                 className="flex items-center justify-between border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
               >
-                <div className="text-sm text-gray-900">{p.title}</div>
+                <div>
+                  <div className="text-sm text-gray-900">{p.title}</div>
+                  <div className="text-xs text-gray-500">{p.concerns?.name}</div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
+                  <Badge className={PAYMENT_BUCKET_STYLES[paymentBucket(p)]}>{PAYMENT_BUCKET_LABELS[paymentBucket(p)]}</Badge>
+                </div>
               </div>
             ))}
           </div>
@@ -168,6 +208,13 @@ export default function ClientDetail() {
         onClose={() => setEditOpen(false)}
         onSaved={() => setReloadKey((k) => k + 1)}
         party={client}
+      />
+
+      <ProjectForm
+        open={projectFormOpen}
+        onClose={() => setProjectFormOpen(false)}
+        onSaved={() => setReloadKey((k) => k + 1)}
+        defaultClientId={id}
       />
     </div>
   );

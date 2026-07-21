@@ -29,3 +29,24 @@ export const CHANNEL_LABELS = {
   cash: 'Cash',
   other: 'Other',
 };
+
+export const PROJECT_STATUS_STYLES = {
+  active: 'bg-income/15 text-income border-income/30',
+  completed: 'bg-surfaceRaised text-gray-700 border-gray-300',
+  stalled: 'bg-due/15 text-due border-due/30',
+};
+
+// Payment-progress bucket — separate from a project's own active/completed/
+// stalled status, this is purely about how much of the contract value has
+// actually been collected.
+export const PAYMENT_BUCKET_STYLES = {
+  due: 'bg-gray-500/15 text-gray-500 border-gray-500/30',
+  partial: 'bg-due/15 text-due border-due/30',
+  complete: 'bg-income/15 text-income border-income/30',
+};
+
+export const PAYMENT_BUCKET_LABELS = {
+  due: 'Due',
+  partial: 'Partial',
+  complete: 'Paid',
+};

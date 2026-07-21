@@ -105,7 +105,11 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     setSavingClient(true);
     setError('');
     try {
-      const row = await createClient({ name: newClientName.trim(), phone: newClientPhone.trim() || null });
+      const row = await createClient({
+        name: newClientName.trim(),
+        phone: newClientPhone.trim() || null,
+        concernIds: concernId ? [concernId] : [],
+      });
       setClients((prev) => [...prev, row]);
       setClientId(row.id);
       setShowNewClient(false);

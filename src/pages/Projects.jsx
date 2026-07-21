@@ -2,25 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import { inputClass } from '../components/Field.jsx';
-import { formatMoney } from '../lib/format.js';
+import { formatMoney, PROJECT_STATUS_STYLES } from '../lib/format.js';
 import { useConcern } from '../context/ConcernContext.jsx';
-import { fetchProjectsWithTotals } from '../lib/projectData.js';
+import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
-
-const STATUS_BADGE = {
-  active: 'bg-income/15 text-income border-income/30',
-  completed: 'bg-surfaceRaised text-gray-700 border-gray-300',
-  stalled: 'bg-due/15 text-due border-due/30',
-};
-
-// Payment-progress bucket — separate from the project's own active/
-// completed/stalled status field, this is purely about how much of the
-// contract value has actually been collected.
-function paymentBucket(p) {
-  if (p.totalReceived <= 0) return 'due';
-  if (p.totalDue <= 0) return 'complete';
-  return 'partial';
-}
 
 const BUCKETS = [
   { key: 'due', label: 'Due' },
@@ -108,7 +93,7 @@ export default function Projects() {
             >
               <div className="flex items-start justify-between mb-1">
                 <div className="font-medium text-gray-900">{p.title}</div>
-                <Badge className={STATUS_BADGE[p.status]}>{p.status}</Badge>
+                <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
               </div>
               <div className="text-xs text-gray-500 mb-3">
                 {p.clients?.name ?? 'No client'} · {p.concerns?.name}

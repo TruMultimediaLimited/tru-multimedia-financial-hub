@@ -42,9 +42,19 @@ function mergeBalance(project, balances) {
 export async function fetchProjectsWithTotals(filters = {}) {
   let query = supabase.from('projects').select(PROJECT_SELECT).order('title');
   if (filters.concernId) query = query.eq('concern_id', filters.concernId);
+  if (filters.clientId) query = query.eq('client_id', filters.clientId);
   const [{ data, error }, balances] = await Promise.all([query, fetchBalancesMap()]);
   if (error) throw error;
   return (data ?? []).map((p) => mergeBalance(p, balances));
+}
+
+// Payment-progress bucket for a project merged with totals (fetchProjectsWithTotals/
+// fetchProject) — purely about how much of the contract value has been collected,
+// separate from the project's own active/completed/stalled status.
+export function paymentBucket(p) {
+  if (p.totalReceived <= 0) return 'due';
+  if (p.totalDue <= 0) return 'complete';
+  return 'partial';
 }
 
 export async function fetchProject(id) {

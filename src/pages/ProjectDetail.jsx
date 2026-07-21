@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
-import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
+import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS, PROJECT_STATUS_STYLES } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchProject, deleteProject } from '../lib/projectData.js';
 import { fetchInvoicesForProject } from '../lib/invoiceData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
-
-const STATUS_BADGE = {
-  active: 'bg-income/15 text-income border-income/30',
-  completed: 'bg-surfaceRaised text-gray-700 border-gray-300',
-  stalled: 'bg-due/15 text-due border-due/30',
-};
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -90,11 +84,18 @@ export default function ProjectDetail() {
           <div>
             <div className="text-lg font-semibold text-gray-900">{project.title}</div>
             <div className="text-xs text-gray-500">
-              {project.clients?.name ?? 'No client'} · {project.concerns?.name}
+              {project.clients ? (
+                <button onClick={() => navigate(`/clients/${project.clients.id}`)} className="text-gray-700 underline underline-offset-2">
+                  {project.clients.name}
+                </button>
+              ) : (
+                'No client'
+              )}{' '}
+              · {project.concerns?.name}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Badge className={STATUS_BADGE[project.status]}>{project.status}</Badge>
+            <Badge className={PROJECT_STATUS_STYLES[project.status]}>{project.status}</Badge>
             <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-gray-300 text-gray-700">
               Edit
             </button>
