@@ -29,7 +29,7 @@ const EXPENSE_CATEGORIES = [
 
 export default function TransactionForm({ open, onClose, onSaved, defaultType = 'income', transaction = null }) {
   const { concerns, selectedConcernId } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [concernId, setConcernId] = useState('');
   const [type, setType] = useState(defaultType);

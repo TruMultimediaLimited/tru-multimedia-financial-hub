@@ -7,7 +7,7 @@ import { createProject, updateProject } from '../../lib/projectData.js';
 
 export default function ProjectForm({ open, onClose, onSaved, project = null }) {
   const { concerns } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [concernId, setConcernId] = useState('');
   const [clientId, setClientId] = useState('');

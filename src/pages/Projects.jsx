@@ -16,7 +16,7 @@ const STATUS_BADGE = {
 export default function Projects() {
   const navigate = useNavigate();
   const { concerns } = useConcern();
-  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
+  const realConcerns = concerns;
 
   const [concernFilter, setConcernFilter] = useState('');
   const [projects, setProjects] = useState([]);

@@ -11,13 +11,11 @@ export default function ConcernSwitcher({ className = '' }) {
       disabled={loading}
     >
       <option value="">সকল (Consolidated)</option>
-      {concerns
-        .filter((c) => c.parent_concern_id !== null)
-        .map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
+      {concerns.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
     </select>
   );
 }
