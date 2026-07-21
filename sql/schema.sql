@@ -36,6 +36,8 @@ drop table if exists payments cascade;
 drop table if exists transactions cascade;
 drop table if exists projects cascade;
 drop table if exists employees cascade;
+drop table if exists owner_investments cascade;
+drop table if exists owners cascade;
 drop table if exists clients cascade;
 drop table if exists concerns cascade;
 
@@ -54,6 +56,7 @@ drop view if exists transaction_balances;
 drop view if exists project_balances;
 drop view if exists concern_pl_view;
 drop view if exists client_balances;
+drop view if exists owner_balances;
 
 drop function if exists log_audit_event() cascade;
 
@@ -137,6 +140,43 @@ create index idx_employees_concern on employees(concern_id);
 
 
 -- ============================================================================
+-- 4b. OWNERS
+-- The partners of Tru Multimedia Limited. Distinct from employees/auth
+-- users: the company currently runs at a loss, so partners routinely pay
+-- company dues/expenses out of pocket and need their own running balance
+-- (see payments.handled_by_owner_id, section 7, and owner_balances view,
+-- section 10) — how much each has personally received vs. given on the
+-- company's behalf, plus a separate record of straight capital they've
+-- invested (owner_investments, not tied to any transaction).
+-- ============================================================================
+
+create table owners (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  role text,
+  company_share_percent numeric check (company_share_percent >= 0 and company_share_percent <= 100),
+  created_at timestamptz not null default now()
+);
+
+insert into owners (name, role, company_share_percent) values
+  ('Rezwan Kobir Zoha', 'Partner', 33),
+  ('Ifthaker Hossain Radone', 'Partner', 34),
+  ('Md Rasel Ahmed', 'Partner', 33);
+
+create table owner_investments (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references owners(id),
+  amount numeric not null check (amount > 0),
+  investment_date date not null default current_date,
+  note text,
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+create index idx_owner_investments_owner on owner_investments(owner_id);
+
+
+-- ============================================================================
 -- 5. PROJECTS
 -- ============================================================================
 
@@ -190,9 +230,10 @@ create index idx_transactions_date on transactions(transaction_date);
 
 -- ============================================================================
 -- 7. PAYMENTS
--- Real money movement against a transaction. handled_by is exactly one
--- of an employee or a logged-in user (owner/partner), or neither if
--- unspecified.
+-- Real money movement against a transaction. handled_by is at most one of
+-- an employee, a logged-in user, or an owner/partner (see owner_balances,
+-- section 10, for the running "who gave/received how much" tally this
+-- feeds — e.g. an owner paying a salary out of pocket).
 -- ============================================================================
 
 create table payments (
@@ -202,12 +243,15 @@ create table payments (
   channel payment_channel not null,
   handled_by_employee_id uuid references employees(id),
   handled_by_user_id uuid references auth.users(id),
+  handled_by_owner_id uuid references owners(id),
   payment_date date not null default current_date,
   note text,
   created_by uuid references auth.users(id),
   created_at timestamptz not null default now(),
   constraint payments_handler_check check (
-    not (handled_by_employee_id is not null and handled_by_user_id is not null)
+    (case when handled_by_employee_id is not null then 1 else 0 end)
+    + (case when handled_by_user_id is not null then 1 else 0 end)
+    + (case when handled_by_owner_id is not null then 1 else 0 end) <= 1
   )
 );
 
@@ -249,6 +293,8 @@ create index idx_invoices_client on invoices(client_id);
 alter table concerns disable row level security;
 alter table clients disable row level security;
 alter table employees disable row level security;
+alter table owners disable row level security;
+alter table owner_investments disable row level security;
 alter table projects disable row level security;
 alter table transactions disable row level security;
 alter table payments disable row level security;
@@ -300,6 +346,8 @@ $$;
 create trigger audit_concerns after insert or update or delete on concerns for each row execute function log_audit_event();
 create trigger audit_clients after insert or update or delete on clients for each row execute function log_audit_event();
 create trigger audit_employees after insert or update or delete on employees for each row execute function log_audit_event();
+create trigger audit_owners after insert or update or delete on owners for each row execute function log_audit_event();
+create trigger audit_owner_investments after insert or update or delete on owner_investments for each row execute function log_audit_event();
 create trigger audit_projects after insert or update or delete on projects for each row execute function log_audit_event();
 create trigger audit_transactions after insert or update or delete on transactions for each row execute function log_audit_event();
 create trigger audit_payments after insert or update or delete on payments for each row execute function log_audit_event();
@@ -339,7 +387,9 @@ from transactions t
 left join payments p on p.transaction_id = t.id
 group by t.id, t.concern_id, t.type, t.total_amount;
 
--- Per-project rollup: received vs. contract value, expenses, due.
+-- Per-project rollup: received vs. contract value, expenses, due, profit.
+-- Profit is cash-basis (received - expense paid), not accrual — matches
+-- how every other due/paid figure in this app is computed.
 create or replace view project_balances as
 select
   pr.id as project_id,
@@ -348,7 +398,9 @@ select
   pr.contract_value,
   coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0) as total_received,
   coalesce(sum(case when t.type = 'income' then tb.due_amount else 0 end), 0) as total_due,
-  coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid
+  coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid,
+  coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0)
+    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
 from projects pr
 left join transactions t on t.project_id = pr.id
 left join transaction_balances tb on tb.transaction_id = t.id
@@ -377,3 +429,22 @@ from clients cl
 left join transactions t on t.client_id = cl.id and t.type = 'income'
 left join transaction_balances tb on tb.transaction_id = t.id
 group by cl.id, cl.name;
+
+-- Per-owner running balance: how much they've personally received
+-- (collected on income transactions) vs. given (paid company expenses out
+-- of pocket). net_owed_to_owner > 0 means the company still owes that
+-- owner a reimbursement; < 0 means the owner is holding uncollected
+-- company cash. Investments are tracked separately (owner_investments)
+-- and are not part of this balance — they're capital put in, not a
+-- transaction-linked payment.
+create or replace view owner_balances as
+select
+  o.id as owner_id,
+  o.name,
+  coalesce(sum(case when t.type = 'income' then p.amount else 0 end), 0) as total_received,
+  coalesce(sum(case when t.type = 'expense' then p.amount else 0 end), 0) as total_given,
+  coalesce(sum(case when t.type = 'expense' then p.amount else -p.amount end), 0) as net_owed_to_owner
+from owners o
+left join payments p on p.handled_by_owner_id = o.id
+left join transactions t on t.id = p.transaction_id
+group by o.id, o.name;

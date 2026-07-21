@@ -7,6 +7,7 @@ export const modules = [
   { path: '/projects', label: 'Projects', icon: 'projects', bottomTab: true },
   { path: '/clients', label: 'Clients', icon: 'clients', bottomTab: false },
   { path: '/employees', label: 'Employees', icon: 'employees', bottomTab: false },
+  { path: '/owners', label: 'Owners', icon: 'owners', bottomTab: false },
   { path: '/invoices', label: 'Invoices', icon: 'invoices', bottomTab: false },
   { path: '/reports', label: 'Reports', icon: 'reports', bottomTab: true },
   { path: '/audit-log', label: 'Audit Log', icon: 'audit', bottomTab: false },

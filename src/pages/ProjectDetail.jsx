@@ -80,7 +80,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-3">
           <div>
             <div className="text-xs text-gray-500">Contract value</div>
             <div className="text-gray-100">{formatMoney(project.contract_value)}</div>
@@ -96,6 +96,10 @@ export default function ProjectDetail() {
           <div>
             <div className="text-xs text-gray-500">Expenses paid</div>
             <div className="text-expense">{formatMoney(project.totalExpensePaid)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Profit</div>
+            <div className={project.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(project.profit)}</div>
           </div>
         </div>
 
