@@ -27,7 +27,7 @@ const EXPENSE_CATEGORIES = [
   'Other',
 ];
 
-export default function TransactionForm({ open, onClose, onSaved, defaultType = 'income', transaction = null }) {
+export default function TransactionForm({ open, onClose, onSaved, defaultType = 'income', transaction = null, fixedType = null }) {
   const { concerns, selectedConcernId } = useConcern();
   const realConcerns = concerns;
 
@@ -185,7 +185,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
           </select>
         </Field>
 
-        {!transaction && (
+        {!transaction && !fixedType && (
           <Field label="Type" required>
             <div className="grid grid-cols-2 gap-2">
               <button

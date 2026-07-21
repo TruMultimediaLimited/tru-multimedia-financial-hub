@@ -219,7 +219,7 @@ export default function Ledger({ fixedType = null }) {
         </>
       )}
 
-      <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={refresh} defaultType={formType} />
+      <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={refresh} defaultType={formType} fixedType={fixedType} />
     </div>
   );
 }
