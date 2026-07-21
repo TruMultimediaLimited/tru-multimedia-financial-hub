@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { inputClass } from '../components/Field.jsx';
+import Dropdown from '../components/Dropdown.jsx';
+import SearchSelect from '../components/SearchSelect.jsx';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 
@@ -25,7 +26,7 @@ export default function Projects() {
   const { selectedConcernId } = useConcern();
 
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('due');
+  const [paymentFilter, setPaymentFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +57,8 @@ export default function Projects() {
     clientMap.set(p.clients.id, entry);
   }
   // Alphabetical list of every client matching the two dropdowns above —
-  // powers both the datalist (browse) and, once narrowed by typing, the
-  // visible cards below.
+  // powers both the browse list and, once narrowed by typing, the visible
+  // cards below.
   const matchedClients = [...clientMap.values()].sort((a, b) => a.name.localeCompare(b.name));
   let clientRows = matchedClients;
   if (search.trim()) {
@@ -65,46 +66,40 @@ export default function Projects() {
     clientRows = clientRows.filter((c) => c.name.toLowerCase().includes(q));
   }
 
+  const statusOptions = STATUS_TABS.map((t) => ({
+    value: t.key,
+    label: `${t.label} (${t.key === 'all' ? projects.length : projects.filter((p) => p.status === t.key).length})`,
+  }));
+  const paymentOptions = PAYMENT_TABS.map((t) => ({
+    value: t.key,
+    label: `${t.label} (${t.key === 'all' ? projects.length : projects.filter((p) => paymentBucket(p) === t.key).length})`,
+  }));
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
       </div>
 
-      <select className={`${inputClass} mb-3`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-        {STATUS_TABS.map((t) => {
-          const count = t.key === 'all' ? projects.length : projects.filter((p) => p.status === t.key).length;
-          return (
-            <option key={t.key} value={t.key}>
-              {t.label} ({count})
-            </option>
-          );
-        })}
-      </select>
+      <div className="mb-3">
+        <span className="block text-xs text-gray-500 mb-1">Project status</span>
+        <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+      </div>
 
-      <input
-        list="project-client-options"
-        placeholder="Search clients"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className={`${inputClass} mb-3`}
-      />
-      <datalist id="project-client-options">
-        {matchedClients.map((c) => (
-          <option key={c.id} value={c.name} />
-        ))}
-      </datalist>
+      <div className="mb-3">
+        <span className="block text-xs text-gray-500 mb-1">Client</span>
+        <SearchSelect
+          value={search}
+          onChange={setSearch}
+          options={matchedClients.map((c) => c.name)}
+          placeholder="Search clients"
+        />
+      </div>
 
-      <select className={`${inputClass} mb-4`} value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
-        {PAYMENT_TABS.map((t) => {
-          const count = t.key === 'all' ? projects.length : projects.filter((p) => paymentBucket(p) === t.key).length;
-          return (
-            <option key={t.key} value={t.key}>
-              {t.label} ({count})
-            </option>
-          );
-        })}
-      </select>
+      <div className="mb-4">
+        <span className="block text-xs text-gray-500 mb-1">Payment status</span>
+        <Dropdown value={paymentFilter} onChange={setPaymentFilter} options={paymentOptions} />
+      </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
