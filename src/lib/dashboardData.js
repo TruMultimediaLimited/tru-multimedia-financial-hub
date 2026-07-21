@@ -11,7 +11,7 @@ const DUE_SELECT = `
 `;
 
 const CHANNEL_SELECT = `
-  amount, channel, handled_by_employee_id, handled_by_user_id,
+  amount, channel, payment_date, handled_by_employee_id, handled_by_user_id,
   employees(id, name),
   transactions(concern_id)
 `;
@@ -94,12 +94,16 @@ export async function fetchDueSummary(concernId) {
 
 // Payment totals grouped by channel + handler, for accountability. Row
 // count is bounded by total payments recorded (small at this business's
-// scale), filtered to the selected concern before grouping.
-export async function fetchChannelBreakdown(concernId, currentUserId) {
+// scale), filtered to the selected concern (and optionally a date range,
+// used by the Reports module) before grouping.
+export async function fetchChannelBreakdown({ concernId, currentUserId, dateFrom, dateTo } = {}) {
   const { data, error } = await supabase.from('payments').select(CHANNEL_SELECT);
   if (error) throw error;
 
-  const rows = concernId ? (data ?? []).filter((p) => p.transactions?.concern_id === concernId) : data ?? [];
+  let rows = data ?? [];
+  if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
+  if (dateFrom) rows = rows.filter((p) => p.payment_date >= dateFrom);
+  if (dateTo) rows = rows.filter((p) => p.payment_date <= dateTo);
 
   const groups = new Map();
   for (const p of rows) {

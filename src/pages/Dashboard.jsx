@@ -31,7 +31,7 @@ export default function Dashboard() {
     Promise.all([
       fetchConcernPL(selectedConcernId || null),
       fetchDueSummary(selectedConcernId || null),
-      fetchChannelBreakdown(selectedConcernId || null, currentUser?.id ?? null),
+      fetchChannelBreakdown({ concernId: selectedConcernId || null, currentUserId: currentUser?.id ?? null }),
     ])
       .then(([plResult, dueResult, channelResult]) => {
         if (cancelled) return;
