@@ -90,7 +90,7 @@ export default function Dashboard() {
 
       {!loading && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
             <SummaryCard
               icon={Folder}
               iconClass="bg-slate-100 text-slate-600"
@@ -265,19 +265,21 @@ function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onCl
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-4 transition-colors hover:border-slate-300 ${
+      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-3 transition-colors hover:border-slate-300 ${
         active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-slate-500">{label}</span>
+      <div className="flex items-start gap-3">
         {Icon && (
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center ${iconClass}`}>
-            <Icon className="w-3.5 h-3.5" />
+          <span className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${iconClass}`}>
+            <Icon className="w-5 h-5" />
           </span>
         )}
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="text-sm font-medium text-slate-500 truncate">{label}</span>
+          <span className={`text-[32px] leading-none font-bold ${accent}`}>{value}</span>
+        </div>
       </div>
-      <div className={`text-xl font-bold ${accent}`}>{value}</div>
     </button>
   );
 }
