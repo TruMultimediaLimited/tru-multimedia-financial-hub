@@ -1,73 +1,107 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Badge from '../components/Badge.jsx';
 import { inputClass } from '../components/Field.jsx';
-import { formatMoney, PROJECT_STATUS_STYLES } from '../lib/format.js';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
-import ProjectForm from './projects/ProjectForm.jsx';
 
-const BUCKETS = [
-  { key: 'due', label: 'Due' },
-  { key: 'partial', label: 'Partial' },
-  { key: 'complete', label: 'Complete' },
+const STATUS_TABS = [
+  { key: 'all', label: 'All' },
+  { key: 'running', label: 'Running' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'cancelled', label: 'Cancelled' },
 ];
 
+const PAYMENT_TABS = [
+  { key: 'complete', label: 'Paid' },
+  { key: 'partial', label: 'Partial' },
+  { key: 'due', label: 'Due' },
+];
+
+// New projects are added from a client's own page — this page is purely
+// for browsing, grouped by client rather than listing every project flatly.
 export default function Projects() {
   const navigate = useNavigate();
-  const { concerns } = useConcern();
-  const realConcerns = concerns;
+  const { selectedConcernId } = useConcern();
 
-  const [concernFilter, setConcernFilter] = useState('');
-  const [bucketFilter, setBucketFilter] = useState('due');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('due');
+  const [search, setSearch] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchProjectsWithTotals({ concernId: concernFilter || null })
+    fetchProjectsWithTotals({ concernId: selectedConcernId || null })
       .then((rows) => !cancelled && setProjects(rows))
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [concernFilter, reloadKey]);
+  }, [selectedConcernId]);
+
+  const matching = projects.filter(
+    (p) => (statusFilter === 'all' || p.status === statusFilter) && paymentBucket(p) === paymentFilter
+  );
+
+  const clientMap = new Map();
+  const noClientCount = matching.filter((p) => !p.clients).length;
+  for (const p of matching) {
+    if (!p.clients) continue;
+    const entry = clientMap.get(p.clients.id) ?? { id: p.clients.id, name: p.clients.name, count: 0 };
+    entry.count += 1;
+    clientMap.set(p.clients.id, entry);
+  }
+  let clientRows = [...clientMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    clientRows = clientRows.filter((c) => c.name.toLowerCase().includes(q));
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white">
-          + New project
-        </button>
       </div>
 
-      <select className={`${inputClass} mb-4`} value={concernFilter} onChange={(e) => setConcernFilter(e.target.value)}>
-        <option value="">All concerns</option>
-        {realConcerns.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-
       <div className="flex gap-1 mb-4">
-        {BUCKETS.map((b) => {
-          const count = projects.filter((p) => paymentBucket(p) === b.key).length;
+        {STATUS_TABS.map((t) => {
+          const count = t.key === 'all' ? projects.length : projects.filter((p) => p.status === t.key).length;
           return (
             <button
-              key={b.key}
-              onClick={() => setBucketFilter(b.key)}
+              key={t.key}
+              onClick={() => setStatusFilter(t.key)}
               className={`px-3 py-1.5 rounded-md text-xs ${
-                bucketFilter === b.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
+                statusFilter === t.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
               }`}
             >
-              {b.label} ({count})
+              {t.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <input
+        placeholder="Search clients"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className={`${inputClass} mb-4`}
+      />
+
+      <div className="flex gap-1 mb-4">
+        {PAYMENT_TABS.map((t) => {
+          const count = projects.filter((p) => paymentBucket(p) === t.key).length;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setPaymentFilter(t.key)}
+              className={`px-3 py-1.5 rounded-md text-xs ${
+                paymentFilter === t.key ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
+              }`}
+            >
+              {t.label} ({count})
             </button>
           );
         })}
@@ -76,46 +110,31 @@ export default function Projects() {
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-gray-500">Loading…</p>}
 
-      {!loading && projects.filter((p) => paymentBucket(p) === bucketFilter).length === 0 && (
+      {!loading && clientRows.length === 0 && noClientCount === 0 && (
         <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
-          No {BUCKETS.find((b) => b.key === bucketFilter)?.label.toLowerCase()} projects.
+          No clients match these filters.
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {projects.filter((p) => paymentBucket(p) === bucketFilter).map((p) => {
-          const progress = p.contract_value > 0 ? Math.min(100, (p.totalReceived / p.contract_value) * 100) : 0;
-          return (
-            <div
-              key={p.id}
-              onClick={() => navigate(`/projects/${p.id}`)}
-              className="bg-surfaceRaised border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-surface"
-            >
-              <div className="flex items-start justify-between mb-1">
-                <div className="font-medium text-gray-900">{p.title}</div>
-                <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
-              </div>
-              <div className="text-xs text-gray-500 mb-3">
-                {p.clients?.name ?? 'No client'} · {p.concerns?.name}
-                {p.project_categories?.name && ` · ${p.project_categories.name}`}
-              </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-500">Contract {formatMoney(p.contract_value)}</span>
-                <span className="text-income">Received {formatMoney(p.totalReceived)}</span>
-                {p.totalDue > 0 && <span className="text-due">Due {formatMoney(p.totalDue)}</span>}
-              </div>
-              <div className="text-xs text-gray-500 mb-2">
-                Profit <span className={p.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(p.profit)}</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-surfaceRaised overflow-hidden">
-                <div className="h-full bg-income" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-2">
+        {clientRows.map((c) => (
+          <div
+            key={c.id}
+            onClick={() => navigate(`/clients/${c.id}`)}
+            className="bg-surfaceRaised border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-surface flex items-center justify-between"
+          >
+            <span className="text-gray-900 font-medium">{c.name}</span>
+            <span className="text-xs text-gray-500">
+              {c.count} project{c.count !== 1 ? 's' : ''}
+            </span>
+          </div>
+        ))}
+        {noClientCount > 0 && (
+          <div className="border border-dashed border-gray-300 rounded-lg p-3 text-xs text-gray-500">
+            {noClientCount} project{noClientCount !== 1 ? 's' : ''} with no client attached.
+          </div>
+        )}
       </div>
-
-      <ProjectForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} />
     </div>
   );
 }
