@@ -8,7 +8,7 @@ export default function Sidebar({ userEmail, onSignOut }) {
     <aside className="hidden md:flex md:flex-col w-64 shrink-0 h-screen sticky top-0 bg-surface border-r border-gray-800">
       <div className="px-4 pt-5 pb-4 border-b border-gray-800">
         <div className="font-semibold text-gray-100 leading-tight">Tru Multimedia Limited</div>
-        <div className="text-xs text-gray-500 mb-3">Tru ERP</div>
+        <div className="text-xs text-gray-500 mb-3">Tru ERP · v2</div>
         <ConcernSwitcher className="w-full" />
       </div>
 
