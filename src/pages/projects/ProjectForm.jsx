@@ -3,7 +3,7 @@ import Sheet from '../../components/Sheet.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
 import { useConcern } from '../../context/ConcernContext.jsx';
 import { fetchClients } from '../../lib/ledgerData.js';
-import { createProject, updateProject } from '../../lib/projectData.js';
+import { createProject, updateProject, fetchProjectCategories, createProjectCategory } from '../../lib/projectData.js';
 
 export default function ProjectForm({ open, onClose, onSaved, project = null, defaultClientId = null }) {
   const { concerns } = useConcern();
@@ -12,38 +12,66 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
   const [concernId, setConcernId] = useState('');
   const [clientId, setClientId] = useState('');
   const [title, setTitle] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [contractValue, setContractValue] = useState('');
-  const [status, setStatus] = useState('active');
+  const [status, setStatus] = useState('running');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [clients, setClients] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [savingCategory, setSavingCategory] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     fetchClients().then(setClients).catch((e) => setError(e.message));
+    fetchProjectCategories().then(setCategories).catch((e) => setError(e.message));
     setConcernId(project?.concern_id ?? '');
     setClientId(project?.client_id ?? defaultClientId ?? '');
     setTitle(project?.title ?? '');
+    setCategoryId(project?.category_id ?? '');
     setContractValue(project?.contract_value != null ? String(project.contract_value) : '');
-    setStatus(project?.status ?? 'active');
+    setStatus(project?.status ?? 'running');
     setStartDate(project?.start_date ?? '');
     setEndDate(project?.end_date ?? '');
+    setShowNewCategory(false);
     setError('');
   }, [open, project, defaultClientId]);
 
   if (!open) return null;
 
+  async function handleSaveNewCategory() {
+    if (!newCategoryName.trim()) return;
+    setSavingCategory(true);
+    setError('');
+    try {
+      const row = await createProjectCategory(newCategoryName.trim());
+      setCategories((prev) => [...prev, row].sort((a, b) => a.name.localeCompare(b.name)));
+      setCategoryId(row.id);
+      setShowNewCategory(false);
+      setNewCategoryName('');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSavingCategory(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!concernId) return setError('Concern is required.');
     if (!title.trim()) return setError('Title is required.');
+    if (!categoryId) return setError('Category is required.');
 
     const payload = {
       concern_id: concernId,
       client_id: clientId || null,
       title: title.trim(),
+      category_id: categoryId,
       contract_value: contractValue ? Number(contractValue) : 0,
       status,
       start_date: startDate || null,
@@ -93,7 +121,55 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
           <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
 
-        <Field label="Contract value">
+        <Field label="Category" required>
+          {!showNewCategory ? (
+            <div className="flex gap-2">
+              <select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                <option value="">Select category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowNewCategory(true)}
+                className="shrink-0 px-3 rounded-md text-sm border border-gray-300 text-gray-700 hover:text-gray-900"
+              >
+                + New
+              </button>
+            </div>
+          ) : (
+            <div className="border border-gray-300 rounded-md p-3 space-y-2">
+              <input
+                className={inputClass}
+                placeholder="Category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={savingCategory}
+                  onClick={handleSaveNewCategory}
+                  className="px-3 py-1.5 rounded-md text-sm bg-gray-900 text-white disabled:opacity-50"
+                >
+                  {savingCategory ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory(false)}
+                  className="px-3 py-1.5 rounded-md text-sm border border-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </Field>
+
+        <Field label="Amount">
           <input
             type="number"
             min="0"
@@ -106,9 +182,10 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
 
         <Field label="Status" required>
           <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="active">Active</option>
+            <option value="running">Running</option>
+            <option value="hold">Hold</option>
+            <option value="cancelled">Cancelled</option>
             <option value="completed">Completed</option>
-            <option value="stalled">Stalled</option>
           </select>
         </Field>
 

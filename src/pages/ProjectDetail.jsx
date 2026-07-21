@@ -92,6 +92,7 @@ export default function ProjectDetail() {
                 'No client'
               )}{' '}
               · {project.concerns?.name}
+              {project.project_categories?.name && ` · ${project.project_categories.name}`}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
