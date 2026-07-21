@@ -4,6 +4,8 @@ import Badge from '../components/Badge.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchClient, deleteClient } from '../lib/partyData.js';
+import { fetchInvoicesForClient } from '../lib/invoiceData.js';
+import { fetchProjectsForClient } from '../lib/projectData.js';
 import PartyForm from './parties/PartyForm.jsx';
 
 export default function ClientDetail() {
@@ -12,6 +14,8 @@ export default function ClientDetail() {
 
   const [client, setClient] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
@@ -20,11 +24,13 @@ export default function ClientDetail() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchClient(id), fetchTransactions({ clientId: id })])
-      .then(([c, txns]) => {
+    Promise.all([fetchClient(id), fetchTransactions({ clientId: id }), fetchInvoicesForClient(id), fetchProjectsForClient(id)])
+      .then(([c, txns, invs, projs]) => {
         if (cancelled) return;
         setClient(c);
         setTransactions(txns);
+        setInvoices(invs);
+        setProjects(projs);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -94,6 +100,41 @@ export default function ClientDetail() {
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
+
+      {projects.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-gray-300 mb-2">Projects</h2>
+          <div className="space-y-2 mb-4">
+            {projects.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => navigate(`/projects/${p.id}`)}
+                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              >
+                <div className="text-sm text-gray-100">{p.title}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {invoices.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-gray-300 mb-2">Invoices</h2>
+          <div className="space-y-2 mb-4">
+            {invoices.map((inv) => (
+              <div
+                key={inv.id}
+                onClick={() => navigate(`/invoices/${inv.id}`)}
+                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              >
+                <div className="text-sm text-gray-100">{inv.invoice_number}</div>
+                <div className="text-xs text-gray-500">{formatDate(inv.issued_date)}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <h2 className="text-sm font-medium text-gray-300 mb-2">Transaction history</h2>
       {transactions.length === 0 && <p className="text-sm text-gray-500">No transactions yet.</p>}

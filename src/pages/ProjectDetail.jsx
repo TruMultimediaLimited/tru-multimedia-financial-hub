@@ -4,6 +4,7 @@ import Badge from '../components/Badge.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchProject, deleteProject } from '../lib/projectData.js';
+import { fetchInvoicesForProject } from '../lib/invoiceData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
 
 const STATUS_BADGE = {
@@ -18,6 +19,7 @@ export default function ProjectDetail() {
 
   const [project, setProject] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
@@ -26,11 +28,12 @@ export default function ProjectDetail() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchProject(id), fetchTransactions({ projectId: id })])
-      .then(([p, txns]) => {
+    Promise.all([fetchProject(id), fetchTransactions({ projectId: id }), fetchInvoicesForProject(id)])
+      .then(([p, txns, invs]) => {
         if (cancelled) return;
         setProject(p);
         setTransactions(txns);
+        setInvoices(invs);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -130,6 +133,24 @@ export default function ProjectDetail() {
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
+
+      {invoices.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-gray-300 mb-2">Invoices</h2>
+          <div className="space-y-2 mb-6">
+            {invoices.map((inv) => (
+              <div
+                key={inv.id}
+                onClick={() => navigate(`/invoices/${inv.id}`)}
+                className="flex items-center justify-between border border-gray-800 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              >
+                <div className="text-sm text-gray-100">{inv.invoice_number}</div>
+                <div className="text-xs text-gray-500">{formatDate(inv.issued_date)}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <h2 className="text-sm font-medium text-gray-300 mb-2">Team</h2>
       {team.length === 0 && <p className="text-sm text-gray-500 mb-4">No employee expenses linked to this project yet.</p>}

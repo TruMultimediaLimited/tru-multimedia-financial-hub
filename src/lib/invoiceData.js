@@ -71,3 +71,26 @@ export async function deleteInvoice(id) {
   const { error } = await supabase.from('invoices').delete().eq('id', id);
   if (error) throw error;
 }
+
+// Lean lookups for ClientDetail/ProjectDetail — surfaces the invoices
+// that block deleting a client/project (invoices.client_id is not-null,
+// invoices.project_id has no cascade), so the block isn't invisible.
+export async function fetchInvoicesForClient(clientId) {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, issued_date')
+    .eq('client_id', clientId)
+    .order('issued_date', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchInvoicesForProject(projectId) {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, issued_date')
+    .eq('project_id', projectId)
+    .order('issued_date', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
