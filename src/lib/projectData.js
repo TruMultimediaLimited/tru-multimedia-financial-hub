@@ -12,7 +12,10 @@ function friendlyDeleteError(error) {
     invoices: 'this project still has a linked invoice. Remove or reassign that invoice first.',
     transactions: 'this project still has linked transactions. Remove those first.',
   };
-  return new Error(`Cannot delete: ${reasons[table] ?? 'this project still has linked records. Remove those first.'}`);
+  const fallback = table
+    ? `this project still has a linked record in "${table}". Remove that first.`
+    : 'this project still has linked records. Remove those first.';
+  return new Error(`Cannot delete: ${reasons[table] ?? fallback}`);
 }
 
 async function fetchBalancesMap() {
