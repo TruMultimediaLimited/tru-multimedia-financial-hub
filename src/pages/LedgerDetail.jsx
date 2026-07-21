@@ -147,6 +147,8 @@ export default function LedgerDetail() {
         transactionId={transaction.id}
         concernId={transaction.concern_id}
         dueAmount={dueAmount}
+        projectId={transaction.project_id}
+        transactionType={transaction.type}
         onSaved={refresh}
       />
 

@@ -110,11 +110,25 @@ export async function fetchClients() {
 }
 
 export async function fetchProjects(concernId) {
-  let query = supabase.from('projects').select('id, title').order('title');
+  let query = supabase.from('projects').select('id, title, contract_value').order('title');
   if (concernId) query = query.eq('concern_id', concernId);
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
+}
+
+// Sum of income transactions already recorded against a project — used to
+// enforce that a project's total income never exceeds its contract value.
+export async function fetchProjectIncomeTotal(projectId, excludeTransactionId = null) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id, total_amount')
+    .eq('project_id', projectId)
+    .eq('type', 'income');
+  if (error) throw error;
+  return (data ?? [])
+    .filter((t) => t.id !== excludeTransactionId)
+    .reduce((sum, t) => sum + Number(t.total_amount), 0);
 }
 
 // Staff work across every concern day-to-day and are recorded under the

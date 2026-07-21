@@ -3,11 +3,12 @@ import Field, { inputClass } from '../../components/Field.jsx';
 import { supabase } from '../../lib/supabase.js';
 import { addPayment, fetchEmployees, createEmployee } from '../../lib/ledgerData.js';
 import { fetchOwners } from '../../lib/ownerData.js';
+import { syncProjectCompletion } from '../../lib/projectData.js';
 import { formatMoney } from '../../lib/format.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-export default function PaymentForm({ transactionId, concernId, dueAmount, onSaved }) {
+export default function PaymentForm({ transactionId, concernId, dueAmount, projectId, transactionType, onSaved }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayStr());
   const [channel, setChannel] = useState('bkash');
@@ -75,6 +76,9 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, onSav
     setSaving(true);
     try {
       await addPayment(payload);
+      if (transactionType === 'income' && projectId) {
+        syncProjectCompletion(projectId).catch(() => {});
+      }
       setAmount('');
       setNote('');
       setHandledBy('');
