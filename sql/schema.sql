@@ -40,6 +40,16 @@ drop table if exists vendors cascade;
 drop table if exists clients cascade;
 drop table if exists concerns cascade;
 
+-- leftover tables from the pre-reset version of this project (not part of
+-- the current schema) — dropped here so the database matches the fresh
+-- start, not just the repo.
+drop table if exists partner_ledger cascade;
+drop table if exists partners cascade;
+drop table if exists payroll_runs cascade;
+drop table if exists staff_work_log cascade;
+drop table if exists project_payments cascade;
+drop table if exists staff cascade;
+
 drop view if exists audit_log_with_user;
 drop view if exists transaction_balances;
 drop view if exists project_balances;
