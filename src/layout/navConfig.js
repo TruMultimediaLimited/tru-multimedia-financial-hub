@@ -3,13 +3,14 @@
 // bottom tab bar, and the mobile "More" sheet.
 export const modules = [
   { path: '/dashboard', label: 'Dashboard', icon: 'dashboard', bottomTab: true },
-  { path: '/ledger', label: 'Ledger', icon: 'ledger', bottomTab: true },
+  { path: '/income', label: 'Income', icon: 'income', bottomTab: true },
+  { path: '/expense', label: 'Expense', icon: 'expense', bottomTab: true },
   { path: '/projects', label: 'Projects', icon: 'projects', bottomTab: true },
   { path: '/clients', label: 'Clients', icon: 'clients', bottomTab: false },
   { path: '/employees', label: 'Employees', icon: 'employees', bottomTab: false },
   { path: '/owners', label: 'Owners', icon: 'owners', bottomTab: false },
   { path: '/invoices', label: 'Invoices', icon: 'invoices', bottomTab: false },
-  { path: '/reports', label: 'Reports', icon: 'reports', bottomTab: true },
+  { path: '/reports', label: 'Reports', icon: 'reports', bottomTab: false },
   { path: '/audit-log', label: 'Audit Log', icon: 'audit', bottomTab: false },
 ];
 

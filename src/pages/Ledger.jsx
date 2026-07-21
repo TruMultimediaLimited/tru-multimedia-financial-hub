@@ -8,7 +8,7 @@ import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/fo
 import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
 import TransactionForm from './ledger/TransactionForm.jsx';
 
-export default function Ledger() {
+export default function Ledger({ fixedType = null }) {
   const navigate = useNavigate();
   const { selectedConcernId, concerns } = useConcern();
   const realConcerns = concerns;
@@ -30,7 +30,7 @@ export default function Ledger() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [formType, setFormType] = useState('income');
+  const [formType, setFormType] = useState(fixedType ?? 'income');
 
   useEffect(() => {
     setConcernFilter(selectedConcernId ?? '');
@@ -59,7 +59,7 @@ export default function Ledger() {
     fetchTransactions({
       concernId: concernFilter || null,
       projectId: projectFilter || null,
-      type: typeTab === 'all' ? null : typeTab,
+      type: fixedType ?? (typeTab === 'all' ? null : typeTab),
       dateFrom: dateFrom || null,
       dateTo: dateTo || null,
       handledBy,
@@ -77,7 +77,7 @@ export default function Ledger() {
     return () => {
       cancelled = true;
     };
-  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, currentUser, reloadKey]);
+  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, currentUser, reloadKey, fixedType]);
 
   function openAdd(type) {
     setFormType(type);
@@ -88,39 +88,47 @@ export default function Ledger() {
     setReloadKey((k) => k + 1);
   }
 
+  const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-gray-900">Ledger</h1>
+        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
         <div className="flex gap-2">
-          <button
-            onClick={() => openAdd('income')}
-            className="px-3 py-1.5 rounded-md text-sm bg-income/15 text-income border border-income/30"
-          >
-            + Add income
-          </button>
-          <button
-            onClick={() => openAdd('expense')}
-            className="px-3 py-1.5 rounded-md text-sm bg-expense/15 text-expense border border-expense/30"
-          >
-            + Add expense
-          </button>
+          {(!fixedType || fixedType === 'income') && (
+            <button
+              onClick={() => openAdd('income')}
+              className="px-3 py-1.5 rounded-md text-sm bg-income/15 text-income border border-income/30"
+            >
+              + Add income
+            </button>
+          )}
+          {(!fixedType || fixedType === 'expense') && (
+            <button
+              onClick={() => openAdd('expense')}
+              className="px-3 py-1.5 rounded-md text-sm bg-expense/15 text-expense border border-expense/30"
+            >
+              + Add expense
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-1 mb-4">
-        {['all', 'income', 'expense'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTypeTab(t)}
-            className={`px-3 py-1.5 rounded-md text-xs capitalize ${
-              typeTab === t ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      {!fixedType && (
+        <div className="flex gap-1 mb-4">
+          {['all', 'income', 'expense'].map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeTab(t)}
+              className={`px-3 py-1.5 rounded-md text-xs capitalize ${
+                typeTab === t ? 'bg-surfaceRaised text-gray-900' : 'text-gray-500'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
         <select className={inputClass} value={concernFilter} onChange={(e) => setConcernFilter(e.target.value)}>

@@ -88,7 +88,7 @@ export default function EmployeeDetail() {
 
       <h2 className="text-sm font-medium text-gray-700 mb-2">Expense history</h2>
       <p className="text-xs text-gray-500 mb-2">
-        Who was given how much and when — add a new entry from Ledger → + Add expense with this employee selected.
+        Who was given how much and when — add a new entry from Expense → + Add expense with this employee selected.
       </p>
       {transactions.length === 0 && <p className="text-sm text-gray-500">No expenses recorded for this employee yet.</p>}
       <div className="space-y-2">

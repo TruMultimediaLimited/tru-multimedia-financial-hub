@@ -2,7 +2,8 @@
 // dependency, per CLAUDE.md's "keep bundle small" convention.
 const paths = {
   dashboard: 'M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z',
-  ledger: 'M6 3h9l3 3v15H6zM15 3v3h3M9 11h6M9 15h6M9 19h4',
+  income: 'M12 19V5M5 12l7-7 7 7',
+  expense: 'M12 5v14M5 12l7 7 7-7',
   projects: 'M3 7h6l2 2h10v10H3z',
   clients: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 4-6 8-6s8 2 8 6',
   employees: 'M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM2 20c0-3.3 2.7-6 6-6M22 20c0-3.3-2.7-6-6-6M8 20c0-3.3 1.8-6 4-6s4 2.7 4 6',
