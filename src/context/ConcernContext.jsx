@@ -13,9 +13,16 @@ export function ConcernProvider({ children }) {
     let cancelled = false;
 
     async function loadConcerns() {
+      // is_active lets a concern be hidden from every switcher/dropdown in
+      // the app (they're all sourced from this one context) without
+      // deleting its history — e.g. a studio that's paused for now but
+      // may resume later. display_order controls the fixed manual
+      // ordering the owner wants, overriding alphabetical.
       const { data, error: fetchError } = await supabase
         .from('concerns')
         .select('id, name, parent_concern_id')
+        .eq('is_active', true)
+        .order('display_order')
         .order('name');
 
       if (cancelled) return;

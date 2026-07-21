@@ -84,22 +84,33 @@ create type audit_action as enum ('insert', 'update', 'delete');
 -- 2. CONCERNS
 -- Tru Multimedia Limited is the parent (parent_concern_id null); the 4
 -- concerns reference it. Nothing elsewhere is hardcoded to "4 concerns" —
--- adding a 5th later is just another row here.
+-- adding a 5th later is just another row here. is_active hides a concern
+-- from every switcher/dropdown app-wide (all sourced from one context,
+-- see src/context/ConcernContext.jsx) without deleting its history —
+-- e.g. a studio that's currently paused. display_order fixes a manual
+-- display order, overriding alphabetical.
 -- ============================================================================
 
 create table concerns (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   parent_concern_id uuid references concerns(id),
+  is_active boolean not null default true,
+  display_order integer not null default 0,
   created_at timestamptz not null default now()
 );
 
-insert into concerns (name, parent_concern_id) values
-  ('Tru Multimedia Limited', null);
+insert into concerns (name, parent_concern_id, display_order) values
+  ('Tru Multimedia Limited', null, 1);
 
-insert into concerns (name, parent_concern_id)
-select v.name, p.id
-from (values ('4R Studio'), ('Truphoto Studio'), ('Uthshob Mukhor'), ('Tru Studios')) as v(name)
+insert into concerns (name, parent_concern_id, display_order, is_active)
+select v.name, p.id, v.display_order, v.is_active
+from (values
+  ('Truphoto Studio', 2, true),
+  ('4R Studio', 3, true),
+  ('Tru Studios', 4, false),
+  ('Uthshob Mukhor', 5, false)
+) as v(name, display_order, is_active)
 cross join (select id from concerns where name = 'Tru Multimedia Limited') as p;
 
 
