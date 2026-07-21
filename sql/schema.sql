@@ -36,7 +36,6 @@ drop table if exists payments cascade;
 drop table if exists transactions cascade;
 drop table if exists projects cascade;
 drop table if exists employees cascade;
-drop table if exists vendors cascade;
 drop table if exists clients cascade;
 drop table if exists concerns cascade;
 
@@ -55,7 +54,6 @@ drop view if exists transaction_balances;
 drop view if exists project_balances;
 drop view if exists concern_pl_view;
 drop view if exists client_balances;
-drop view if exists vendor_balances;
 
 drop function if exists log_audit_event() cascade;
 
@@ -103,22 +101,12 @@ cross join (select id from concerns where name = 'Tru Multimedia Limited') as p;
 
 
 -- ============================================================================
--- 3. CLIENTS & VENDORS
--- Global (not concern-scoped) — the same client/vendor can engage with
--- more than one concern; individual transactions carry the concern.
+-- 3. CLIENTS
+-- Global (not concern-scoped) — the same client can engage with more than
+-- one concern; individual transactions carry the concern.
 -- ============================================================================
 
 create table clients (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  phone text,
-  email text,
-  address text,
-  notes text,
-  created_at timestamptz not null default now()
-);
-
-create table vendors (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   phone text,
@@ -179,7 +167,6 @@ create table transactions (
   concern_id uuid not null references concerns(id),
   project_id uuid references projects(id),
   client_id uuid references clients(id),
-  vendor_id uuid references vendors(id),
   employee_id uuid references employees(id),
   type transaction_type not null,
   category text,
@@ -189,15 +176,14 @@ create table transactions (
   created_by uuid references auth.users(id),
   created_at timestamptz not null default now(),
   constraint transactions_party_check check (
-    (type = 'income' and vendor_id is null and employee_id is null)
-    or (type = 'expense' and client_id is null and not (vendor_id is not null and employee_id is not null))
+    (type = 'income' and employee_id is null)
+    or (type = 'expense' and client_id is null)
   )
 );
 
 create index idx_transactions_concern on transactions(concern_id);
 create index idx_transactions_project on transactions(project_id);
 create index idx_transactions_client on transactions(client_id);
-create index idx_transactions_vendor on transactions(vendor_id);
 create index idx_transactions_employee on transactions(employee_id);
 create index idx_transactions_date on transactions(transaction_date);
 
@@ -262,7 +248,6 @@ create index idx_invoices_client on invoices(client_id);
 
 alter table concerns disable row level security;
 alter table clients disable row level security;
-alter table vendors disable row level security;
 alter table employees disable row level security;
 alter table projects disable row level security;
 alter table transactions disable row level security;
@@ -314,7 +299,6 @@ $$;
 
 create trigger audit_concerns after insert or update or delete on concerns for each row execute function log_audit_event();
 create trigger audit_clients after insert or update or delete on clients for each row execute function log_audit_event();
-create trigger audit_vendors after insert or update or delete on vendors for each row execute function log_audit_event();
 create trigger audit_employees after insert or update or delete on employees for each row execute function log_audit_event();
 create trigger audit_projects after insert or update or delete on projects for each row execute function log_audit_event();
 create trigger audit_transactions after insert or update or delete on transactions for each row execute function log_audit_event();
@@ -393,14 +377,3 @@ from clients cl
 left join transactions t on t.client_id = cl.id and t.type = 'income'
 left join transaction_balances tb on tb.transaction_id = t.id
 group by cl.id, cl.name;
-
--- Running balance owed to each vendor (across their expense transactions).
-create or replace view vendor_balances as
-select
-  v.id as vendor_id,
-  v.name,
-  coalesce(sum(tb.due_amount), 0) as total_due
-from vendors v
-left join transactions t on t.vendor_id = v.id and t.type = 'expense'
-left join transaction_balances tb on tb.transaction_id = t.id
-group by v.id, v.name;

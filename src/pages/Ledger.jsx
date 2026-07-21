@@ -217,7 +217,7 @@ export default function Ledger() {
 }
 
 function partyName(t) {
-  return t.clients?.name ?? t.employees?.name ?? t.vendors?.name ?? '—';
+  return t.clients?.name ?? t.employees?.name ?? '—';
 }
 
 function TransactionRow({ t, onClick }) {

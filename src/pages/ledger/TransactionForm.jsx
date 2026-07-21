@@ -147,7 +147,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       concern_id: concernId,
       project_id: projectId || null,
       client_id: type === 'income' ? clientId : null,
-      vendor_id: null,
       employee_id: type === 'expense' ? employeeId || null : null,
       type,
       category: category.trim() || null,

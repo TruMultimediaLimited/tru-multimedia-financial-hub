@@ -2,10 +2,9 @@ import { supabase } from './supabase.js';
 
 const TRANSACTION_SELECT = `
   id, type, category, total_amount, description, transaction_date,
-  concern_id, project_id, client_id, vendor_id, employee_id,
+  concern_id, project_id, client_id, employee_id,
   concerns(id, name),
   clients(id, name),
-  vendors(id, name),
   employees(id, name, role),
   projects(id, title),
   payments(id, amount, channel, payment_date, note, handled_by_employee_id, handled_by_user_id, employees(id, name))
@@ -32,7 +31,6 @@ export async function fetchTransactions(filters = {}) {
   if (filters.concernId) query = query.eq('concern_id', filters.concernId);
   if (filters.projectId) query = query.eq('project_id', filters.projectId);
   if (filters.clientId) query = query.eq('client_id', filters.clientId);
-  if (filters.vendorId) query = query.eq('vendor_id', filters.vendorId);
   if (filters.employeeId) query = query.eq('employee_id', filters.employeeId);
   if (filters.type) query = query.eq('type', filters.type);
   if (filters.dateFrom) query = query.gte('transaction_date', filters.dateFrom);
@@ -111,12 +109,6 @@ export async function fetchClients() {
   return data ?? [];
 }
 
-export async function fetchVendors() {
-  const { data, error } = await supabase.from('vendors').select('id, name').order('name');
-  if (error) throw error;
-  return data ?? [];
-}
-
 export async function fetchProjects(concernId) {
   let query = supabase.from('projects').select('id, title').order('title');
   if (concernId) query = query.eq('concern_id', concernId);
@@ -148,12 +140,6 @@ export async function fetchEmployees(concernId) {
 
 export async function createClient({ name, phone }) {
   const { data, error } = await supabase.from('clients').insert({ name, phone }).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function createVendor({ name, phone }) {
-  const { data, error } = await supabase.from('vendors').insert({ name, phone }).select().single();
   if (error) throw error;
   return data;
 }

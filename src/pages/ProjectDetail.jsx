@@ -120,7 +120,7 @@ export default function ProjectDetail() {
               <div>
                 <div className="text-sm text-gray-100">{t.category || 'Uncategorized'}</div>
                 <div className="text-xs text-gray-500">
-                  {t.type === 'income' ? t.clients?.name : t.employees?.name ?? t.vendors?.name ?? 'General'} · {formatDate(t.transaction_date)}
+                  {t.type === 'income' ? t.clients?.name : t.employees?.name ?? 'General'} · {formatDate(t.transaction_date)}
                 </div>
               </div>
               <div className="text-right">
