@@ -5,7 +5,7 @@ import { useConcern } from '../../context/ConcernContext.jsx';
 import { fetchClients } from '../../lib/ledgerData.js';
 import { createProject, updateProject } from '../../lib/projectData.js';
 
-export default function ProjectForm({ open, onClose, onSaved, project = null }) {
+export default function ProjectForm({ open, onClose, onSaved, project = null, defaultClientId = null }) {
   const { concerns } = useConcern();
   const realConcerns = concerns;
 
@@ -24,14 +24,14 @@ export default function ProjectForm({ open, onClose, onSaved, project = null }) 
     if (!open) return;
     fetchClients().then(setClients).catch((e) => setError(e.message));
     setConcernId(project?.concern_id ?? '');
-    setClientId(project?.client_id ?? '');
+    setClientId(project?.client_id ?? defaultClientId ?? '');
     setTitle(project?.title ?? '');
     setContractValue(project?.contract_value != null ? String(project.contract_value) : '');
     setStatus(project?.status ?? 'active');
     setStartDate(project?.start_date ?? '');
     setEndDate(project?.end_date ?? '');
     setError('');
-  }, [open, project]);
+  }, [open, project, defaultClientId]);
 
   if (!open) return null;
 

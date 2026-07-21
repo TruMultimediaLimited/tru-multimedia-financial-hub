@@ -38,6 +38,7 @@ drop table if exists projects cascade;
 drop table if exists employees cascade;
 drop table if exists owner_investments cascade;
 drop table if exists owners cascade;
+drop table if exists client_concerns cascade;
 drop table if exists clients cascade;
 drop table if exists concerns cascade;
 
@@ -129,6 +130,18 @@ create table clients (
   notes text,
   created_at timestamptz not null default now()
 );
+
+-- Which concern(s) a client is known to work with. Informational tagging,
+-- separate from clients staying global — a client usually serves one
+-- concern but occasionally more, and individual transactions still carry
+-- their own concern regardless of what's tagged here.
+create table client_concerns (
+  client_id uuid not null references clients(id) on delete cascade,
+  concern_id uuid not null references concerns(id) on delete cascade,
+  primary key (client_id, concern_id)
+);
+
+create index idx_client_concerns_concern on client_concerns(concern_id);
 
 
 -- ============================================================================
@@ -303,6 +316,7 @@ create index idx_invoices_client on invoices(client_id);
 
 alter table concerns disable row level security;
 alter table clients disable row level security;
+alter table client_concerns disable row level security;
 alter table employees disable row level security;
 alter table owners disable row level security;
 alter table owner_investments disable row level security;

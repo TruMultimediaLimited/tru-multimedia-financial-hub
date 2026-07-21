@@ -152,9 +152,15 @@ export async function fetchEmployees(concernId) {
   return data ?? [];
 }
 
-export async function createClient({ name, phone }) {
-  const { data, error } = await supabase.from('clients').insert({ name, phone }).select().single();
+export async function createClient({ name, phone, email = null, address = null, notes = null, concernIds = [] }) {
+  const { data, error } = await supabase.from('clients').insert({ name, phone, email, address, notes }).select().single();
   if (error) throw error;
+  if (concernIds.length > 0) {
+    const { error: linkError } = await supabase
+      .from('client_concerns')
+      .insert(concernIds.map((concern_id) => ({ client_id: data.id, concern_id })));
+    if (linkError) throw linkError;
+  }
   return data;
 }
 

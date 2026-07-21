@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import Sheet from '../../components/Sheet.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
+import { useConcern } from '../../context/ConcernContext.jsx';
 import { createClient, updateClient } from '../../lib/partyData.js';
 
 export default function PartyForm({ open, onClose, onSaved, party = null }) {
+  const { concerns } = useConcern();
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [concernIds, setConcernIds] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,10 +23,15 @@ export default function PartyForm({ open, onClose, onSaved, party = null }) {
     setEmail(party?.email ?? '');
     setAddress(party?.address ?? '');
     setNotes(party?.notes ?? '');
+    setConcernIds((party?.concerns ?? []).map((c) => c.id));
     setError('');
   }, [open, party]);
 
   if (!open) return null;
+
+  function toggleConcern(id) {
+    setConcernIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -40,9 +49,9 @@ export default function PartyForm({ open, onClose, onSaved, party = null }) {
     setError('');
     try {
       if (party) {
-        await updateClient(party.id, payload);
+        await updateClient(party.id, payload, concernIds);
       } else {
-        await createClient(payload);
+        await createClient({ ...payload, concernIds });
       }
       onSaved();
       onClose();
@@ -70,6 +79,23 @@ export default function PartyForm({ open, onClose, onSaved, party = null }) {
         </Field>
         <Field label="Notes">
           <textarea className={inputClass} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+        </Field>
+
+        <Field label="Concern(s)" hint="Usually one — select more if this client works with multiple">
+          <div className="flex flex-wrap gap-2">
+            {concerns.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleConcern(c.id)}
+                className={`px-3 py-1.5 rounded-md text-xs border ${
+                  concernIds.includes(c.id) ? 'bg-gray-900 border-gray-900 text-white' : 'border-gray-300 text-gray-700'
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </Field>
 
         {error && <p className="text-sm text-expense mb-3">{error}</p>}

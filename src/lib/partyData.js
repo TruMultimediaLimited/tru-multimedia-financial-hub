@@ -39,15 +39,38 @@ export async function fetchClientsWithTotals() {
   });
 }
 
-export async function fetchClient(id) {
-  const { data, error } = await supabase.from('clients').select(PARTY_COLUMNS).eq('id', id).single();
+// Concern(s) a client is tagged as working with — separate from clients
+// staying global; a client usually serves one concern but occasionally more.
+export async function fetchClientConcerns(clientId) {
+  const { data, error } = await supabase.from('client_concerns').select('concern_id, concerns(id, name)').eq('client_id', clientId);
   if (error) throw error;
-  return data;
+  return (data ?? []).map((r) => r.concerns).filter(Boolean);
 }
 
-export async function updateClient(id, payload) {
+export async function fetchClient(id) {
+  const [{ data, error }, concerns] = await Promise.all([
+    supabase.from('clients').select(PARTY_COLUMNS).eq('id', id).single(),
+    fetchClientConcerns(id),
+  ]);
+  if (error) throw error;
+  return { ...data, concerns };
+}
+
+// concernIds is left as-is (undefined) when the caller doesn't touch concern
+// tagging at all; pass an array (possibly empty) to replace the tag set.
+export async function updateClient(id, payload, concernIds = undefined) {
   const { data, error } = await supabase.from('clients').update(payload).eq('id', id).select().single();
   if (error) throw error;
+  if (concernIds !== undefined) {
+    const { error: delError } = await supabase.from('client_concerns').delete().eq('client_id', id);
+    if (delError) throw delError;
+    if (concernIds.length > 0) {
+      const { error: insError } = await supabase
+        .from('client_concerns')
+        .insert(concernIds.map((concern_id) => ({ client_id: id, concern_id })));
+      if (insError) throw insError;
+    }
+  }
   return data;
 }
 
