@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { modules } from './navConfig.js';
-import Icon from './Icon.jsx';
+import { navIcons } from './navIcons.js';
 import ConcernSwitcher from './ConcernSwitcher.jsx';
 
 export default function Sidebar({ userEmail, onSignOut }) {
@@ -13,22 +13,25 @@ export default function Sidebar({ userEmail, onSignOut }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2">
-        {modules.map((m) => (
-          <NavLink
-            key={m.path}
-            to={m.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 text-sm ${
-                isActive
-                  ? 'bg-surfaceRaised text-primary border-r-2 border-primary'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-surfaceRaised/60'
-              }`
-            }
-          >
-            <Icon name={m.icon} />
-            <span>{m.label}</span>
-          </NavLink>
-        ))}
+        {modules.map((m) => {
+          const ModIcon = navIcons[m.icon];
+          return (
+            <NavLink
+              key={m.path}
+              to={m.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-2.5 text-sm ${
+                  isActive
+                    ? 'bg-surfaceRaised text-primary font-medium border-r-2 border-primary'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-surfaceRaised/60'
+                }`
+              }
+            >
+              <ModIcon className="w-[18px] h-[18px]" strokeWidth={2} />
+              <span>{m.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="px-4 py-3 border-t border-slate-200 text-sm">

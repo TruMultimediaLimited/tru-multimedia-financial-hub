@@ -70,10 +70,10 @@ export default function ClientDetail() {
         ← Back to Clients
       </button>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <div className="text-lg font-semibold text-slate-900">{client.name}</div>
+            <div className="text-2xl font-bold text-slate-900">{client.name}</div>
             <div className="text-xs text-slate-500">
               {[client.phone, client.email, client.address].filter(Boolean).join(' · ') || 'No contact info'}
             </div>
@@ -88,10 +88,10 @@ export default function ClientDetail() {
             )}
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-md text-xs border border-slate-300 text-slate-700">
+            <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
               Edit
             </button>
-            <button onClick={handleDelete} className="px-3 py-1.5 rounded-md text-xs border border-expense/40 text-expense">
+            <button onClick={handleDelete} className="px-3 py-1.5 rounded-xl text-xs border border-expense/40 text-expense">
               Delete
             </button>
           </div>
@@ -121,7 +121,7 @@ export default function ClientDetail() {
         <h2 className="text-sm font-medium text-slate-700">Projects</h2>
         <button
           onClick={() => setProjectFormOpen(true)}
-          className="px-2.5 py-1 rounded-md text-xs border border-slate-300 text-slate-700"
+          className="px-2.5 py-1 rounded-xl text-xs border border-slate-300 text-slate-700"
         >
           + New project
         </button>

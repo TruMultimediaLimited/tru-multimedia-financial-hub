@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { fetchClientsWithTotals } from '../lib/partyData.js';
 import PartyForm from './parties/PartyForm.jsx';
@@ -34,10 +36,10 @@ export default function Clients() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-slate-900">Clients</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
         <button
           onClick={() => setFormOpen(true)}
-          className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover"
+          className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover"
         >
           + New client
         </button>
@@ -47,15 +49,15 @@ export default function Clients() {
         placeholder="Search by name or phone"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
+        className="w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && filtered.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">
-          No clients found.
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={Users} message="No clients found." />
         </div>
       )}
 
@@ -103,7 +105,7 @@ export default function Clients() {
               <div
                 key={c.id}
                 onClick={() => navigate(`/clients/${c.id}`)}
-                className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer active:bg-surface"
+                className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-slate-900 font-medium">{c.name}</span>

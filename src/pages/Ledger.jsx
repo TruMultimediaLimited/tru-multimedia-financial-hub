@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Inbox } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
@@ -93,12 +95,12 @@ export default function Ledger({ fixedType = null }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
         <div className="flex gap-2">
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="px-3 py-1.5 rounded-md text-sm bg-income/15 text-income border border-income/30"
+              className="px-3 py-1.5 rounded-xl text-sm bg-income/15 text-income border border-income/30"
             >
               + Add income
             </button>
@@ -106,7 +108,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="px-3 py-1.5 rounded-md text-sm bg-expense/15 text-expense border border-expense/30"
+              className="px-3 py-1.5 rounded-xl text-sm bg-expense/15 text-expense border border-expense/30"
             >
               + Add expense
             </button>
@@ -120,7 +122,7 @@ export default function Ledger({ fixedType = null }) {
             <button
               key={t}
               onClick={() => setTypeTab(t)}
-              className={`px-3 py-1.5 rounded-md text-xs capitalize ${
+              className={`px-3 py-1.5 rounded-xl text-xs capitalize ${
                 typeTab === t ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'
               }`}
             >
@@ -181,8 +183,8 @@ export default function Ledger({ fixedType = null }) {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && transactions.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">
-          No transactions match these filters.
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={Inbox} message="No transactions match these filters." />
         </div>
       )}
 
@@ -250,7 +252,7 @@ function TransactionCard({ t, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer active:bg-surface"
+      className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface"
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-slate-900 font-medium">{partyName(t)}</span>

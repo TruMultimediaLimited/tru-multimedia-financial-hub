@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserCog } from 'lucide-react';
+import EmptyState from '../components/EmptyState.jsx';
 import { fetchEmployeesFull } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
 
@@ -33,8 +35,8 @@ export default function Employees() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-slate-900">Employees</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover">
+        <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">
           + New employee
         </button>
       </div>
@@ -43,15 +45,15 @@ export default function Employees() {
         placeholder="Search by name or role"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
+        className="w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && filtered.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">
-          No employees found.
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={UserCog} message="No employees found." />
         </div>
       )}
 

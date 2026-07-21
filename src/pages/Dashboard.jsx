@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import {
   fetchDueSummary,
@@ -81,7 +83,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-4">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Dashboard</h1>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
@@ -90,6 +92,8 @@ export default function Dashboard() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
             <SummaryCard
+              icon={Folder}
+              iconClass="bg-slate-100 text-slate-600"
               label="Total Project Value"
               value={formatMoney(projectValue.total)}
               accent="text-slate-900"
@@ -97,6 +101,8 @@ export default function Dashboard() {
               onClick={() => toggleCard('value')}
             />
             <SummaryCard
+              icon={Wallet}
+              iconClass="bg-income/10 text-income"
               label="Total Payment Received"
               value={formatMoney(paymentsReceived.total)}
               accent="text-income"
@@ -104,6 +110,8 @@ export default function Dashboard() {
               onClick={() => toggleCard('received')}
             />
             <SummaryCard
+              icon={Receipt}
+              iconClass="bg-expense/10 text-expense"
               label="Total Expense"
               value={formatMoney(expense.total)}
               accent="text-expense"
@@ -111,6 +119,8 @@ export default function Dashboard() {
               onClick={() => toggleCard('expense')}
             />
             <SummaryCard
+              icon={projectProfit.total >= 0 ? TrendingUp : TrendingDown}
+              iconClass={projectProfit.total >= 0 ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}
               label="Project Profit"
               value={formatMoney(projectProfit.total)}
               accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
@@ -203,7 +213,7 @@ export default function Dashboard() {
 
           <h2 className="text-sm font-medium text-slate-700 mb-2">Channel breakdown</h2>
           {channels.length === 0 ? (
-            <p className="text-sm text-slate-500">No payments recorded yet.</p>
+            <EmptyState icon={Inbox} message="No payments recorded yet." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -242,23 +252,32 @@ function SortButton({ active, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 py-1 rounded-md text-xs ${active ? 'bg-surfaceRaised text-slate-900' : 'text-slate-500'}`}
+      className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+        active ? 'bg-primary text-white border-primary' : 'bg-surfaceRaised text-slate-600 border-slate-200'
+      }`}
     >
       {label}
     </button>
   );
 }
 
-function SummaryCard({ label, value, accent, active, onClick }) {
+function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-lg px-3 py-2.5 hover:border-slate-300 ${
-        active ? 'border-slate-900' : 'border-slate-200'
+      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-4 transition-colors hover:border-slate-300 ${
+        active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className={`text-lg font-semibold mt-0.5 ${accent}`}>{value}</div>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-slate-500">{label}</span>
+        {Icon && (
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center ${iconClass}`}>
+            <Icon className="w-3.5 h-3.5" />
+          </span>
+        )}
+      </div>
+      <div className={`text-xl font-bold ${accent}`}>{value}</div>
     </button>
   );
 }
@@ -266,8 +285,8 @@ function SummaryCard({ label, value, accent, active, onClick }) {
 function BreakdownPanel({ children, emptyText }) {
   const isEmpty = !children || (Array.isArray(children) && children.length === 0);
   return (
-    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 mb-4">
-      {isEmpty ? <p className="text-sm text-slate-500">{emptyText}</p> : <div className="space-y-1">{children}</div>}
+    <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
+      {isEmpty ? <EmptyState icon={Inbox} message={emptyText} /> : <div className="space-y-1">{children}</div>}
     </div>
   );
 }
@@ -276,7 +295,7 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
+      className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
     >
       <div>
         <div className="text-sm text-slate-900">{title}</div>
@@ -289,7 +308,7 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate
 
 function DueColumn({ title, rows, onRowClick, emptyText }) {
   return (
-    <div className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3">
+    <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
       <div className="text-xs text-slate-500 mb-2">{title}</div>
       {rows.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
       <div className="space-y-1">
@@ -297,7 +316,7 @@ function DueColumn({ title, rows, onRowClick, emptyText }) {
           <div
             key={r.id}
             onClick={() => onRowClick(r.id)}
-            className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surface"
+            className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
           >
             <div>
               <div className="text-sm text-slate-900">{r.name}</div>

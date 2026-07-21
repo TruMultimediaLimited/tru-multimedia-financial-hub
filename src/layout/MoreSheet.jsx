@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { moreSheetModules } from './navConfig.js';
+import { navIcons } from './navIcons.js';
 import Icon from './Icon.jsx';
 
 export default function MoreSheet({ open, onClose, userEmail, onSignOut }) {
@@ -16,21 +17,24 @@ export default function MoreSheet({ open, onClose, userEmail, onSignOut }) {
           </button>
         </div>
         <nav className="py-1">
-          {moreSheetModules.map((m) => (
-            <NavLink
-              key={m.path}
-              to={m.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3.5 text-sm ${
-                  isActive ? 'text-slate-900' : 'text-slate-700'
-                }`
-              }
-            >
-              <Icon name={m.icon} />
-              <span>{m.label}</span>
-            </NavLink>
-          ))}
+          {moreSheetModules.map((m) => {
+            const ModIcon = navIcons[m.icon];
+            return (
+              <NavLink
+                key={m.path}
+                to={m.path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3.5 text-sm ${
+                    isActive ? 'text-primary font-medium' : 'text-slate-700'
+                  }`
+                }
+              >
+                <ModIcon className="w-[18px] h-[18px]" strokeWidth={2} />
+                <span>{m.label}</span>
+              </NavLink>
+            );
+          })}
           <div className="border-t border-slate-200 mt-1 pt-1">
             <div className="px-4 py-2 text-xs text-slate-500 truncate">{userEmail}</div>
             <button

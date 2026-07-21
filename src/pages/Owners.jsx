@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Award } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
 import OwnerForm from './owners/OwnerForm.jsx';
@@ -29,8 +31,8 @@ export default function Owners() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold text-slate-900">Owners</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-md text-sm bg-primary text-white hover:bg-primaryHover">
+        <h1 className="text-2xl font-bold text-slate-900">Owners</h1>
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">
           + New owner
         </button>
       </div>
@@ -42,7 +44,9 @@ export default function Owners() {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && owners.length === 0 && (
-        <div className="border border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">No owners yet.</div>
+        <div className="border border-dashed border-slate-300 rounded-2xl p-8">
+          <EmptyState icon={Award} message="No owners yet." />
+        </div>
       )}
 
       {!loading && owners.length > 0 && (
@@ -51,7 +55,7 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className="bg-surfaceRaised border border-slate-200 rounded-lg shadow-sm p-3 cursor-pointer hover:bg-surface"
+              className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface"
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-slate-900 font-medium">{o.name}</span>
