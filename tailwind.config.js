@@ -1,28 +1,15 @@
-module.exports = {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        ink: "#12181A",
-        surface: "#1B2326",
-        "surface-raised": "#222C2F",
-        hairline: "#2E393C",
-        bone: "#EDEAE2",
-        muted: "#8B9598",
-        moss: "#8FB08A",
-        rust: "#C3714E",
-        gold: "#D3A653",
-      },
-      fontFamily: {
-        mono: [
-          '"SF Mono"',
-          "Monaco",
-          '"Cascadia Code"',
-          '"Roboto Mono"',
-          "Consolas",
-          '"Courier New"',
-          "monospace",
-        ],
+        income: '#22c55e',
+        expense: '#ef4444',
+        due: '#f59e0b',
+        surface: '#111318',
+        surfaceRaised: '#1a1d24',
       },
     },
   },

@@ -1,261 +1,330 @@
-import React, { useEffect, useState } from "react";
-import { Download, TrendingUp } from "lucide-react";
-import { tokens, fmtBDT } from "../lib/theme";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useConcern } from '../context/ConcernContext.jsx';
+import { supabase } from '../lib/supabase.js';
+import { inputClass } from '../components/Field.jsx';
+import BarChart from '../components/BarChart.jsx';
+import { formatMoney, CHANNEL_LABELS } from '../lib/format.js';
+import { fetchProjects } from '../lib/ledgerData.js';
+import { fetchDueSummary } from '../lib/dashboardData.js';
+import { fetchChannelBreakdown } from '../lib/dashboardData.js';
+import { fetchIncomeExpenseReport, fetchPLByPeriod, fetchEmployeeCostReport, toCsv, downloadCsv } from '../lib/reportsData.js';
 
-async function fetchConcernPL(supabase) {
-  const { data, error } = await supabase.from("concern_pl_view").select("*");
-  if (error) throw error;
-  return data;
-}
+const TYPE_LABELS = { fixed: 'Fixed', remote: 'Remote', project_based: 'Project-based' };
 
-async function fetchMonthlyPL(supabase) {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("amount, type, transaction_date")
-    .order("transaction_date", { ascending: true });
-  if (error) throw error;
+export default function Reports() {
+  const navigate = useNavigate();
+  const { concerns } = useConcern();
+  const realConcerns = concerns.filter((c) => c.parent_concern_id !== null);
 
-  const byMonth = {};
-  data.forEach((t) => {
-    const month = t.transaction_date.slice(0, 7);
-    if (!byMonth[month]) byMonth[month] = { month, income: 0, expense: 0 };
-    if (t.type === "income") byMonth[month].income += Number(t.amount);
-    else byMonth[month].expense += Number(t.amount);
-  });
+  const [concernId, setConcernId] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [plPeriod, setPlPeriod] = useState('month');
+  const [dueSort, setDueSort] = useState('amount');
 
-  return Object.values(byMonth)
-    .sort((a, b) => a.month.localeCompare(b.month))
-    .map((r) => ({ ...r, net: r.income - r.expense }));
-}
+  const [projects, setProjects] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
-async function fetchPartnerContribution(supabase) {
-  const [{ data: partners, error: pErr }, { data: ledger, error: lErr }] = await Promise.all([
-    supabase.from("partners").select("id, name, share_percentage, investment"),
-    supabase.from("partner_ledger_balance_view").select("*, partners(name)"),
-  ]);
-  if (pErr) throw pErr;
-  if (lErr) throw lErr;
-
-  const owedByPartner = {};
-  (ledger || []).forEach((r) => {
-    owedByPartner[r.partner_id] = r.outstanding_owed_to_partner;
-  });
-
-  return (partners || []).map((p) => ({
-    name: p.name,
-    share_percentage: p.share_percentage || 0,
-    investment: p.investment || 0,
-    outstanding_owed_to_partner: owedByPartner[p.id] || 0,
-  }));
-}
-
-function toCSV(rows, columns) {
-  const header = columns.map((c) => c.label).join(",");
-  const body = rows
-    .map((row) =>
-      columns
-        .map((c) => {
-          const v = row[c.key];
-          const s = v === null || v === undefined ? "" : String(v);
-          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-        })
-        .join(",")
-    )
-    .join("\n");
-  return `${header}\n${body}`;
-}
-
-function downloadCSV(filename, csvText) {
-  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-export default function Reports({ supabase }) {
-  const [concernPL, setConcernPL] = useState([]);
-  const [monthlyPL, setMonthlyPL] = useState([]);
-  const [partnerContribution, setPartnerContribution] = useState([]);
-  const [loading, setLoading] = useState(!!supabase);
-  const [liveError, setLiveError] = useState(false);
+  const [incomeExpense, setIncomeExpense] = useState({ totals: { income: 0, expense: 0 }, byCategory: [], byMonth: [] });
+  const [plRows, setPlRows] = useState([]);
+  const [dueSummary, setDueSummary] = useState({ receivables: [], payables: [] });
+  const [channels, setChannels] = useState([]);
+  const [employeeCosts, setEmployeeCosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!supabase) return;
-    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
+  }, []);
 
-    (async () => {
-      try {
-        const [pl, monthly, contrib] = await Promise.all([
-          fetchConcernPL(supabase),
-          fetchMonthlyPL(supabase),
-          fetchPartnerContribution(supabase),
-        ]);
+  useEffect(() => {
+    fetchProjects(concernId || null).then(setProjects).catch((e) => setError(e.message));
+  }, [concernId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+
+    const filters = { dateFrom: dateFrom || null, dateTo: dateTo || null, concernId: concernId || null, projectId: projectId || null };
+
+    Promise.all([
+      fetchIncomeExpenseReport(filters),
+      fetchPLByPeriod({ ...filters, period: plPeriod }),
+      fetchDueSummary(concernId || null),
+      fetchChannelBreakdown({ concernId: concernId || null, currentUserId: currentUser?.id ?? null, dateFrom: dateFrom || null, dateTo: dateTo || null }),
+      fetchEmployeeCostReport(filters),
+    ])
+      .then(([ie, pl, due, ch, cost]) => {
         if (cancelled) return;
-        setConcernPL(pl || []);
-        setMonthlyPL(monthly || []);
-        setPartnerContribution(contrib || []);
-      } catch (err) {
-        console.error("Reports fetch failed:", err);
-        setLiveError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+        setIncomeExpense(ie);
+        setPlRows(pl);
+        setDueSummary(due);
+        setChannels(ch);
+        setEmployeeCosts(cost);
+      })
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
 
     return () => {
       cancelled = true;
     };
-  }, [supabase]);
+  }, [dateFrom, dateTo, concernId, projectId, plPeriod, currentUser]);
 
-  const totals = concernPL.reduce(
-    (acc, c) => ({
-      income: acc.income + Number(c.total_income || 0),
-      expense: acc.expense + Number(c.total_expense || 0),
-    }),
-    { income: 0, expense: 0 }
-  );
-  totals.net = totals.income - totals.expense;
+  function sortedDue(rows) {
+    return [...rows].sort((a, b) => (dueSort === 'amount' ? b.due - a.due : a.oldestDate < b.oldestDate ? -1 : 1));
+  }
 
-  const REPORT_DEFS = [
-    { id: 1, title: "Monthly P&L Report", period: "All months", type: "Financial", dataKey: "monthly" },
-    { id: 2, title: "Income vs Expense Analysis", period: "By concern", type: "Analysis", dataKey: "concernIncomeExpense" },
-    { id: 3, title: "Partner Contribution Summary", period: "Current", type: "Partnership", dataKey: "partners" },
-    { id: 4, title: "Concern-wise Performance", period: "All-time", type: "Performance", dataKey: "concernPerformance" },
-  ];
-
-  function handleDownload(report) {
-    if (!supabase) return alert("Supabase connected নেই।");
-
-    let rows, columns, filename;
-    switch (report.dataKey) {
-      case "monthly":
-        rows = monthlyPL;
-        columns = [
-          { key: "month", label: "Month" },
-          { key: "income", label: "Income" },
-          { key: "expense", label: "Expense" },
-          { key: "net", label: "Net" },
-        ];
-        filename = "monthly-pl-report.csv";
-        break;
-      case "concernIncomeExpense":
-        rows = concernPL;
-        columns = [
-          { key: "concern_name", label: "Concern" },
-          { key: "total_income", label: "Income" },
-          { key: "total_expense", label: "Expense" },
-        ];
-        filename = "income-vs-expense-by-concern.csv";
-        break;
-      case "partners":
-        rows = partnerContribution;
-        columns = [
-          { key: "name", label: "Partner" },
-          { key: "share_percentage", label: "Share %" },
-          { key: "investment", label: "Investment" },
-          { key: "outstanding_owed_to_partner", label: "Outstanding Owed" },
-        ];
-        filename = "partner-contribution-summary.csv";
-        break;
-      case "concernPerformance":
-        rows = concernPL;
-        columns = [
-          { key: "concern_name", label: "Concern" },
-          { key: "total_income", label: "Income" },
-          { key: "total_expense", label: "Expense" },
-          { key: "net_pl", label: "Net P&L" },
-        ];
-        filename = "concern-wise-performance.csv";
-        break;
-      default:
-        return;
-    }
-
-    if (!rows || rows.length === 0) return alert("No data available to export.");
-    downloadCSV(filename, toCSV(rows, columns));
+  function exportDueCsv() {
+    const rows = [
+      ...sortedDue(dueSummary.receivables).map((r) => ({ ...r, kind: 'Receivable' })),
+      ...sortedDue(dueSummary.payables).map((r) => ({ ...r, kind: 'Payable' })),
+    ];
+    const csv = toCsv(rows, [
+      { label: 'Type', value: (r) => r.kind },
+      { label: 'Name', value: (r) => r.name },
+      { label: 'Due amount', value: (r) => r.due },
+      { label: 'Outstanding since', value: (r) => r.oldestDate },
+    ]);
+    downloadCsv('due-report.csv', csv);
   }
 
   return (
-    <div className="min-h-screen w-full" style={{ background: tokens.ink }}>
-      <div className="max-w-5xl mx-auto px-5 py-8">
-        <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: tokens.muted }}>
-            Analytics
-          </p>
-          <h1 className="text-2xl font-semibold mt-1" style={{ color: tokens.bone }}>
-            Reports & Analytics
-          </h1>
-          <p style={{ color: tokens.muted }}>Export and analyze financial data</p>
-        </div>
+    <div>
+      <h1 className="text-lg font-semibold text-gray-100 mb-4">Reports</h1>
 
-        {liveError && (
-          <p className="text-sm mb-4" style={{ color: tokens.rust }}>
-            Live data connect করা যায়নি — sample figures দেখানো হচ্ছে। Supabase project active আছে কিনা check করো।
-          </p>
-        )}
-
-        {loading && <p style={{ color: tokens.muted }}>Loading…</p>}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
-            <p className="text-[11px]" style={{ color: tokens.muted }}>Total Income</p>
-            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.moss }}>{fmtBDT(totals.income)}</p>
-          </div>
-          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
-            <p className="text-[11px]" style={{ color: tokens.muted }}>Total Expense</p>
-            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: tokens.rust }}>{fmtBDT(totals.expense)}</p>
-          </div>
-          <div className="rounded-xl border p-5" style={{ background: tokens.surface, borderColor: tokens.hairline }}>
-            <p className="text-[11px]" style={{ color: tokens.muted }}>Net</p>
-            <p className="text-2xl font-mono font-semibold mt-2" style={{ color: totals.net >= 0 ? tokens.moss : tokens.rust }}>
-              {fmtBDT(totals.net)}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {REPORT_DEFS.map((report) => (
-            <div
-              key={report.id}
-              className="rounded-xl border p-6 flex items-center justify-between"
-              style={{ background: tokens.surface, borderColor: tokens.hairline }}
-            >
-              <div>
-                <h3 style={{ color: tokens.bone }} className="font-semibold">
-                  {report.title}
-                </h3>
-                <p style={{ color: tokens.muted }} className="text-sm mt-1">
-                  {report.period} • {report.type}
-                </p>
-              </div>
-              <button
-                onClick={() => handleDownload(report)}
-                style={{ background: tokens.gold, color: "white" }}
-                className="p-3 rounded-lg hover:opacity-90 transition-opacity"
-              >
-                <Download size={18} />
-              </button>
-            </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+        <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>
+          <option value="">All concerns</option>
+          {realConcerns.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
-        </div>
+        </select>
+        <select className={inputClass} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+          <option value="">All projects</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title}
+            </option>
+          ))}
+        </select>
+        <input type="date" className={inputClass} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} aria-label="From date" />
+        <input type="date" className={inputClass} value={dateTo} onChange={(e) => setDateTo(e.target.value)} aria-label="To date" />
+      </div>
 
-        <div
-          className="rounded-xl border p-8 text-center"
-          style={{ background: tokens.surface, borderColor: tokens.hairline }}
-        >
-          <TrendingUp size={48} style={{ color: tokens.gold }} className="mx-auto mb-4" />
-          <h3 style={{ color: tokens.bone }} className="text-xl font-semibold mb-2">
-            Advanced Analytics Coming Soon
-          </h3>
-          <p style={{ color: tokens.muted }}>
-            Real-time dashboards, custom reports, and trend analysis features will be available in the next update.
-          </p>
-        </div>
+      {error && <p className="text-sm text-expense mb-3">{error}</p>}
+      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+
+      {!loading && (
+        <>
+          {/* Income vs Expense */}
+          <Section title="Income vs Expense">
+            <div className="flex gap-4 mb-3 text-sm">
+              <span className="text-income">Income {formatMoney(incomeExpense.totals.income)}</span>
+              <span className="text-expense">Expense {formatMoney(incomeExpense.totals.expense)}</span>
+            </div>
+            <BarChart
+              data={incomeExpense.byMonth}
+              xKey="month"
+              series={[
+                { key: 'income', label: 'Income', color: '#22c55e' },
+                { key: 'expense', label: 'Expense', color: '#ef4444' },
+              ]}
+            />
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="py-2 pr-3 font-normal">Category</th>
+                    <th className="py-2 pr-3 font-normal text-right">Income</th>
+                    <th className="py-2 pr-3 font-normal text-right">Expense</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {incomeExpense.byCategory.map((c) => (
+                    <tr key={c.category} className="border-b border-gray-800/60">
+                      <td className="py-2 pr-3 text-gray-100">{c.category}</td>
+                      <td className="py-2 pr-3 text-right text-income">{c.income > 0 ? formatMoney(c.income) : '—'}</td>
+                      <td className="py-2 pr-3 text-right text-expense">{c.expense > 0 ? formatMoney(c.expense) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+
+          {/* Profit / Loss */}
+          <Section title="Profit / Loss">
+            <div className="flex gap-1 mb-3">
+              {['month', 'quarter', 'year'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPlPeriod(p)}
+                  className={`px-2.5 py-1 rounded-md text-xs capitalize ${plPeriod === p ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'}`}
+                >
+                  {p}ly
+                </button>
+              ))}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="py-2 pr-3 font-normal">Period</th>
+                    <th className="py-2 pr-3 font-normal text-right">Income</th>
+                    <th className="py-2 pr-3 font-normal text-right">Expense</th>
+                    <th className="py-2 pr-3 font-normal text-right">Net P/L</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plRows.map((r) => (
+                    <tr key={r.period} className="border-b border-gray-800/60">
+                      <td className="py-2 pr-3 text-gray-100">{r.period}</td>
+                      <td className="py-2 pr-3 text-right text-gray-300">{formatMoney(r.income)}</td>
+                      <td className="py-2 pr-3 text-right text-gray-300">{formatMoney(r.expense)}</td>
+                      <td className={`py-2 pr-3 text-right ${r.netPl >= 0 ? 'text-income' : 'text-expense'}`}>{formatMoney(r.netPl)}</td>
+                    </tr>
+                  ))}
+                  {plRows.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-3 text-center text-gray-500">
+                        No transactions in this range.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+
+          {/* Due report */}
+          <Section
+            title="Due report"
+            action={
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setDueSort('amount')}
+                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'amount' ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'}`}
+                >
+                  By amount
+                </button>
+                <button
+                  onClick={() => setDueSort('age')}
+                  className={`px-2 py-1 rounded-md text-xs ${dueSort === 'age' ? 'bg-surfaceRaised text-gray-100' : 'text-gray-500'}`}
+                >
+                  By age
+                </button>
+                <button onClick={exportDueCsv} className="px-2 py-1 rounded-md text-xs border border-gray-700 text-gray-300">
+                  Export CSV
+                </button>
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DueList title="Receivable" rows={sortedDue(dueSummary.receivables)} onRowClick={(id) => navigate(`/clients/${id}`)} />
+              <DueList title="Payable" rows={sortedDue(dueSummary.payables)} onRowClick={(id) => navigate(`/vendors/${id}`)} />
+            </div>
+          </Section>
+
+          {/* Payment channel report */}
+          <Section title="Payment channel report">
+            {channels.length === 0 ? (
+              <p className="text-sm text-gray-500">No payments in this range.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b border-gray-800">
+                      <th className="py-2 pr-3 font-normal">Channel</th>
+                      <th className="py-2 pr-3 font-normal">Handled by</th>
+                      <th className="py-2 pr-3 font-normal text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {channels.map((row) => (
+                      <tr key={`${row.channel}|${row.handler}`} className="border-b border-gray-800/60">
+                        <td className="py-2 pr-3 text-gray-300">{CHANNEL_LABELS[row.channel] ?? row.channel}</td>
+                        <td className="py-2 pr-3 text-gray-300">{row.handler}</td>
+                        <td className="py-2 pr-3 text-right text-gray-100">{formatMoney(row.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          {/* Employee cost report */}
+          <Section title="Employee cost report">
+            {employeeCosts.length === 0 ? (
+              <p className="text-sm text-gray-500">No paid work logs in this range.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b border-gray-800">
+                      <th className="py-2 pr-3 font-normal">Employee</th>
+                      <th className="py-2 pr-3 font-normal">Type</th>
+                      <th className="py-2 pr-3 font-normal">Concern</th>
+                      <th className="py-2 pr-3 font-normal text-right">Total paid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employeeCosts.map((r) => (
+                      <tr
+                        key={r.employeeId}
+                        onClick={() => navigate(`/employees/${r.employeeId}`)}
+                        className="border-b border-gray-800/60 cursor-pointer hover:bg-surfaceRaised/60"
+                      >
+                        <td className="py-2 pr-3 text-gray-100">{r.name}</td>
+                        <td className="py-2 pr-3 text-gray-400">{TYPE_LABELS[r.type]}</td>
+                        <td className="py-2 pr-3 text-gray-400">{r.concernName}</td>
+                        <td className="py-2 pr-3 text-right text-gray-100">{formatMoney(r.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, action, children }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-medium text-gray-300">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DueList({ title, rows, onRowClick }) {
+  return (
+    <div className="border border-gray-800 rounded-lg p-3">
+      <div className="text-xs text-gray-400 mb-2">{title}</div>
+      {rows.length === 0 && <p className="text-sm text-gray-500">None.</p>}
+      <div className="space-y-1">
+        {rows.map((r) => (
+          <div
+            key={r.id}
+            onClick={() => onRowClick(r.id)}
+            className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-surfaceRaised/60"
+          >
+            <span className="text-sm text-gray-100">{r.name}</span>
+            <span className="text-sm text-due">{formatMoney(r.due)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
