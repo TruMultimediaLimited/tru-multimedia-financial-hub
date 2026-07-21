@@ -114,10 +114,10 @@ export default function Dashboard() {
               emptyText="No outstanding client dues."
             />
             <DueColumn
-              title="Payable — we owe vendors"
+              title="Payable — we owe employees"
               rows={sortRows(dueSummary.payables)}
-              onRowClick={(id) => navigate(`/vendors/${id}`)}
-              emptyText="No outstanding vendor dues."
+              onRowClick={(id) => navigate(`/employees/${id}`)}
+              emptyText="No outstanding employee dues."
             />
           </div>
 

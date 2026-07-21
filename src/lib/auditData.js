@@ -3,7 +3,6 @@ import { supabase } from './supabase.js';
 const AUDIT_TABLES = [
   'concerns',
   'clients',
-  'vendors',
   'employees',
   'projects',
   'transactions',

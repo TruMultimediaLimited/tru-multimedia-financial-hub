@@ -5,7 +5,6 @@ const paths = {
   ledger: 'M6 3h9l3 3v15H6zM15 3v3h3M9 11h6M9 15h6M9 19h4',
   projects: 'M3 7h6l2 2h10v10H3z',
   clients: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 4-6 8-6s8 2 8 6',
-  vendors: 'M3 9l2-5h14l2 5M4 9v11h16V9M4 9h16M10 20v-6h4v6',
   employees: 'M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM2 20c0-3.3 2.7-6 6-6M22 20c0-3.3-2.7-6-6-6M8 20c0-3.3 1.8-6 4-6s4 2.7 4 6',
   invoices: 'M7 3h10v18l-2.5-2-2.5 2-2.5-2L7 21zM9 8h6M9 12h6M9 16h4',
   reports: 'M4 20V10M10 20V4M16 20v-7M4 20h16',

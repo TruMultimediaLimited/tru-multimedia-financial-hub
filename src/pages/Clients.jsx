@@ -126,7 +126,6 @@ export default function Clients() {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         onSaved={() => setReloadKey((k) => k + 1)}
-        kind="client"
       />
     </div>
   );

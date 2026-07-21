@@ -4,9 +4,9 @@ import { supabase } from './supabase.js';
 // ledgerData's TRANSACTION_SELECT (no projects, no payment channel/note),
 // since the Dashboard only needs enough to sum due amounts per party.
 const DUE_SELECT = `
-  id, type, concern_id, client_id, vendor_id, total_amount, transaction_date,
+  id, type, concern_id, client_id, employee_id, total_amount, transaction_date,
   clients(id, name),
-  vendors(id, name),
+  employees(id, name),
   payments(amount)
 `;
 
@@ -78,9 +78,9 @@ function groupDue(rows, partyRelation) {
   return Array.from(groups.values());
 }
 
-// Receivables/payables due totals grouped per client/vendor. The sum
+// Receivables/payables due totals grouped per client/employee. The sum
 // itself (total_amount - sum(payments)) mirrors transaction_balances,
-// computed here because that view doesn't carry client_id/vendor_id for
+// computed here because that view doesn't carry client_id/employee_id for
 // grouping — acceptable at this business's transaction volume per
 // docs/architecture.md §7.
 export async function fetchDueSummary(concernId) {
@@ -90,7 +90,7 @@ export async function fetchDueSummary(concernId) {
   ]);
   return {
     receivables: groupDue(incomeRows, 'clients'),
-    payables: groupDue(expenseRows, 'vendors'),
+    payables: groupDue(expenseRows, 'employees'),
   };
 }
 

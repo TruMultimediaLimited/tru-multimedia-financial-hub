@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
-import { createClient, createVendor } from './ledgerData.js';
+import { createClient } from './ledgerData.js';
 
-export { createClient, createVendor };
+export { createClient };
 
 const PARTY_COLUMNS = 'id, name, phone, email, address, notes, created_at';
 
@@ -39,39 +39,14 @@ export async function fetchClientsWithTotals() {
   });
 }
 
-export async function fetchVendorsWithTotals() {
-  const [{ data: vendors, error }, totals] = await Promise.all([
-    supabase.from('vendors').select(PARTY_COLUMNS).order('name'),
-    fetchPartyTotals('expense', 'vendor_id'),
-  ]);
-  if (error) throw error;
-
-  return (vendors ?? []).map((v) => {
-    const t = totals.get(v.id) ?? { billed: 0, paid: 0, count: 0 };
-    return { ...v, totalPaid: t.paid, totalDue: t.billed - t.paid, transactionCount: t.count };
-  });
-}
-
 export async function fetchClient(id) {
   const { data, error } = await supabase.from('clients').select(PARTY_COLUMNS).eq('id', id).single();
   if (error) throw error;
   return data;
 }
 
-export async function fetchVendor(id) {
-  const { data, error } = await supabase.from('vendors').select(PARTY_COLUMNS).eq('id', id).single();
-  if (error) throw error;
-  return data;
-}
-
 export async function updateClient(id, payload) {
   const { data, error } = await supabase.from('clients').update(payload).eq('id', id).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function updateVendor(id, payload) {
-  const { data, error } = await supabase.from('vendors').update(payload).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
@@ -85,10 +60,5 @@ function friendlyDeleteError(error) {
 
 export async function deleteClient(id) {
   const { error } = await supabase.from('clients').delete().eq('id', id);
-  if (error) throw friendlyDeleteError(error);
-}
-
-export async function deleteVendor(id) {
-  const { error } = await supabase.from('vendors').delete().eq('id', id);
   if (error) throw friendlyDeleteError(error);
 }

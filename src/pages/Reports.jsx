@@ -224,7 +224,7 @@ export default function Reports() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DueList title="Receivable" rows={sortedDue(dueSummary.receivables)} onRowClick={(id) => navigate(`/clients/${id}`)} />
-              <DueList title="Payable" rows={sortedDue(dueSummary.payables)} onRowClick={(id) => navigate(`/vendors/${id}`)} />
+              <DueList title="Payable" rows={sortedDue(dueSummary.payables)} onRowClick={(id) => navigate(`/employees/${id}`)} />
             </div>
           </Section>
 

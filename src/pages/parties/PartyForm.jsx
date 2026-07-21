@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import Sheet from '../../components/Sheet.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
-import { createClient, createVendor, updateClient, updateVendor } from '../../lib/partyData.js';
+import { createClient, updateClient } from '../../lib/partyData.js';
 
-export default function PartyForm({ open, onClose, onSaved, kind, party = null }) {
+export default function PartyForm({ open, onClose, onSaved, party = null }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -11,8 +11,6 @@ export default function PartyForm({ open, onClose, onSaved, kind, party = null }
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const label = kind === 'client' ? 'Client' : 'Vendor';
 
   useEffect(() => {
     if (!open) return;
@@ -42,11 +40,9 @@ export default function PartyForm({ open, onClose, onSaved, kind, party = null }
     setError('');
     try {
       if (party) {
-        if (kind === 'client') await updateClient(party.id, payload);
-        else await updateVendor(party.id, payload);
+        await updateClient(party.id, payload);
       } else {
-        if (kind === 'client') await createClient(payload);
-        else await createVendor(payload);
+        await createClient(payload);
       }
       onSaved();
       onClose();
@@ -58,7 +54,7 @@ export default function PartyForm({ open, onClose, onSaved, kind, party = null }
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={party ? `Edit ${label.toLowerCase()}` : `New ${label.toLowerCase()}`}>
+    <Sheet open={open} onClose={onClose} title={party ? 'Edit client' : 'New client'}>
       <form onSubmit={handleSubmit}>
         <Field label="Name" required>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
@@ -83,7 +79,7 @@ export default function PartyForm({ open, onClose, onSaved, kind, party = null }
           disabled={saving}
           className="w-full py-2.5 rounded-md text-sm font-medium bg-gray-100 text-gray-900 disabled:opacity-50"
         >
-          {saving ? 'Saving…' : party ? 'Save changes' : `Add ${label.toLowerCase()}`}
+          {saving ? 'Saving…' : party ? 'Save changes' : 'Add client'}
         </button>
       </form>
     </Sheet>

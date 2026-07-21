@@ -126,7 +126,6 @@ export default function ClientDetail() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         onSaved={() => setReloadKey((k) => k + 1)}
-        kind="client"
         party={client}
       />
     </div>
