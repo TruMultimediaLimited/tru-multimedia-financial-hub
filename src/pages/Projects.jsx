@@ -97,6 +97,7 @@ export default function Projects() {
               </div>
               <div className="text-xs text-gray-500 mb-3">
                 {p.clients?.name ?? 'No client'} · {p.concerns?.name}
+                {p.project_categories?.name && ` · ${p.project_categories.name}`}
               </div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-500">Contract {formatMoney(p.contract_value)}</span>

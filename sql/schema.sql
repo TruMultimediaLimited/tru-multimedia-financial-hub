@@ -35,6 +35,7 @@ drop table if exists work_logs cascade;
 drop table if exists payments cascade;
 drop table if exists transactions cascade;
 drop table if exists projects cascade;
+drop table if exists project_categories cascade;
 drop table if exists employees cascade;
 drop table if exists owner_investments cascade;
 drop table if exists owners cascade;
@@ -77,7 +78,7 @@ create extension if not exists pgcrypto;
 create type transaction_type as enum ('income', 'expense');
 create type payment_channel as enum ('bkash', 'nagad', 'bank', 'cash', 'other');
 create type employee_type as enum ('fixed', 'remote', 'project_based');
-create type project_status as enum ('active', 'completed', 'stalled');
+create type project_status as enum ('running', 'hold', 'cancelled', 'completed');
 create type audit_action as enum ('insert', 'update', 'delete');
 
 
@@ -202,21 +203,41 @@ create index idx_owner_investments_owner on owner_investments(owner_id);
 
 -- ============================================================================
 -- 5. PROJECTS
+-- category_id is an open-ended, owner-extendable list (project_categories)
+-- rather than a hardcoded enum — new categories get added often enough
+-- that they shouldn't require a code deploy.
 -- ============================================================================
+
+create table project_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  created_at timestamptz not null default now()
+);
+
+insert into project_categories (name) values
+  ('Wedding Shoot'),
+  ('Pre-Wedding'),
+  ('Corporate Event'),
+  ('Product Shoot'),
+  ('Portrait'),
+  ('Video Production'),
+  ('Other');
 
 create table projects (
   id uuid primary key default gen_random_uuid(),
   concern_id uuid not null references concerns(id),
   client_id uuid references clients(id),
   title text not null,
+  category_id uuid references project_categories(id),
   contract_value numeric not null default 0 check (contract_value >= 0),
-  status project_status not null default 'active',
+  status project_status not null default 'running',
   start_date date,
   end_date date,
   created_at timestamptz not null default now()
 );
 
 create index idx_projects_concern on projects(concern_id);
+create index idx_projects_category on projects(category_id);
 create index idx_projects_client on projects(client_id);
 
 
@@ -317,6 +338,7 @@ create index idx_invoices_client on invoices(client_id);
 alter table concerns disable row level security;
 alter table clients disable row level security;
 alter table client_concerns disable row level security;
+alter table project_categories disable row level security;
 alter table employees disable row level security;
 alter table owners disable row level security;
 alter table owner_investments disable row level security;

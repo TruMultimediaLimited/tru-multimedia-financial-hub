@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js';
 
-const PROJECT_SELECT = 'id, concern_id, client_id, title, contract_value, status, start_date, end_date, concerns(id, name), clients(id, name)';
+const PROJECT_SELECT =
+  'id, concern_id, client_id, title, category_id, contract_value, status, start_date, end_date, concerns(id, name), clients(id, name), project_categories(id, name)';
 
 // Both transactions and invoices carry a project_id foreign key — name
 // the actual blocker instead of always blaming "transactions", which is
@@ -100,4 +101,18 @@ export async function fetchProjectsForClient(clientId) {
   const { data, error } = await supabase.from('projects').select('id, title').eq('client_id', clientId).order('title');
   if (error) throw error;
   return data ?? [];
+}
+
+// Open-ended, owner-extendable list — new categories get added often
+// enough that they shouldn't require a code deploy.
+export async function fetchProjectCategories() {
+  const { data, error } = await supabase.from('project_categories').select('id, name').order('name');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createProjectCategory(name) {
+  const { data, error } = await supabase.from('project_categories').insert({ name }).select().single();
+  if (error) throw error;
+  return data;
 }
