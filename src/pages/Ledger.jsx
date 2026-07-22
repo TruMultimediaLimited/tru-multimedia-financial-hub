@@ -8,8 +8,9 @@ import EmptyState from '../components/EmptyState.jsx';
 import Sheet from '../components/Sheet.jsx';
 import Dropdown from '../components/Dropdown.jsx';
 import { inputClass } from '../components/Field.jsx';
-import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
+import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
+import { fetchOwners } from '../lib/ownerData.js';
 import TransactionForm from './ledger/TransactionForm.jsx';
 
 export default function Ledger({ fixedType = null }) {
@@ -19,6 +20,7 @@ export default function Ledger({ fixedType = null }) {
   const [concernFilter, setConcernFilter] = useState(selectedConcernId ?? '');
   const [projectFilter, setProjectFilter] = useState('');
   const [handledByFilter, setHandledByFilter] = useState('');
+  const [channelFilter, setChannelFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [typeTab, setTypeTab] = useState('all');
@@ -26,6 +28,7 @@ export default function Ledger({ fixedType = null }) {
 
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [owners, setOwners] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -50,6 +53,10 @@ export default function Ledger({ fixedType = null }) {
   }, []);
 
   useEffect(() => {
+    fetchOwners().then(setOwners).catch((e) => setError(e.message));
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -57,7 +64,7 @@ export default function Ledger({ fixedType = null }) {
     const handledBy = handledByFilter
       ? handledByFilter === 'self'
         ? { kind: 'user', id: currentUser?.id }
-        : { kind: 'employee', id: handledByFilter.split(':')[1] }
+        : { kind: handledByFilter.split(':')[0], id: handledByFilter.split(':')[1] }
       : null;
 
     fetchTransactions({
@@ -67,6 +74,7 @@ export default function Ledger({ fixedType = null }) {
       dateFrom: dateFrom || null,
       dateTo: dateTo || null,
       handledBy,
+      channel: channelFilter || null,
     })
       .then((rows) => {
         if (!cancelled) setTransactions(rows);
@@ -81,7 +89,7 @@ export default function Ledger({ fixedType = null }) {
     return () => {
       cancelled = true;
     };
-  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, currentUser, reloadKey, fixedType]);
+  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, channelFilter, currentUser, reloadKey, fixedType]);
 
   function openAdd(type) {
     setFormType(type);
@@ -94,13 +102,14 @@ export default function Ledger({ fixedType = null }) {
 
   function clearSecondaryFilters() {
     setHandledByFilter('');
+    setChannelFilter('');
     setDateFrom('');
     setDateTo('');
   }
 
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
   const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
-  const activeSecondaryFilters = [handledByFilter, dateFrom, dateTo].filter(Boolean).length;
+  const activeSecondaryFilters = [handledByFilter, channelFilter, dateFrom, dateTo].filter(Boolean).length;
   const projectOptions = [
     { value: '', label: 'All projects' },
     ...projects.map((p) => ({ value: p.id, label: p.title })),
@@ -108,7 +117,12 @@ export default function Ledger({ fixedType = null }) {
   const handledByOptions = [
     { value: '', label: 'Anyone' },
     ...(currentUser ? [{ value: 'self', label: 'Myself' }] : []),
+    ...owners.map((o) => ({ value: `owner:${o.id}`, label: `${o.name} (Owner)` })),
     ...employees.map((emp) => ({ value: `employee:${emp.id}`, label: emp.name })),
+  ];
+  const channelOptions = [
+    { value: '', label: 'All channels' },
+    ...Object.entries(CHANNEL_LABELS).map(([value, label]) => ({ value, label })),
   ];
 
   return (
@@ -216,6 +230,10 @@ export default function Ledger({ fixedType = null }) {
           <div>
             <span className="block text-xs font-medium text-slate-500 mb-1.5">{handledByLabel}</span>
             <Dropdown value={handledByFilter} onChange={setHandledByFilter} options={handledByOptions} />
+          </div>
+          <div>
+            <span className="block text-xs font-medium text-slate-500 mb-1.5">Channel</span>
+            <Dropdown value={channelFilter} onChange={setChannelFilter} options={channelOptions} />
           </div>
           <div>
             <span className="block text-xs font-medium text-slate-500 mb-1.5">Date Range</span>

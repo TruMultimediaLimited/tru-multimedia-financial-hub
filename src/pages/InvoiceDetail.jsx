@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchInvoice, deleteInvoice } from '../lib/invoiceData.js';
 import InvoiceForm from './invoices/InvoiceForm.jsx';
@@ -49,9 +50,7 @@ export default function InvoiceDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/invoices')} className="text-xs text-slate-500 mb-3 print:hidden">
-        ← Back to Invoices
-      </button>
+      <BackButton className="print:hidden" />
 
       <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-6 mb-4">
         <div className="flex items-start justify-between mb-6">

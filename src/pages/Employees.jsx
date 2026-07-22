@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserCog } from 'lucide-react';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { fetchEmployeesFull } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
@@ -34,6 +35,7 @@ export default function Employees() {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
         <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">

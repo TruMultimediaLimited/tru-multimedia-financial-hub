@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import BackButton from '../components/BackButton.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchOwner, deleteOwner, fetchOwnerPayments, fetchOwnerInvestments, deleteOwnerInvestment } from '../lib/ownerData.js';
 import OwnerForm from './owners/OwnerForm.jsx';
@@ -63,9 +64,7 @@ export default function OwnerDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/owners')} className="text-xs text-slate-500 mb-3">
-        ← Back to Owners
-      </button>
+      <BackButton />
 
       <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { fetchClientsWithTotals } from '../lib/partyData.js';
@@ -35,6 +36,7 @@ export default function Clients() {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
         <button

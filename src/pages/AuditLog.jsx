@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ClipboardList } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { fetchAuditLog, AUDIT_TABLES } from '../lib/auditData.js';
@@ -55,6 +56,7 @@ export default function AuditLog() {
 
   return (
     <div>
+      <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Log</h1>
       <p className="text-xs text-slate-500 mb-4">
         Read-only. Every entry here is written automatically by database triggers when a record is created, edited, or
