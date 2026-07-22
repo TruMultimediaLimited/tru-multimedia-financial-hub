@@ -4,6 +4,7 @@ import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox } from 'lucide
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import {
@@ -83,6 +84,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-4">Dashboard</h1>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}

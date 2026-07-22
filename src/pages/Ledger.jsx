@@ -4,6 +4,7 @@ import { Inbox, Filter } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Sheet from '../components/Sheet.jsx';
 import Dropdown from '../components/Dropdown.jsx';
@@ -127,6 +128,7 @@ export default function Ledger({ fixedType = null }) {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
         <div className="flex gap-2">
