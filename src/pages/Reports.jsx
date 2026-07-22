@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import { inputClass } from '../components/Field.jsx';
+import BackButton from '../components/BackButton.jsx';
 import BarChart from '../components/BarChart.jsx';
 import { formatMoney, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchProjects } from '../lib/ledgerData.js';
@@ -91,6 +92,7 @@ export default function Reports() {
 
   return (
     <div>
+      <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-4">Reports</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">

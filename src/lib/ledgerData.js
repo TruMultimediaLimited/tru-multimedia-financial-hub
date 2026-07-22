@@ -44,10 +44,16 @@ export async function fetchTransactions(filters = {}) {
   if (filters.handledBy) {
     const { kind, id } = filters.handledBy;
     rows = rows.filter((t) =>
-      (t.payments ?? []).some((p) =>
-        kind === 'employee' ? p.handled_by_employee_id === id : p.handled_by_user_id === id
-      )
+      (t.payments ?? []).some((p) => {
+        if (kind === 'employee') return p.handled_by_employee_id === id;
+        if (kind === 'owner') return p.handled_by_owner_id === id;
+        return p.handled_by_user_id === id;
+      })
     );
+  }
+
+  if (filters.channel) {
+    rows = rows.filter((t) => (t.payments ?? []).some((p) => p.channel === filters.channel));
   }
 
   return rows;

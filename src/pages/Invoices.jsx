@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchInvoices } from '../lib/invoiceData.js';
@@ -29,6 +30,7 @@ export default function Invoices() {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">Invoices</h1>
         <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { supabase } from '../lib/supabase.js';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
@@ -74,9 +75,7 @@ export default function LedgerDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate(-1)} className="text-xs text-slate-500 mb-3">
-        ← Back
-      </button>
+      <BackButton />
 
       <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">

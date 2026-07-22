@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, PROJECT_STATUS_STYLES, PAYMENT_BUCKET_STYLES, PAYMENT_BUCKET_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchClient, deleteClient } from '../lib/partyData.js';
@@ -66,9 +67,7 @@ export default function ClientDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate('/clients')} className="text-xs text-slate-500 mb-3">
-        ← Back to Clients
-      </button>
+      <BackButton />
 
       <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
         <div className="flex items-start justify-between mb-2">

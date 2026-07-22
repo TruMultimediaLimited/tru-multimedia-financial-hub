@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
+import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
@@ -30,6 +31,7 @@ export default function Owners() {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">Owners</h1>
         <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">
