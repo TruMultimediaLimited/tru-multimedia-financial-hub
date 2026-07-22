@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sheet from '../../components/Sheet.jsx';
+import BackButton from '../../components/BackButton.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
 import { useConcern } from '../../context/ConcernContext.jsx';
 import { supabase } from '../../lib/supabase.js';
@@ -383,6 +384,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   return (
     <Sheet open={open} onClose={onClose} title={transaction ? 'Edit transaction' : `Add ${type}`}>
+      <BackButton label="Back" onClick={onClose} />
       <form onSubmit={handleSubmit}>
         <Field label="Concern" required>
           <select className={inputClass} value={concernId} onChange={(e) => setConcernId(e.target.value)}>

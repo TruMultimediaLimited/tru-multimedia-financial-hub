@@ -4,7 +4,6 @@ import { Users } from 'lucide-react';
 import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import EmptyState from '../components/EmptyState.jsx';
-import BackButton from '../components/BackButton.jsx';
 import { formatMoney } from '../lib/format.js';
 import { initials, avatarColor } from '../lib/avatar.js';
 import { useConcern } from '../context/ConcernContext.jsx';
@@ -90,7 +89,6 @@ export default function Projects() {
 
   return (
     <div>
-      <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Projects</h1>
       <p className="text-xs text-slate-500 mb-4">Browse by client</p>
 
