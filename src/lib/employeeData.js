@@ -25,6 +25,15 @@ export async function fetchEmployeesFull() {
   return data ?? [];
 }
 
+// Roles aren't a lookup table — just the distinct values already in use,
+// so a role typed for one employee becomes a pickable option for the
+// next one without any schema change.
+export async function fetchDistinctRoles() {
+  const { data, error } = await supabase.from('employees').select('role').not('role', 'is', null);
+  if (error) throw error;
+  return Array.from(new Set(data.map((row) => row.role).filter(Boolean)));
+}
+
 export async function fetchEmployee(id) {
   const { data, error } = await supabase.from('employees').select(EMPLOYEE_SELECT).eq('id', id).single();
   if (error) throw error;
