@@ -7,6 +7,7 @@ import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchProject, deleteProject } from '../lib/projectData.js';
 import { fetchInvoicesForProject } from '../lib/invoiceData.js';
 import ProjectForm from './projects/ProjectForm.jsx';
+import TeamMemberForm from './projects/TeamMemberForm.jsx';
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+  const [teamFormOpen, setTeamFormOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -67,6 +69,9 @@ export default function ProjectDetail() {
     existing.due += dueAmount;
     teamById.set(t.employees.id, existing);
     if (!team.includes(existing)) team.push(existing);
+  }
+  for (const m of team) {
+    m.status = m.paid >= m.total ? 'paid' : m.paid > 0 ? 'partial' : 'pending';
   }
 
   const clientPayments = transactions
@@ -153,17 +158,26 @@ export default function ProjectDetail() {
         </>
       )}
 
-      <h2 className="text-sm font-medium text-slate-700 mb-2">Team</h2>
-      {team.length === 0 && <p className="text-sm text-slate-500 mb-4">No employee expenses linked to this project yet.</p>}
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-medium text-slate-700">Team</h2>
+        <button
+          onClick={() => setTeamFormOpen(true)}
+          className="px-3 py-1.5 rounded-xl text-xs bg-primary text-white hover:bg-primaryHover"
+        >
+          + Add team member
+        </button>
+      </div>
+      {team.length === 0 && <p className="text-sm text-slate-500 mb-4">No team members added to this project yet.</p>}
       {team.length > 0 && (
         <div className="overflow-x-auto mb-6">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-slate-500 border-b border-slate-200">
                 <th className="py-2 pr-3 font-normal">Employee</th>
-                <th className="py-2 pr-3 font-normal text-right">Total</th>
+                <th className="py-2 pr-3 font-normal text-right">Salary</th>
                 <th className="py-2 pr-3 font-normal text-right">Paid</th>
                 <th className="py-2 pr-3 font-normal text-right">Due</th>
+                <th className="py-2 pr-3 font-normal">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -177,6 +191,9 @@ export default function ProjectDetail() {
                   <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(m.total)}</td>
                   <td className="py-2 pr-3 text-right text-slate-700">{formatMoney(m.paid)}</td>
                   <td className="py-2 pr-3 text-right">{m.due > 0 ? <span className="text-due">{formatMoney(m.due)}</span> : '—'}</td>
+                  <td className="py-2 pr-3">
+                    <Badge className={STATUS_STYLES[m.status]}>{STATUS_LABELS[m.status]}</Badge>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -234,6 +251,12 @@ export default function ProjectDetail() {
       </div>
 
       <ProjectForm open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} project={project} />
+      <TeamMemberForm
+        open={teamFormOpen}
+        onClose={() => setTeamFormOpen(false)}
+        onSaved={() => setReloadKey((k) => k + 1)}
+        project={project}
+      />
     </div>
   );
 }
