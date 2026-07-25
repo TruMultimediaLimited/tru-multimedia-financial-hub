@@ -32,6 +32,8 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [dueSort, setDueSort] = useState('amount');
   const [expandedCard, setExpandedCard] = useState(null);
+  const [expandedReceivable, setExpandedReceivable] = useState(null);
+  const [expandedPayable, setExpandedPayable] = useState(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
@@ -200,13 +202,17 @@ export default function Dashboard() {
             <DueColumn
               title="Receivable"
               rows={sortRows(dueSummary.receivables)}
-              onRowClick={(id) => navigate(`/clients/${id}`)}
+              expandedId={expandedReceivable}
+              onToggle={(id) => setExpandedReceivable((cur) => (cur === id ? null : id))}
+              onBreakdownClick={(b) => navigate(b.type === 'project' ? `/projects/${b.id}` : `/ledger/${b.id}`)}
               emptyText="No outstanding client dues."
             />
             <DueColumn
               title="Payable"
               rows={sortRows(dueSummary.payables)}
-              onRowClick={(id) => navigate(`/employees/${id}`)}
+              expandedId={expandedPayable}
+              onToggle={(id) => setExpandedPayable((cur) => (cur === id ? null : id))}
+              onBreakdownClick={(b) => navigate(`/employees/${b.id}`)}
               emptyText="No outstanding employee dues."
             />
           </div>
@@ -306,23 +312,38 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate
   );
 }
 
-function DueColumn({ title, rows, onRowClick, emptyText }) {
+function DueColumn({ title, rows, expandedId, onToggle, onBreakdownClick, emptyText }) {
   return (
     <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
       <div className="text-xs text-slate-500 mb-2">{title}</div>
       {rows.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
       <div className="space-y-1">
         {rows.map((r) => (
-          <div
-            key={r.id}
-            onClick={() => onRowClick(r.id)}
-            className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
-          >
-            <div>
-              <div className="text-sm text-slate-900">{r.name}</div>
-              <div className="text-xs text-slate-500">since {formatDate(r.oldestDate)}</div>
+          <div key={r.id}>
+            <div
+              onClick={() => onToggle(r.id)}
+              className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
+            >
+              <div>
+                <div className="text-sm text-slate-900">{r.name}</div>
+                {r.oldestDate && <div className="text-xs text-slate-500">since {formatDate(r.oldestDate)}</div>}
+              </div>
+              <div className="text-sm text-due">{formatMoney(r.due)}</div>
             </div>
-            <div className="text-sm text-due">{formatMoney(r.due)}</div>
+            {expandedId === r.id && (
+              <div className="ml-2 mb-1 pl-2 border-l-2 border-slate-200 space-y-0.5">
+                {r.breakdown.map((b) => (
+                  <div
+                    key={b.id}
+                    onClick={() => onBreakdownClick(b)}
+                    className="flex items-center justify-between py-1 px-2 rounded-lg cursor-pointer hover:bg-surface"
+                  >
+                    <div className="text-xs text-slate-700">{b.label}</div>
+                    <div className="text-xs text-due">{formatMoney(b.due)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

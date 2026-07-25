@@ -1,12 +1,13 @@
 import { supabase } from './supabase.js';
 
 // Lean select for due-list aggregation — deliberately fewer columns than
-// ledgerData's TRANSACTION_SELECT (no projects, no payment channel/note),
-// since the Dashboard only needs enough to sum due amounts per party.
+// ledgerData's TRANSACTION_SELECT (no payment channel/note), since the
+// Dashboard only needs enough to sum due amounts per party/project.
 const DUE_SELECT = `
-  id, type, concern_id, client_id, employee_id, total_amount, transaction_date,
+  id, type, concern_id, client_id, employee_id, project_id, total_amount, transaction_date,
   clients(id, name),
   employees(id, name),
+  projects(id, title),
   payments(amount)
 `;
 
@@ -113,39 +114,88 @@ async function fetchDueRows(type, concernId) {
   return data ?? [];
 }
 
-function groupDue(rows, partyRelation) {
+// Receivable is grouped per client, one summary row each, with a
+// click-to-expand breakdown underneath — never one row per transaction,
+// which gets congested fast. A client's due is mostly their projects'
+// committed contract value minus what's been received (project_balances,
+// same figure ProjectDetail shows), not the sum of income-transaction
+// dues — a project can carry a due before any income transaction has even
+// been logged against it yet. Ad-hoc income (no project_id) still counts
+// via its own transaction-level due, since it has no contract to draw from.
+async function fetchReceivables(concernId) {
+  let projectQuery = supabase.from('projects').select('id, title, start_date, client_id, clients(id, name)');
+  if (concernId) projectQuery = projectQuery.eq('concern_id', concernId);
+  const [{ data: projects, error: projError }, { data: balances, error: balError }, incomeRows] = await Promise.all([
+    projectQuery,
+    supabase.from('project_balances').select('project_id, total_due'),
+    fetchDueRows('income', concernId),
+  ]);
+  if (projError) throw projError;
+  if (balError) throw balError;
+
+  const dueByProject = new Map((balances ?? []).map((b) => [b.project_id, Number(b.total_due)]));
   const groups = new Map();
-  for (const t of rows) {
+  function group(client) {
+    let g = groups.get(client.id);
+    if (!g) {
+      g = { id: client.id, name: client.name, due: 0, oldestDate: null, breakdown: [] };
+      groups.set(client.id, g);
+    }
+    return g;
+  }
+  function bumpOldest(g, date) {
+    if (date && (!g.oldestDate || date < g.oldestDate)) g.oldestDate = date;
+  }
+
+  for (const pr of projects ?? []) {
+    const due = dueByProject.get(pr.id) ?? 0;
+    if (due <= 0 || !pr.clients) continue;
+    const g = group(pr.clients);
+    g.due += due;
+    g.breakdown.push({ type: 'project', id: pr.id, label: pr.title, due });
+    bumpOldest(g, pr.start_date);
+  }
+  for (const t of incomeRows) {
+    if (t.project_id) continue; // already represented via that project's contract due above
     const due = dueAmount(t);
-    const party = t[partyRelation];
-    if (due <= 0 || !party) continue;
-    const existing = groups.get(party.id) ?? {
-      id: party.id,
-      name: party.name,
-      due: 0,
-      oldestDate: t.transaction_date,
-    };
-    existing.due += due;
-    if (t.transaction_date < existing.oldestDate) existing.oldestDate = t.transaction_date;
-    groups.set(party.id, existing);
+    if (due <= 0 || !t.clients) continue;
+    const g = group(t.clients);
+    g.due += due;
+    g.breakdown.push({ type: 'transaction', id: t.id, label: t.category || 'Uncategorized', due });
+    bumpOldest(g, t.transaction_date);
   }
   return Array.from(groups.values());
 }
 
-// Receivables/payables due totals grouped per client/employee. The sum
-// itself (total_amount - sum(payments)) mirrors transaction_balances,
-// computed here because that view doesn't carry client_id/employee_id for
-// grouping — acceptable at this business's transaction volume per
-// docs/architecture.md §7.
+// Payable is grouped per project (falls back to a single "Other / General"
+// bucket for expenses not linked to any project), with a click-to-expand
+// breakdown of which employee is owed how much within that project — the
+// "who gets paid from this job" view, rather than one row per employee
+// across every job at once.
+async function fetchPayables(concernId) {
+  const expenseRows = await fetchDueRows('expense', concernId);
+  const groups = new Map();
+  for (const t of expenseRows) {
+    const due = dueAmount(t);
+    if (due <= 0 || !t.employees) continue;
+    const key = t.project_id ?? 'other';
+    let g = groups.get(key);
+    if (!g) {
+      g = { id: key, name: t.projects?.title ?? 'Other / General', due: 0, oldestDate: t.transaction_date, breakdown: new Map() };
+      groups.set(key, g);
+    }
+    g.due += due;
+    if (t.transaction_date < g.oldestDate) g.oldestDate = t.transaction_date;
+    const existing = g.breakdown.get(t.employees.id) ?? { id: t.employees.id, label: t.employees.name, due: 0 };
+    existing.due += due;
+    g.breakdown.set(t.employees.id, existing);
+  }
+  return Array.from(groups.values()).map((g) => ({ ...g, breakdown: Array.from(g.breakdown.values()) }));
+}
+
 export async function fetchDueSummary(concernId) {
-  const [incomeRows, expenseRows] = await Promise.all([
-    fetchDueRows('income', concernId),
-    fetchDueRows('expense', concernId),
-  ]);
-  return {
-    receivables: groupDue(incomeRows, 'clients'),
-    payables: groupDue(expenseRows, 'employees'),
-  };
+  const [receivables, payables] = await Promise.all([fetchReceivables(concernId), fetchPayables(concernId)]);
+  return { receivables, payables };
 }
 
 // Payment totals grouped by channel + handler, for accountability. Row
