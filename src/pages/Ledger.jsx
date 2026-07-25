@@ -298,8 +298,11 @@ export default function Ledger({ fixedType = null }) {
   );
 }
 
+// Falls back to the category when a transaction has no client/employee
+// attached — a general expense like office rent has neither, and the
+// row/card must still say what it actually was, not a blank dash.
 function partyName(t) {
-  return t.clients?.name ?? t.employees?.name ?? '—';
+  return t.clients?.name ?? t.employees?.name ?? (t.category || 'Uncategorized');
 }
 
 function TransactionRow({ t, onClick }) {

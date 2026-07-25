@@ -297,6 +297,15 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     if (type === 'income' && !clientId) return setError('Client is required.');
     const amount = Number(totalAmount);
     if (!(amount > 0)) return setError('Total amount must be greater than 0.');
+    // New expenses (this branch's only "new" case, since new income goes
+    // through handleIncomeCreate) are logged as paid at the moment they're
+    // entered — same as office rent actually leaving the company's hand —
+    // so who paid it and how gets captured right here, not as a separate
+    // step afterward.
+    if (!transaction) {
+      if (!channel) return setError('Channel is required.');
+      if (!handledByOwnerId) return setError('Handled by is required.');
+    }
 
     if (type === 'income' && projectId) {
       const project = projects.find((p) => p.id === projectId);
@@ -330,7 +339,15 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       if (transaction) {
         await updateTransaction(transaction.id, payload);
       } else {
-        await createTransaction(payload);
+        const txn = await createTransaction(payload);
+        await addPayment({
+          transaction_id: txn.id,
+          amount,
+          channel,
+          payment_date: date,
+          note: null,
+          handled_by_owner_id: handledByOwnerId,
+        });
       }
       onSaved();
       onClose();
@@ -529,6 +546,31 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                 onChange={(e) => setTotalAmount(e.target.value)}
               />
             </Field>
+
+            {!transaction && (
+              <>
+                <Field label="Channel" required>
+                  <select className={inputClass} value={channel} onChange={(e) => setChannel(e.target.value)}>
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="bank">Bank</option>
+                    <option value="cash">Cash</option>
+                    <option value="other">Other</option>
+                  </select>
+                </Field>
+
+                <Field label="Handled by" required>
+                  <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+                    <option value="">Select</option>
+                    {owners.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </>
+            )}
 
             <Field label="Date" required>
               <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
