@@ -38,6 +38,16 @@ export default function Ledger({ fixedType = null }) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [formType, setFormType] = useState(fixedType ?? 'income');
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set());
+
+  function toggleGroup(key) {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setConcernFilter(selectedConcernId ?? '');
@@ -116,6 +126,31 @@ export default function Ledger({ fixedType = null }) {
   const visibleTransactions =
     fixedType === 'expense' ? transactions.filter((t) => computeBalances(t).paidAmount > 0) : transactions;
   const hiddenDueCount = transactions.length - visibleTransactions.length;
+
+  // On the Expense page specifically, group by employee (salary/reimbursement
+  // entries) or by category (office rent, bills, etc.) instead of listing
+  // every payment as its own card — the same person or category can rack up
+  // many entries over time, which otherwise turns into a very long list.
+  const employeeGroups = [];
+  const categoryGroups = [];
+  if (fixedType === 'expense') {
+    const empMap = new Map();
+    const catMap = new Map();
+    for (const t of visibleTransactions) {
+      if (t.employees) {
+        const g = empMap.get(t.employees.id) ?? { key: t.employees.id, title: t.employees.name, entries: [] };
+        g.entries.push(t);
+        empMap.set(t.employees.id, g);
+      } else {
+        const cat = t.category || 'Uncategorized';
+        const g = catMap.get(cat) ?? { key: cat, title: cat, entries: [] };
+        g.entries.push(t);
+        catMap.set(cat, g);
+      }
+    }
+    employeeGroups.push(...empMap.values());
+    categoryGroups.push(...catMap.values());
+  }
 
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
   const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
@@ -214,7 +249,46 @@ export default function Ledger({ fixedType = null }) {
         </p>
       )}
 
-      {!loading && visibleTransactions.length > 0 && (
+      {!loading && fixedType === 'expense' && visibleTransactions.length > 0 && (
+        <div className="space-y-4">
+          {employeeGroups.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-slate-700 mb-2">Team / Salaries</h2>
+              <div className="space-y-2">
+                {employeeGroups.map((g) => (
+                  <ExpenseGroupCard
+                    key={`emp:${g.key}`}
+                    group={g}
+                    expanded={expandedGroups.has(`emp:${g.key}`)}
+                    onToggle={() => toggleGroup(`emp:${g.key}`)}
+                    onEntryClick={(id) => navigate(`/ledger/${id}`)}
+                    viewLabel="View more"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {categoryGroups.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-slate-700 mb-2">Office &amp; Other Expenses</h2>
+              <div className="space-y-2">
+                {categoryGroups.map((g) => (
+                  <ExpenseGroupCard
+                    key={`cat:${g.key}`}
+                    group={g}
+                    expanded={expandedGroups.has(`cat:${g.key}`)}
+                    onToggle={() => toggleGroup(`cat:${g.key}`)}
+                    onEntryClick={(id) => navigate(`/ledger/${id}`)}
+                    viewLabel="View"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loading && fixedType !== 'expense' && visibleTransactions.length > 0 && (
         <>
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
@@ -303,6 +377,61 @@ export default function Ledger({ fixedType = null }) {
 // row/card must still say what it actually was, not a blank dash.
 function partyName(t) {
   return t.clients?.name ?? t.employees?.name ?? (t.category || 'Uncategorized');
+}
+
+// One row per employee/category instead of one row per payment — an
+// employee paid across several projects, or a recurring cost like
+// Electricity Bill, otherwise turns the Expense page into a very long
+// list. Total/Paid roll up every entry in the group; expanding shows each
+// one individually.
+function ExpenseGroupCard({ group, expanded, onToggle, onEntryClick, viewLabel }) {
+  const totalAmount = group.entries.reduce((s, t) => s + Number(t.total_amount), 0);
+  const paidAmount = group.entries.reduce((s, t) => s + computeBalances(t).paidAmount, 0);
+  return (
+    <div className="bg-expense/5 border border-slate-200 border-l-4 border-l-expense/50 rounded-2xl shadow-card p-4">
+      <div onClick={onToggle} className="flex items-center justify-between cursor-pointer">
+        <div>
+          <div className="text-slate-900 font-medium">{group.title}</div>
+          <div className="text-xs text-slate-500">
+            {group.entries.length} {group.entries.length === 1 ? 'entry' : 'entries'} · Total {formatMoney(totalAmount)}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-expense">{formatMoney(paidAmount)}</div>
+          <span className="text-xs text-primary underline underline-offset-2">{expanded ? 'Hide' : viewLabel}</span>
+        </div>
+      </div>
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+          {group.entries
+            .slice()
+            .sort((a, b) => (a.transaction_date < b.transaction_date ? 1 : -1))
+            .map((t) => {
+              const { paidAmount: entryPaid, status } = computeBalances(t);
+              return (
+                <div
+                  key={t.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEntryClick(t.id);
+                  }}
+                  className="flex items-center justify-between bg-surfaceRaised rounded-xl px-3 py-2 cursor-pointer hover:bg-surface"
+                >
+                  <div className="text-xs text-slate-600">
+                    {t.category || 'Uncategorized'} · {formatDate(t.transaction_date)}
+                    {t.projects?.title && ` · ${t.projects.title}`}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-slate-900">{formatMoney(entryPaid)}</span>
+                    <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function TransactionRow({ t, onClick }) {
