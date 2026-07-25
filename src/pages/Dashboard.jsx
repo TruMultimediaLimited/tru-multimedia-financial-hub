@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox, Building2, Layers } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
-import { supabase } from '../lib/supabase.js';
-import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import MonthToggle from '../components/MonthToggle.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
@@ -11,7 +9,6 @@ import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { useMonthRange } from '../lib/monthRange.js';
 import {
   fetchDueSummary,
-  fetchChannelBreakdown,
   fetchProjectValueBreakdown,
   fetchPaymentsReceivedBreakdown,
   fetchExpenseBreakdown,
@@ -30,18 +27,12 @@ export default function Dashboard() {
   const [expense, setExpense] = useState(EMPTY_BREAKDOWN);
   const [projectProfit, setProjectProfit] = useState(EMPTY_BREAKDOWN);
   const [dueSummary, setDueSummary] = useState({ receivables: [], payables: [] });
-  const [channels, setChannels] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [dueSort, setDueSort] = useState('amount');
   const [expandedCard, setExpandedCard] = useState(null);
   const [expandedReceivable, setExpandedReceivable] = useState(null);
   const [expandedPayable, setExpandedPayable] = useState(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,16 +47,14 @@ export default function Dashboard() {
       fetchExpenseBreakdown(concernId, monthRange),
       fetchProjectProfitBreakdown(concernId, monthRange),
       fetchDueSummary(concernId),
-      fetchChannelBreakdown({ concernId, currentUserId: currentUser?.id ?? null, ...monthRange }),
     ])
-      .then(([valueResult, receivedResult, expenseResult, profitResult, dueResult, channelResult]) => {
+      .then(([valueResult, receivedResult, expenseResult, profitResult, dueResult]) => {
         if (cancelled) return;
         setProjectValue(valueResult);
         setPaymentsReceived(receivedResult);
         setExpense(expenseResult);
         setProjectProfit(profitResult);
         setDueSummary(dueResult);
-        setChannels(channelResult);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -73,7 +62,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [selectedConcernId, currentUser, monthStart, monthEnd]);
+  }, [selectedConcernId, monthStart, monthEnd]);
 
   function sortRows(rows) {
     return [...rows].sort((a, b) =>
@@ -99,7 +88,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
         <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
         <MonthToggle
           label={monthLabel}
@@ -109,9 +98,6 @@ export default function Dashboard() {
           onCurrent={() => setOffset(0)}
         />
       </div>
-      <p className="text-xs text-slate-500 -mt-2 mb-4">
-        Summary cards below reflect {offset === 0 ? 'this month' : monthLabel} only — Due list is always all-time.
-      </p>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
@@ -298,39 +284,6 @@ export default function Dashboard() {
               breakdownColorKey="employee"
             />
           </div>
-
-          <h2 className="text-sm font-medium text-slate-700 mb-2">Channel breakdown</h2>
-          {channels.length === 0 ? (
-            <EmptyState icon={Inbox} message="No payments recorded yet." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="py-2 pr-3 font-normal">Channel</th>
-                    <th className="py-2 pr-3 font-normal">Handled by</th>
-                    <th className="py-2 pr-3 font-normal text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {channels.map((row) => (
-                    <tr key={`${row.channel}|${row.handler}|${row.type}`} className="border-b border-slate-200/60">
-                      <td className="py-2 pr-3">
-                        <Badge className="bg-surfaceRaised text-slate-700 border-slate-300">
-                          {CHANNEL_LABELS[row.channel] ?? row.channel}
-                        </Badge>
-                      </td>
-                      <td className="py-2 pr-3 text-slate-700">{row.handler}</td>
-                      <td className={`py-2 pr-3 text-right ${row.type === 'income' ? 'text-income' : 'text-expense'}`}>
-                        {row.type === 'income' ? '+' : '−'}
-                        {formatMoney(row.total)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </>
       )}
     </div>
