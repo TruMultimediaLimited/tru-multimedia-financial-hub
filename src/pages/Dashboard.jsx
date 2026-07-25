@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import {
   fetchDueSummary,
   fetchChannelBreakdown,
@@ -95,7 +96,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
             <SummaryCard
               icon={Folder}
-              iconClass="bg-slate-100 text-slate-600"
+              iconClass={ENTITY_COLORS.project.icon}
               label="Total Project Value"
               value={formatMoney(projectValue.total)}
               accent="text-slate-900"
@@ -206,6 +207,8 @@ export default function Dashboard() {
               onToggle={(id) => setExpandedReceivable((cur) => (cur === id ? null : id))}
               onBreakdownClick={(b) => navigate(b.type === 'project' ? `/projects/${b.id}` : `/ledger/${b.id}`)}
               emptyText="No outstanding client dues."
+              colorKey="client"
+              breakdownColorKey={(b) => (b.type === 'project' ? 'project' : 'client')}
             />
             <DueColumn
               title="Payable"
@@ -214,6 +217,8 @@ export default function Dashboard() {
               onToggle={(id) => setExpandedPayable((cur) => (cur === id ? null : id))}
               onBreakdownClick={(b) => navigate(`/employees/${b.id}`)}
               emptyText="No outstanding employee dues."
+              colorKey="project"
+              breakdownColorKey="employee"
             />
           </div>
 
@@ -312,10 +317,11 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate
   );
 }
 
-function DueColumn({ title, rows, expandedId, onToggle, onBreakdownClick, emptyText }) {
+function DueColumn({ title, rows, expandedId, onToggle, onBreakdownClick, emptyText, colorKey, breakdownColorKey }) {
+  const color = ENTITY_COLORS[colorKey];
   return (
-    <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
-      <div className="text-xs text-slate-500 mb-2">{title}</div>
+    <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${color.border} rounded-2xl shadow-card p-4`}>
+      <div className={`text-xs font-medium mb-2 ${color.text}`}>{title}</div>
       {rows.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
       <div className="space-y-1">
         {rows.map((r) => (
@@ -324,24 +330,33 @@ function DueColumn({ title, rows, expandedId, onToggle, onBreakdownClick, emptyT
               onClick={() => onToggle(r.id)}
               className="flex items-center justify-between py-1.5 px-2 rounded-xl cursor-pointer hover:bg-surface"
             >
-              <div>
-                <div className="text-sm text-slate-900">{r.name}</div>
-                {r.oldestDate && <div className="text-xs text-slate-500">since {formatDate(r.oldestDate)}</div>}
+              <div className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 shrink-0 rounded-full ${color.dot}`} />
+                <div>
+                  <div className="text-sm text-slate-900">{r.name}</div>
+                  {r.oldestDate && <div className="text-xs text-slate-500">since {formatDate(r.oldestDate)}</div>}
+                </div>
               </div>
               <div className="text-sm text-due">{formatMoney(r.due)}</div>
             </div>
             {expandedId === r.id && (
               <div className="ml-2 mb-1 pl-2 border-l-2 border-slate-200 space-y-0.5">
-                {r.breakdown.map((b) => (
-                  <div
-                    key={b.id}
-                    onClick={() => onBreakdownClick(b)}
-                    className="flex items-center justify-between py-1 px-2 rounded-lg cursor-pointer hover:bg-surface"
-                  >
-                    <div className="text-xs text-slate-700">{b.label}</div>
-                    <div className="text-xs text-due">{formatMoney(b.due)}</div>
-                  </div>
-                ))}
+                {r.breakdown.map((b) => {
+                  const bColor = ENTITY_COLORS[typeof breakdownColorKey === 'function' ? breakdownColorKey(b) : breakdownColorKey];
+                  return (
+                    <div
+                      key={b.id}
+                      onClick={() => onBreakdownClick(b)}
+                      className="flex items-center justify-between py-1 px-2 rounded-lg cursor-pointer hover:bg-surface"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1 h-1 shrink-0 rounded-full ${bColor.dot}`} />
+                        <span className="text-xs text-slate-700">{b.label}</span>
+                      </div>
+                      <span className="text-xs text-due">{formatMoney(b.due)}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

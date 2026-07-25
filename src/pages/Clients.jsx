@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney } from '../lib/format.js';
 import { fetchClientsWithTotals } from '../lib/partyData.js';
 import PartyForm from './parties/PartyForm.jsx';
@@ -107,7 +108,7 @@ export default function Clients() {
               <div
                 key={c.id}
                 onClick={() => navigate(`/clients/${c.id}`)}
-                className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface"
+                className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-slate-900 font-medium">{c.name}</span>

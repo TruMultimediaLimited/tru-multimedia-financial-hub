@@ -4,6 +4,7 @@ import { Award } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
 import OwnerForm from './owners/OwnerForm.jsx';
@@ -57,7 +58,7 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface"
+              className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-slate-900 font-medium">{o.name}</span>

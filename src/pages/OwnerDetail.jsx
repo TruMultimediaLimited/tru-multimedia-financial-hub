@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchOwner, deleteOwner, fetchOwnerPayments, fetchOwnerInvestments, deleteOwnerInvestment } from '../lib/ownerData.js';
 import OwnerForm from './owners/OwnerForm.jsx';
@@ -66,7 +67,7 @@ export default function OwnerDetail() {
     <div>
       <BackButton />
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
+      <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 mb-4`}>
         <div className="flex items-start justify-between mb-2">
           <div>
             <div className="text-2xl font-bold text-slate-900">{owner.name}</div>

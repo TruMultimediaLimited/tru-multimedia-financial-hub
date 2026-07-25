@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS } from '../lib/format.js';
 import { fetchInvoices } from '../lib/invoiceData.js';
 import InvoiceForm from './invoices/InvoiceForm.jsx';
@@ -53,7 +54,7 @@ export default function Invoices() {
             <div
               key={inv.id}
               onClick={() => navigate(`/invoices/${inv.id}`)}
-              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className={`flex items-center justify-between bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <div>
                 <div className="text-sm text-slate-900">{inv.invoice_number}</div>
