@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, PROJECT_STATUS_STYLES, PAYMENT_BUCKET_STYLES, PAYMENT_BUCKET_LABELS } from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchClient, deleteClient } from '../lib/partyData.js';
@@ -73,7 +74,7 @@ export default function ClientDetail() {
     <div>
       <BackButton />
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
+      <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 mb-4`}>
         <div className="flex items-start justify-between mb-2">
           <div>
             <div className="text-2xl font-bold text-slate-900">{client.name}</div>

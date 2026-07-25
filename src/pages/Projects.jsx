@@ -6,6 +6,7 @@ import SearchSelect from '../components/SearchSelect.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { formatMoney } from '../lib/format.js';
 import { initials, avatarColor } from '../lib/avatar.js';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchProjectsWithTotals, paymentBucket } from '../lib/projectData.js';
 
@@ -140,7 +141,7 @@ export default function Projects() {
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3"
+            className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3`}
           >
             <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
               {initials(c.name)}

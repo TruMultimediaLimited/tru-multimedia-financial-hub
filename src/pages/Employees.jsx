@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserCog } from 'lucide-react';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { fetchEmployeesFull } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
 
@@ -65,7 +66,7 @@ export default function Employees() {
             <div
               key={emp.id}
               onClick={() => navigate(`/employees/${emp.id}`)}
-              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
+              className={`flex items-center justify-between bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <span className="text-slate-900 font-medium">{emp.name}</span>
               <span className="text-sm text-slate-500">{emp.role || 'No role set'}</span>
