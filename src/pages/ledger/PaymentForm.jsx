@@ -31,6 +31,7 @@ export default function PaymentForm({ transactionId, dueAmount, projectId, trans
 
     const amt = Number(amount);
     if (!(amt > 0)) return setError('Amount must be greater than 0.');
+    if (amt > dueAmount) return setError(`Amount exceeds the remaining due (${formatMoney(dueAmount)}).`);
 
     const payload = {
       transaction_id: transactionId,
@@ -67,6 +68,7 @@ export default function PaymentForm({ transactionId, dueAmount, projectId, trans
           <input
             type="number"
             min="0"
+            max={dueAmount}
             step="0.01"
             className={inputClass}
             value={amount}

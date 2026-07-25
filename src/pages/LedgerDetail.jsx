@@ -141,15 +141,21 @@ export default function LedgerDetail() {
           ))}
       </div>
 
-      <h2 className="text-sm font-medium text-slate-700 mb-2">Add payment</h2>
-      <PaymentForm
-        transactionId={transaction.id}
-        concernId={transaction.concern_id}
-        dueAmount={dueAmount}
-        projectId={transaction.project_id}
-        transactionType={transaction.type}
-        onSaved={refresh}
-      />
+      {dueAmount > 0 ? (
+        <>
+          <h2 className="text-sm font-medium text-slate-700 mb-2">Add payment</h2>
+          <PaymentForm
+            transactionId={transaction.id}
+            concernId={transaction.concern_id}
+            dueAmount={dueAmount}
+            projectId={transaction.project_id}
+            transactionType={transaction.type}
+            onSaved={refresh}
+          />
+        </>
+      ) : (
+        <p className="text-sm text-slate-500">Fully paid — no further payments needed.</p>
+      )}
 
       <TransactionForm
         open={editOpen}
