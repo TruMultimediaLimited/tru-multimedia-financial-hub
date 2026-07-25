@@ -82,10 +82,20 @@ export default function Projects() {
 
   const outstandingDue = projects.reduce((sum, p) => sum + Number(p.totalDue || 0), 0);
   const stats = [
-    { key: 'total', label: 'Total Projects', value: projects.length },
-    { key: 'running', label: 'Running', value: projects.filter((p) => p.status === 'running').length },
-    { key: 'completed', label: 'Completed', value: projects.filter((p) => p.status === 'completed').length },
-    { key: 'due', label: 'Outstanding Due', value: formatMoney(outstandingDue) },
+    { key: 'total', label: 'Total Projects', value: projects.length, classes: 'bg-violet-50 border-violet-200 text-violet-700' },
+    {
+      key: 'running',
+      label: 'Running',
+      value: projects.filter((p) => p.status === 'running').length,
+      classes: 'bg-primary/10 border-primary/20 text-primary',
+    },
+    {
+      key: 'completed',
+      label: 'Completed',
+      value: projects.filter((p) => p.status === 'completed').length,
+      classes: 'bg-income/10 border-income/20 text-income',
+    },
+    { key: 'due', label: 'Outstanding Due', value: formatMoney(outstandingDue), classes: 'bg-due/10 border-due/20 text-due' },
   ];
 
   return (
@@ -95,8 +105,8 @@ export default function Projects() {
 
       <div className="grid grid-cols-2 gap-2 mb-4">
         {stats.map((s) => (
-          <div key={s.key} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card px-3 py-2">
-            <div className="text-base font-semibold text-slate-900 leading-tight">{s.value}</div>
+          <div key={s.key} className={`border rounded-2xl shadow-card px-3 py-2 ${s.classes}`}>
+            <div className="text-base font-semibold leading-tight">{s.value}</div>
             <div className="text-xs text-slate-500">{s.label}</div>
           </div>
         ))}
