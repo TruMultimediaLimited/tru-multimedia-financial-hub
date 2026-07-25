@@ -58,10 +58,6 @@ export default function AuditLog() {
     <div>
       <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Log</h1>
-      <p className="text-xs text-slate-500 mb-4">
-        Read-only. Every entry here is written automatically by database triggers when a record is created, edited, or
-        deleted — nothing can be changed or removed from this page.
-      </p>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
         <select className={inputClass} value={tableName} onChange={(e) => setTableName(e.target.value)}>

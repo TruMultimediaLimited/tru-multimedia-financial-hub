@@ -4,6 +4,7 @@ import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox, Building2, La
 import { useConcern } from '../context/ConcernContext.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import MonthToggle from '../components/MonthToggle.jsx';
+import PageTitle from '../components/PageTitle.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { useMonthRange } from '../lib/monthRange.js';
@@ -88,10 +89,8 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-        <h1 className="h-9 flex items-center bg-primary/10 border border-primary/25 rounded-full px-4 text-sm font-bold text-primary">
-          Dashboard
-        </h1>
+      <div className="flex items-center gap-2 mb-2">
+        <PageTitle colorClass="bg-primary/10 border-primary/25 text-primary">Dashboard</PageTitle>
         <MonthToggle
           label={monthLabel}
           offset={offset}

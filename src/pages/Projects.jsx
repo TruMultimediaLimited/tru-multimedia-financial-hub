@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import Dropdown from '../components/Dropdown.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PageTitle from '../components/PageTitle.jsx';
 import { formatMoney } from '../lib/format.js';
 import { initials, avatarColor } from '../lib/avatar.js';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
@@ -100,7 +101,9 @@ export default function Projects() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-4">Projects</h1>
+      <div className="mb-4">
+        <PageTitle colorClass="bg-violet-100 border-violet-200 text-violet-700">Projects</PageTitle>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 mb-4">
         {stats.map((s) => (

@@ -4,10 +4,10 @@ import { Award } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PageTitle from '../components/PageTitle.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
-import OwnerForm from './owners/OwnerForm.jsx';
 
 export default function Owners() {
   const navigate = useNavigate();
@@ -15,8 +15,6 @@ export default function Owners() {
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,20 +26,14 @@ export default function Owners() {
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, []);
 
   return (
     <div>
       <BackButton />
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-slate-900">Owners</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-full text-sm bg-rose-100 text-rose-700 border border-rose-200">
-          + New owner
-        </button>
+      <div className="mb-4">
+        <PageTitle colorClass="bg-rose-100 border-rose-200 text-rose-700">Owners</PageTitle>
       </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Partner-level balances — how much each owner has personally received vs. given on the company's behalf, plus capital invested.
-      </p>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
@@ -83,8 +75,6 @@ export default function Owners() {
           ))}
         </div>
       )}
-
-      <OwnerForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} />
     </div>
   );
 }
