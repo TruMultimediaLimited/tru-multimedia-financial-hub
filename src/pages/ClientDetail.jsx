@@ -61,9 +61,13 @@ export default function ClientDetail() {
   if (error && !client) return <p className="text-sm text-expense">{error}</p>;
   if (!client) return null;
 
-  const totalBilled = transactions.reduce((s, t) => s + Number(t.total_amount), 0);
-  const totalPaid = transactions.reduce((s, t) => s + computeBalances(t).paidAmount, 0);
-  const totalDue = totalBilled - totalPaid;
+  // Billed/Paid/Due roll up from the client's projects (contract value vs.
+  // received), not raw transactions — a project can carry due before any
+  // income transaction exists for it, and this must match what the
+  // project's own page shows.
+  const totalBilled = projects.reduce((s, p) => s + Number(p.contract_value), 0);
+  const totalPaid = projects.reduce((s, p) => s + Number(p.totalReceived), 0);
+  const totalDue = projects.reduce((s, p) => s + Number(p.totalDue), 0);
 
   return (
     <div>

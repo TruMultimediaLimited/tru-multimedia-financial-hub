@@ -27,15 +27,37 @@ async function fetchPartyTotals(type, relationField) {
 }
 
 export async function fetchClientsWithTotals() {
-  const [{ data: clients, error }, totals] = await Promise.all([
-    supabase.from('clients').select(PARTY_COLUMNS).order('name'),
-    fetchPartyTotals('income', 'client_id'),
-  ]);
+  const [{ data: clients, error }, txnTotals, { data: projects, error: projectsError }, { data: balances, error: balancesError }] =
+    await Promise.all([
+      supabase.from('clients').select(PARTY_COLUMNS).order('name'),
+      fetchPartyTotals('income', 'client_id'),
+      supabase.from('projects').select('id, client_id'),
+      supabase.from('project_balances').select('project_id, contract_value, total_received, total_due'),
+    ]);
   if (error) throw error;
+  if (projectsError) throw projectsError;
+  if (balancesError) throw balancesError;
+
+  // Billed/Paid/Due roll up from the client's projects (contract value vs.
+  // received), matching what each project's own page shows — a project can
+  // carry due before any income transaction exists for it, so summing raw
+  // transactions alone understates a client's due.
+  const balanceByProject = new Map((balances ?? []).map((b) => [b.project_id, b]));
+  const projectTotalsByClient = new Map();
+  for (const p of projects ?? []) {
+    if (!p.client_id) continue;
+    const b = balanceByProject.get(p.id) ?? { contract_value: 0, total_received: 0, total_due: 0 };
+    const existing = projectTotalsByClient.get(p.client_id) ?? { billed: 0, paid: 0, due: 0 };
+    existing.billed += Number(b.contract_value);
+    existing.paid += Number(b.total_received);
+    existing.due += Number(b.total_due);
+    projectTotalsByClient.set(p.client_id, existing);
+  }
 
   return (clients ?? []).map((c) => {
-    const t = totals.get(c.id) ?? { billed: 0, paid: 0, count: 0 };
-    return { ...c, totalBilled: t.billed, totalPaid: t.paid, totalDue: t.billed - t.paid, transactionCount: t.count };
+    const pt = projectTotalsByClient.get(c.id) ?? { billed: 0, paid: 0, due: 0 };
+    const tt = txnTotals.get(c.id) ?? { count: 0 };
+    return { ...c, totalBilled: pt.billed, totalPaid: pt.paid, totalDue: pt.due, transactionCount: tt.count };
   });
 }
 

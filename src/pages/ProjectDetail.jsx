@@ -129,7 +129,13 @@ export default function ProjectDetail() {
           </div>
           <div>
             <div className="text-xs text-slate-500">Profit</div>
-            <div className={project.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(project.profit)}</div>
+            {project.status === 'completed' ? (
+              <div className={project.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(project.profit)}</div>
+            ) : (
+              <div className="text-slate-400" title="Profit is calculated once the project is marked completed">
+                —
+              </div>
+            )}
           </div>
         </div>
 
