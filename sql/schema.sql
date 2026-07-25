@@ -454,7 +454,10 @@ select
     pr.contract_value - coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0),
     0
   ) as total_due,
+  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0) as total_expense,
   coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid,
+  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0)
+    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_due,
   coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0)
     - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
 from projects pr

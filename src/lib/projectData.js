@@ -22,7 +22,7 @@ function friendlyDeleteError(error) {
 async function fetchBalancesMap() {
   const { data, error } = await supabase
     .from('project_balances')
-    .select('project_id, total_received, total_due, total_expense_paid, profit');
+    .select('project_id, total_received, total_due, total_expense, total_expense_paid, total_expense_due, profit');
   if (error) throw error;
   const map = new Map();
   for (const row of data ?? []) map.set(row.project_id, row);
@@ -30,12 +30,21 @@ async function fetchBalancesMap() {
 }
 
 function mergeBalance(project, balances) {
-  const b = balances.get(project.id) ?? { total_received: 0, total_due: 0, total_expense_paid: 0, profit: 0 };
+  const b = balances.get(project.id) ?? {
+    total_received: 0,
+    total_due: 0,
+    total_expense: 0,
+    total_expense_paid: 0,
+    total_expense_due: 0,
+    profit: 0,
+  };
   return {
     ...project,
     totalReceived: Number(b.total_received),
     totalDue: Number(b.total_due),
+    totalExpense: Number(b.total_expense),
     totalExpensePaid: Number(b.total_expense_paid),
+    totalExpenseDue: Number(b.total_expense_due),
     profit: Number(b.profit),
   };
 }

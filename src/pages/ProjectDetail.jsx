@@ -110,33 +110,51 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-3">
-          <div>
-            <div className="text-xs text-slate-500">Contract value</div>
-            <div className="text-slate-900">{formatMoney(project.contract_value)}</div>
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Client</div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div>
+              <div className="text-xs text-slate-500">Contract value</div>
+              <div className="text-slate-900">{formatMoney(project.contract_value)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Received</div>
+              <div className="text-income">{formatMoney(project.totalReceived)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Due</div>
+              <div className={project.totalDue > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(project.totalDue)}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-slate-500">Received</div>
-            <div className="text-income">{formatMoney(project.totalReceived)}</div>
+        </div>
+
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Team / Expenses</div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div>
+              <div className="text-xs text-slate-500">Total expense</div>
+              <div className="text-slate-900">{formatMoney(project.totalExpense)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Paid</div>
+              <div className="text-expense">{formatMoney(project.totalExpensePaid)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Due</div>
+              <div className={project.totalExpenseDue > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(project.totalExpenseDue)}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-slate-500">Due</div>
-            <div className={project.totalDue > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(project.totalDue)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Expenses paid</div>
-            <div className="text-expense">{formatMoney(project.totalExpensePaid)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Profit</div>
-            {project.status === 'completed' ? (
-              <div className={project.profit >= 0 ? 'text-income' : 'text-expense'}>{formatMoney(project.profit)}</div>
-            ) : (
-              <div className="text-slate-400" title="Profit is calculated once the project is marked completed">
-                —
-              </div>
-            )}
-          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="text-xs text-slate-500">Profit</div>
+          {project.status === 'completed' ? (
+            <div className={`text-sm ${project.profit >= 0 ? 'text-income' : 'text-expense'}`}>{formatMoney(project.profit)}</div>
+          ) : (
+            <div className="text-sm text-slate-400" title="Profit is calculated once the project is marked completed">
+              —
+            </div>
+          )}
         </div>
 
         <div className="h-1.5 rounded-full bg-surfaceRaised overflow-hidden">
