@@ -56,6 +56,12 @@ export default function ProjectDetail() {
 
   const progress = project.contract_value > 0 ? Math.min(100, (project.totalReceived / project.contract_value) * 100) : 0;
 
+  // Profit only means something once the money has actually finished
+  // moving both ways — the client has paid in full AND every team
+  // member's salary on this project is fully paid — not the moment
+  // someone flips the status dropdown to "Completed".
+  const isProfitReady = project.totalDue <= 0 && project.totalExpenseDue <= 0;
+
   // "Who worked on this project" is derived straight from the Ledger — an
   // employee shows up here the moment an expense transaction links both
   // this project and that employee, no separate assignment step needed.
@@ -149,10 +155,13 @@ export default function ProjectDetail() {
 
         <div className="mb-3">
           <div className="text-xs text-slate-500">Profit</div>
-          {project.status === 'completed' ? (
+          {isProfitReady ? (
             <div className={`text-sm ${project.profit >= 0 ? 'text-income' : 'text-expense'}`}>{formatMoney(project.profit)}</div>
           ) : (
-            <div className="text-sm text-slate-400" title="Profit is calculated once the project is marked completed">
+            <div
+              className="text-sm text-slate-400"
+              title="Profit is calculated once the client has paid in full and every team member's salary on this project is fully paid"
+            >
               —
             </div>
           )}
