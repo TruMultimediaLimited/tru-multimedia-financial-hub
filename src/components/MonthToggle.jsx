@@ -1,10 +1,10 @@
 export default function MonthToggle({ label, offset, onPrev, onNext, onCurrent }) {
   return (
-    <div className="flex items-center gap-1 bg-surfaceRaised border border-slate-200 rounded-full px-1.5 py-1">
+    <div className="h-9 flex items-center gap-1 bg-surfaceRaised border border-slate-200 rounded-full px-1.5">
       <button
         onClick={onPrev}
         aria-label="Previous month"
-        className="w-7 h-7 flex items-center justify-center rounded-full text-slate-600 hover:bg-surface"
+        className="w-6 h-6 shrink-0 flex items-center justify-center rounded-full text-slate-600 hover:bg-surface"
       >
         ‹
       </button>
@@ -18,7 +18,7 @@ export default function MonthToggle({ label, offset, onPrev, onNext, onCurrent }
         onClick={onNext}
         disabled={offset >= 0}
         aria-label="Next month"
-        className="w-7 h-7 flex items-center justify-center rounded-full text-slate-600 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-6 h-6 shrink-0 flex items-center justify-center rounded-full text-slate-600 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed"
       >
         ›
       </button>
