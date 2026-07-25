@@ -439,10 +439,10 @@ group by t.id, t.concern_id, t.type, t.total_amount;
 -- blocks income transactions on a project from summing past it. So "due"
 -- is contract_value minus what's actually been received (not the sum of
 -- individual transaction dues, which would understate due if the full
--- contract hasn't been invoiced as transactions yet), and profit is
--- contract_value minus expense paid — accrual against the committed deal
--- value, not cash-basis, since income/expense on a project routinely
--- settle months apart but the contract value itself doesn't change.
+-- contract hasn't been invoiced as transactions yet). Profit is cash-basis
+-- (total received minus total expense paid) — it should read as real,
+-- settled money in hand, not a projection against the committed contract
+-- value while nothing has actually changed hands yet.
 create or replace view project_balances as
 select
   pr.id as project_id,
@@ -455,7 +455,8 @@ select
     0
   ) as total_due,
   coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid,
-  pr.contract_value - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
+  coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0)
+    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
 from projects pr
 left join transactions t on t.project_id = pr.id
 left join transaction_balances tb on tb.transaction_id = t.id
