@@ -66,7 +66,7 @@ export default function Employees() {
             <div
               key={emp.id}
               onClick={() => navigate(`/employees/${emp.id}`)}
-              className={`flex items-center justify-between bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
+              className={`flex items-center justify-between ${ENTITY_COLORS.employee.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <span className="text-slate-900 font-medium">{emp.name}</span>
               <span className="text-sm text-slate-500">{emp.role || 'No role set'}</span>

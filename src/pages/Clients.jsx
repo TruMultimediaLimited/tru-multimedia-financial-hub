@@ -108,7 +108,7 @@ export default function Clients() {
               <div
                 key={c.id}
                 onClick={() => navigate(`/clients/${c.id}`)}
-                className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface`}
+                className={`${ENTITY_COLORS.client.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-slate-900 font-medium">{c.name}</span>

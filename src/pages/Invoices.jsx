@@ -54,7 +54,7 @@ export default function Invoices() {
             <div
               key={inv.id}
               onClick={() => navigate(`/invoices/${inv.id}`)}
-              className={`flex items-center justify-between bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
+              className={`flex items-center justify-between ${ENTITY_COLORS.client.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <div>
                 <div className="text-sm text-slate-900">{inv.invoice_number}</div>

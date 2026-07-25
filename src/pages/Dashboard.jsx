@@ -321,7 +321,7 @@ function BreakdownRow({ onClick, title, sub, value, valueClassName = 'text-slate
 function DueColumn({ title, rows, expandedId, onToggle, onBreakdownClick, emptyText, colorKey, breakdownColorKey }) {
   const color = ENTITY_COLORS[colorKey];
   return (
-    <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${color.border} rounded-2xl shadow-card p-4`}>
+    <div className={`${color.bg} border border-slate-200 border-l-4 ${color.border} rounded-2xl shadow-card p-4`}>
       <div className={`text-xs font-medium mb-2 ${color.text}`}>{title}</div>
       {rows.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
       <div className="space-y-1">

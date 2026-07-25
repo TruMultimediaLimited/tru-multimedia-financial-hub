@@ -56,7 +56,7 @@ export default function EmployeeDetail() {
     <div>
       <BackButton />
 
-      <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 mb-4`}>
+      <div className={`${ENTITY_COLORS.employee.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 mb-4`}>
         <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
           <div className="min-w-0">
             <div className="text-2xl font-bold text-slate-900 break-words">{employee.name}</div>
