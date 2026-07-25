@@ -118,64 +118,65 @@ export default function Dashboard() {
 
       {!loading && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
-            <SummaryCard
-              icon={Folder}
-              iconClass={ENTITY_COLORS.project.icon}
-              label="Total Project Value"
-              value={formatMoney(projectValue.total)}
-              accent="text-slate-900"
-              active={expandedCard === 'value'}
-              onClick={() => toggleCard('value')}
-            />
-            <SummaryCard
-              icon={Wallet}
-              iconClass="bg-income/10 text-income"
-              label="Total Payment Received"
-              value={formatMoney(paymentsReceived.total)}
-              accent="text-income"
-              active={expandedCard === 'received'}
-              onClick={() => toggleCard('received')}
-            />
-            <SummaryCard
-              icon={Receipt}
-              iconClass="bg-expense/10 text-expense"
-              label="Project Expense"
-              value={formatMoney(projectExpenseTotal)}
-              accent="text-expense"
-              active={expandedCard === 'projectExpense'}
-              onClick={() => toggleCard('projectExpense')}
-            />
-            <SummaryCard
-              icon={projectProfit.total >= 0 ? TrendingUp : TrendingDown}
-              iconClass={projectProfit.total >= 0 ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}
-              label="Project Profit"
-              value={formatMoney(projectProfit.total)}
-              accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
-              active={expandedCard === 'profit'}
-              onClick={() => toggleCard('profit')}
-            />
-          </div>
-
           <div className="grid grid-cols-2 gap-3 mb-2">
-            <SummaryCard
-              icon={Building2}
-              iconClass="bg-expense/10 text-expense"
-              label="Office Expense"
-              value={formatMoney(officeExpenseTotal)}
-              accent="text-expense"
-              active={expandedCard === 'office'}
-              onClick={() => toggleCard('office')}
-            />
-            <SummaryCard
-              icon={Layers}
-              iconClass="bg-expense/10 text-expense"
-              label="Total Expense"
-              value={formatMoney(expense.total)}
-              accent="text-expense"
-              active={expandedCard === 'expense'}
-              onClick={() => toggleCard('expense')}
-            />
+            <div className="flex flex-col gap-3">
+              <SummaryCard
+                icon={Folder}
+                iconClass={ENTITY_COLORS.project.icon}
+                label="Total Project Value"
+                value={formatMoney(projectValue.total)}
+                accent="text-slate-900"
+                active={expandedCard === 'value'}
+                onClick={() => toggleCard('value')}
+              />
+              <SummaryCard
+                icon={Wallet}
+                iconClass="bg-income/10 text-income"
+                label="Total Payment Received"
+                value={formatMoney(paymentsReceived.total)}
+                accent="text-income"
+                active={expandedCard === 'received'}
+                onClick={() => toggleCard('received')}
+              />
+              <SummaryCard
+                icon={projectProfit.total >= 0 ? TrendingUp : TrendingDown}
+                iconClass={projectProfit.total >= 0 ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}
+                label="Total Project Profit"
+                value={formatMoney(projectProfit.total)}
+                accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
+                active={expandedCard === 'profit'}
+                onClick={() => toggleCard('profit')}
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <SummaryCard
+                icon={Receipt}
+                iconClass="bg-expense/10 text-expense"
+                label="Project Expense"
+                value={formatMoney(projectExpenseTotal)}
+                accent="text-expense"
+                active={expandedCard === 'projectExpense'}
+                onClick={() => toggleCard('projectExpense')}
+              />
+              <SummaryCard
+                icon={Building2}
+                iconClass="bg-expense/10 text-expense"
+                label="Office Expense"
+                value={formatMoney(officeExpenseTotal)}
+                accent="text-expense"
+                active={expandedCard === 'office'}
+                onClick={() => toggleCard('office')}
+              />
+              <SummaryCard
+                icon={Layers}
+                iconClass="bg-expense/10 text-expense"
+                label="Total Expense"
+                value={formatMoney(expense.total)}
+                accent="text-expense"
+                active={expandedCard === 'expense'}
+                onClick={() => toggleCard('expense')}
+              />
+            </div>
           </div>
 
           {expandedCard === 'value' && (
@@ -353,19 +354,19 @@ function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onCl
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-3.5 transition-colors hover:border-slate-300 ${
+      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-3.5 py-3 transition-colors hover:border-slate-300 ${
         active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-500">{label}</span>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] text-slate-500">{label}</span>
         {Icon && (
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center ${iconClass}`}>
-            <Icon className="w-3.5 h-3.5" />
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center ${iconClass}`}>
+            <Icon className="w-3 h-3" />
           </span>
         )}
       </div>
-      <div className={`text-xl font-bold ${accent}`}>{value}</div>
+      <div className={`text-lg font-bold ${accent}`}>{value}</div>
     </button>
   );
 }
