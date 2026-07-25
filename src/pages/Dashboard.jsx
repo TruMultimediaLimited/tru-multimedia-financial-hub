@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox } from 'lucide-react';
+import { Folder, Wallet, Receipt, TrendingUp, TrendingDown, Inbox, Building2, Layers } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
@@ -88,6 +88,15 @@ export default function Dashboard() {
   const totalReceivable = dueSummary.receivables.reduce((sum, r) => sum + r.due, 0);
   const totalPayable = dueSummary.payables.reduce((sum, r) => sum + r.due, 0);
 
+  // Total Expense splits into money spent on a specific project (team
+  // salaries, project gear/food/rent) vs. general office overhead (rent,
+  // bills) that isn't tied to any project — same distinction already used
+  // by the Expense list's Team/Salaries vs. Office & Other Expenses groups.
+  const projectExpenseRows = expense.rows.filter((r) => r.projectId);
+  const officeExpenseRows = expense.rows.filter((r) => !r.projectId);
+  const projectExpenseTotal = projectExpenseRows.reduce((sum, r) => sum + r.amount, 0);
+  const officeExpenseTotal = officeExpenseRows.reduce((sum, r) => sum + r.amount, 0);
+
   return (
     <div>
       <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
@@ -131,11 +140,11 @@ export default function Dashboard() {
             <SummaryCard
               icon={Receipt}
               iconClass="bg-expense/10 text-expense"
-              label="Total Expense"
-              value={formatMoney(expense.total)}
+              label="Project Expense"
+              value={formatMoney(projectExpenseTotal)}
               accent="text-expense"
-              active={expandedCard === 'expense'}
-              onClick={() => toggleCard('expense')}
+              active={expandedCard === 'projectExpense'}
+              onClick={() => toggleCard('projectExpense')}
             />
             <SummaryCard
               icon={projectProfit.total >= 0 ? TrendingUp : TrendingDown}
@@ -145,6 +154,27 @@ export default function Dashboard() {
               accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
               active={expandedCard === 'profit'}
               onClick={() => toggleCard('profit')}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            <SummaryCard
+              icon={Building2}
+              iconClass="bg-expense/10 text-expense"
+              label="Office Expense"
+              value={formatMoney(officeExpenseTotal)}
+              accent="text-expense"
+              active={expandedCard === 'office'}
+              onClick={() => toggleCard('office')}
+            />
+            <SummaryCard
+              icon={Layers}
+              iconClass="bg-expense/10 text-expense"
+              label="Total Expense"
+              value={formatMoney(expense.total)}
+              accent="text-expense"
+              active={expandedCard === 'expense'}
+              onClick={() => toggleCard('expense')}
             />
           </div>
 
@@ -172,6 +202,36 @@ export default function Dashboard() {
                   sub={`${formatDate(r.date)} · via ${CHANNEL_LABELS[r.channel] ?? r.channel}`}
                   value={formatMoney(r.amount)}
                   valueClassName="text-income"
+                />
+              ))}
+            </BreakdownPanel>
+          )}
+
+          {expandedCard === 'projectExpense' && (
+            <BreakdownPanel emptyText="No project expenses paid yet.">
+              {projectExpenseRows.map((r) => (
+                <BreakdownRow
+                  key={r.id}
+                  onClick={() => navigate(`/ledger/${r.transactionId}`)}
+                  title={r.category}
+                  sub={`${r.projectTitle} · ${formatDate(r.date)} · via ${CHANNEL_LABELS[r.channel] ?? r.channel}`}
+                  value={formatMoney(r.amount)}
+                  valueClassName="text-expense"
+                />
+              ))}
+            </BreakdownPanel>
+          )}
+
+          {expandedCard === 'office' && (
+            <BreakdownPanel emptyText="No office expenses paid yet.">
+              {officeExpenseRows.map((r) => (
+                <BreakdownRow
+                  key={r.id}
+                  onClick={() => navigate(`/ledger/${r.transactionId}`)}
+                  title={r.category}
+                  sub={`${r.concernName} · ${formatDate(r.date)} · via ${CHANNEL_LABELS[r.channel] ?? r.channel}`}
+                  value={formatMoney(r.amount)}
+                  valueClassName="text-expense"
                 />
               ))}
             </BreakdownPanel>
@@ -293,11 +353,11 @@ function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onCl
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-4 transition-colors hover:border-slate-300 ${
+      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-4 py-3.5 transition-colors hover:border-slate-300 ${
         active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-slate-500">{label}</span>
         {Icon && (
           <span className={`w-7 h-7 rounded-full flex items-center justify-center ${iconClass}`}>
