@@ -107,6 +107,16 @@ export default function Ledger({ fixedType = null }) {
     setDateTo('');
   }
 
+  // The Expense list is meant to read as "money actually spent," matching
+  // the same cash-basis principle already used for the Dashboard's Total
+  // Expense figure — a Salary/Payroll commitment with nothing paid against
+  // it yet isn't an expense that's happened, so it stays hidden here until
+  // at least a partial payment lands (fully due-but-unpaid entries are
+  // still visible via the Payable due list and each project's Team table).
+  const visibleTransactions =
+    fixedType === 'expense' ? transactions.filter((t) => computeBalances(t).paidAmount > 0) : transactions;
+  const hiddenDueCount = transactions.length - visibleTransactions.length;
+
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
   const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
   const activeSecondaryFilters = [handledByFilter, channelFilter, dateFrom, dateTo].filter(Boolean).length;
@@ -186,13 +196,25 @@ export default function Ledger({ fixedType = null }) {
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
-      {!loading && transactions.length === 0 && (
+      {!loading && visibleTransactions.length === 0 && (
         <div className="border border-dashed border-slate-300 rounded-2xl p-8">
-          <EmptyState icon={Inbox} message="No transactions match these filters." />
+          <EmptyState
+            icon={Inbox}
+            message={
+              hiddenDueCount > 0
+                ? `No expenses paid yet — ${hiddenDueCount} due but unpaid ${hiddenDueCount === 1 ? 'entry is' : 'entries are'} hidden until paid.`
+                : 'No transactions match these filters.'
+            }
+          />
         </div>
       )}
+      {!loading && hiddenDueCount > 0 && visibleTransactions.length > 0 && (
+        <p className="text-xs text-slate-500 mb-3">
+          {hiddenDueCount} due but unpaid {hiddenDueCount === 1 ? 'entry is' : 'entries are'} hidden until paid.
+        </p>
+      )}
 
-      {!loading && transactions.length > 0 && (
+      {!loading && visibleTransactions.length > 0 && (
         <>
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
@@ -209,7 +231,7 @@ export default function Ledger({ fixedType = null }) {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((t) => (
+                {visibleTransactions.map((t) => (
                   <TransactionRow key={t.id} t={t} onClick={() => navigate(`/ledger/${t.id}`)} />
                 ))}
               </tbody>
@@ -218,7 +240,7 @@ export default function Ledger({ fixedType = null }) {
 
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
-            {transactions.map((t) => (
+            {visibleTransactions.map((t) => (
               <TransactionCard key={t.id} t={t} onClick={() => navigate(`/ledger/${t.id}`)} />
             ))}
           </div>
