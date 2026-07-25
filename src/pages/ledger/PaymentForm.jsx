@@ -1,64 +1,29 @@
 import { useEffect, useState } from 'react';
 import Field, { inputClass } from '../../components/Field.jsx';
-import { supabase } from '../../lib/supabase.js';
-import { addPayment, fetchEmployees, createEmployee } from '../../lib/ledgerData.js';
+import { addPayment } from '../../lib/ledgerData.js';
 import { fetchOwners } from '../../lib/ownerData.js';
 import { syncProjectCompletion } from '../../lib/projectData.js';
 import { formatMoney } from '../../lib/format.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-export default function PaymentForm({ transactionId, concernId, dueAmount, projectId, transactionType, onSaved }) {
+// Money only ever moves through the 3 partners — never an employee or a
+// generic "myself" — so "Handled by" is just their names, nothing else.
+export default function PaymentForm({ transactionId, dueAmount, projectId, transactionType, onSaved }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayStr());
   const [channel, setChannel] = useState('bkash');
-  const [handledBy, setHandledBy] = useState('');
+  const [handledByOwnerId, setHandledByOwnerId] = useState('');
   const [note, setNote] = useState('');
 
-  const [employees, setEmployees] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  const [showNewEmployee, setShowNewEmployee] = useState(false);
-  const [newEmployeeName, setNewEmployeeName] = useState('');
-  const [newEmployeeRole, setNewEmployeeRole] = useState('');
-  const [savingEmployee, setSavingEmployee] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Client money only ever lands in the company's own hands — one of the
-  // 3 partners, or the company bank account directly — never an employee,
-  // so the employee picker/creator is skipped entirely for income payments.
-  const canHandleAsEmployee = transactionType !== 'income';
-
   useEffect(() => {
-    if (concernId && canHandleAsEmployee) fetchEmployees(concernId).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
-  }, [concernId, canHandleAsEmployee]);
-
-  async function handleSaveNewEmployee() {
-    if (!newEmployeeName.trim()) return;
-    setSavingEmployee(true);
-    setError('');
-    try {
-      const row = await createEmployee({
-        concern_id: concernId,
-        name: newEmployeeName.trim(),
-        role: newEmployeeRole.trim() || null,
-      });
-      setEmployees((prev) => [...prev, row]);
-      setHandledBy(`employee:${row.id}`);
-      setShowNewEmployee(false);
-      setNewEmployeeName('');
-      setNewEmployeeRole('');
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSavingEmployee(false);
-    }
-  }
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -73,9 +38,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, proje
       channel,
       payment_date: date,
       note: note.trim() || null,
-      handled_by_employee_id: handledBy.startsWith('employee:') ? handledBy.split(':')[1] : null,
-      handled_by_user_id: handledBy === 'self' ? currentUser?.id ?? null : null,
-      handled_by_owner_id: handledBy.startsWith('owner:') ? handledBy.split(':')[1] : null,
+      handled_by_owner_id: handledByOwnerId || null,
     };
 
     setSaving(true);
@@ -86,7 +49,7 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, proje
       }
       setAmount('');
       setNote('');
-      setHandledBy('');
+      setHandledByOwnerId('');
       onSaved();
     } catch (e) {
       setError(e.message);
@@ -126,66 +89,14 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, proje
       </Field>
 
       <Field label="Handled by">
-        {!showNewEmployee ? (
-          <div className="flex gap-2">
-            <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
-              <option value="">Select</option>
-              {currentUser && <option value="self">Myself ({currentUser.email})</option>}
-              {owners.map((o) => (
-                <option key={o.id} value={`owner:${o.id}`}>
-                  {o.name} (Owner)
-                </option>
-              ))}
-              {canHandleAsEmployee &&
-                employees.map((emp) => (
-                  <option key={emp.id} value={`employee:${emp.id}`}>
-                    {emp.name}
-                  </option>
-                ))}
-            </select>
-            {canHandleAsEmployee && (
-              <button
-                type="button"
-                onClick={() => setShowNewEmployee(true)}
-                className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
-              >
-                + New
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="border border-slate-300 rounded-xl p-3 space-y-2">
-            <input
-              className={inputClass}
-              placeholder="Employee name"
-              value={newEmployeeName}
-              onChange={(e) => setNewEmployeeName(e.target.value)}
-            />
-            <input
-              className={inputClass}
-              placeholder="Role (optional)"
-              value={newEmployeeRole}
-              onChange={(e) => setNewEmployeeRole(e.target.value)}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={savingEmployee}
-                onClick={handleSaveNewEmployee}
-                className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
-              >
-                {savingEmployee ? 'Saving…' : 'Save'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowNewEmployee(false)}
-                className="px-3 py-1.5 rounded-xl text-sm border border-slate-300 text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+          <option value="">Select</option>
+          {owners.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
       </Field>
 
       <Field label="Note">

@@ -4,7 +4,6 @@ import Sheet from '../../components/Sheet.jsx';
 import BackButton from '../../components/BackButton.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
 import { useConcern } from '../../context/ConcernContext.jsx';
-import { supabase } from '../../lib/supabase.js';
 import {
   createTransaction,
   updateTransaction,
@@ -146,9 +145,8 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   const [clientProjects, setClientProjects] = useState([]);
   const [loadingClientProjects, setLoadingClientProjects] = useState(false);
   const [channel, setChannel] = useState('bkash');
-  const [handledBy, setHandledBy] = useState('');
+  const [handledByOwnerId, setHandledByOwnerId] = useState('');
   const [owners, setOwners] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
 
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState('');
@@ -172,7 +170,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     fetchClients().then(setClients).catch((e) => setError(e.message));
     fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
 
     if (transaction) {
       setConcernId(transaction.concern_id ?? '');
@@ -196,7 +193,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       setProjectId('');
     }
     setChannel('bkash');
-    setHandledBy('');
+    setHandledByOwnerId('');
     setShowNewClient(false);
     setShowNewEmployee(false);
     setError('');
@@ -260,8 +257,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       const parentConcern = concerns.find((c) => c.parent_concern_id === null);
       const row = await createEmployee({ concern_id: parentConcern?.id, name: newEmployeeName.trim() });
       setEmployees((prev) => [...prev, row]);
-      if (isNewIncome) setHandledBy(`employee:${row.id}`);
-      else setEmployeeId(row.id);
+      setEmployeeId(row.id);
       setShowNewEmployee(false);
       setNewEmployeeName('');
     } catch (e) {
@@ -281,7 +277,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     const amount = Number(totalAmount);
     if (!(amount > 0)) return setError('Amount must be greater than 0.');
     if (!channel) return setError('Channel is required.');
-    if (!handledBy) return setError('Handled by is required.');
+    if (!handledByOwnerId) return setError('Handled by is required.');
 
     if (selectedProject && Number(selectedProject.contract_value) > 0) {
       try {
@@ -314,9 +310,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
         channel,
         payment_date: date,
         note: null,
-        handled_by_employee_id: handledBy.startsWith('employee:') ? handledBy.split(':')[1] : null,
-        handled_by_user_id: handledBy === 'self' ? currentUser?.id ?? null : null,
-        handled_by_owner_id: handledBy.startsWith('owner:') ? handledBy.split(':')[1] : null,
+        handled_by_owner_id: handledByOwnerId,
       });
       await syncProjectCompletion(projectId);
       onSaved();
@@ -500,12 +494,11 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
             </Field>
 
             <Field label="Handled by" required>
-              <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
+              <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
                 <option value="">Select</option>
-                {currentUser && <option value="self">Myself ({currentUser.email})</option>}
                 {owners.map((o) => (
-                  <option key={o.id} value={`owner:${o.id}`}>
-                    {o.name} (Owner)
+                  <option key={o.id} value={o.id}>
+                    {o.name}
                   </option>
                 ))}
               </select>
