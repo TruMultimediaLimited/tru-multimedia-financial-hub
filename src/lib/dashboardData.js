@@ -65,25 +65,31 @@ export async function fetchPaymentsReceivedBreakdown(concernId) {
   return { total: mapped.reduce((sum, r) => sum + r.amount, 0), rows: mapped };
 }
 
-// Every expense transaction — rent, salary, equipment, bills, etc.
+// Money actually paid out — every payment logged against an expense
+// transaction, not the committed/billed total_amount. Mirrors
+// fetchPaymentsReceivedBreakdown and the same cash-basis principle
+// Project Profit already follows: a salary/bill only counts here once it's
+// actually been paid, same as profit only counts once a project is
+// actually wrapped — not the moment it's merely committed to.
 export async function fetchExpenseBreakdown(concernId) {
-  let query = supabase
-    .from('transactions')
-    .select('id, category, total_amount, transaction_date, concerns(name)')
-    .eq('type', 'expense');
-  if (concernId) query = query.eq('concern_id', concernId);
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, concerns(name))');
   if (error) throw error;
-  const rows = (data ?? [])
-    .map((t) => ({
-      id: t.id,
-      category: t.category || 'Uncategorized',
-      amount: Number(t.total_amount),
-      date: t.transaction_date,
-      concernName: t.concerns?.name,
+  let rows = (data ?? []).filter((p) => p.transactions?.type === 'expense');
+  if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
+  const mapped = rows
+    .map((p) => ({
+      id: p.id,
+      transactionId: p.transaction_id,
+      amount: Number(p.amount),
+      date: p.payment_date,
+      channel: p.channel,
+      category: p.transactions?.category || 'Uncategorized',
+      concernName: p.transactions?.concerns?.name,
     }))
     .sort((a, b) => (a.date < b.date ? 1 : -1));
-  return { total: rows.reduce((sum, r) => sum + r.amount, 0), rows };
+  return { total: mapped.reduce((sum, r) => sum + r.amount, 0), rows: mapped };
 }
 
 // Profit only means something once a project is actually wrapped — this

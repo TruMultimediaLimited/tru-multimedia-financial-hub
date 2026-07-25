@@ -162,13 +162,13 @@ export default function Dashboard() {
           )}
 
           {expandedCard === 'expense' && (
-            <BreakdownPanel emptyText="No expenses yet.">
+            <BreakdownPanel emptyText="No expenses paid yet.">
               {expense.rows.map((r) => (
                 <BreakdownRow
                   key={r.id}
-                  onClick={() => navigate(`/ledger/${r.id}`)}
+                  onClick={() => navigate(`/ledger/${r.transactionId}`)}
                   title={r.category}
-                  sub={`${r.concernName} · ${formatDate(r.date)}`}
+                  sub={`${r.concernName} · ${formatDate(r.date)} · via ${CHANNEL_LABELS[r.channel] ?? r.channel}`}
                   value={formatMoney(r.amount)}
                   valueClassName="text-expense"
                 />
