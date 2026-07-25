@@ -454,12 +454,12 @@ select
     pr.contract_value - coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0),
     0
   ) as total_due,
-  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0) as total_expense,
   coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_paid,
-  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0)
-    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_due,
   coalesce(sum(case when t.type = 'income' then tb.paid_amount else 0 end), 0)
-    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit
+    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as profit,
+  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0) as total_expense,
+  coalesce(sum(case when t.type = 'expense' then t.total_amount else 0 end), 0)
+    - coalesce(sum(case when t.type = 'expense' then tb.paid_amount else 0 end), 0) as total_expense_due
 from projects pr
 left join transactions t on t.project_id = pr.id
 left join transaction_balances tb on tb.transaction_id = t.id
