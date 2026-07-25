@@ -28,13 +28,29 @@ function dueAmount(t) {
 // there's never a second round-trip when a card is opened.
 
 // Total value of projects landed — distinct from Total Payment Received
-// (booked contract value vs. actual cash collected).
-export async function fetchProjectValueBreakdown(concernId) {
-  let query = supabase.from('projects').select('id, title, contract_value, concerns(name)');
+// (booked contract value vs. actual cash collected). When a month range is
+// given (Dashboard's month toggle), scoped to projects that started that
+// month — Due tracking itself stays perpetual, only this summary figure
+// is month-bound.
+export async function fetchProjectValueBreakdown(concernId, { dateFrom, dateTo } = {}) {
+  let query = supabase.from('projects').select('id, title, contract_value, start_date, created_at, concerns(name)');
   if (concernId) query = query.eq('concern_id', concernId);
   const { data, error } = await query;
   if (error) throw error;
-  const rows = (data ?? [])
+  let filtered = data ?? [];
+  if (dateFrom || dateTo) {
+    // Fall back to created_at when start_date was left blank, so a project
+    // never silently disappears from a month's figure just because that
+    // optional field wasn't filled in.
+    filtered = filtered.filter((p) => {
+      const d = (p.start_date || p.created_at || '').slice(0, 10);
+      if (!d) return false;
+      if (dateFrom && d < dateFrom) return false;
+      if (dateTo && d > dateTo) return false;
+      return true;
+    });
+  }
+  const rows = filtered
     .map((p) => ({ id: p.id, title: p.title, concernName: p.concerns?.name, contractValue: Number(p.contract_value) }))
     .sort((a, b) => b.contractValue - a.contractValue);
   return { total: rows.reduce((sum, r) => sum + r.contractValue, 0), rows };
@@ -45,13 +61,15 @@ export async function fetchProjectValueBreakdown(concernId) {
 // booked/billed amount. Payment timing is irregular for this business
 // (settles months after the fact either way), so this is deliberately
 // a flat list of real payments, not a period-bound figure.
-export async function fetchPaymentsReceivedBreakdown(concernId) {
+export async function fetchPaymentsReceivedBreakdown(concernId, { dateFrom, dateTo } = {}) {
   const { data, error } = await supabase
     .from('payments')
     .select('id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, clients(name))');
   if (error) throw error;
   let rows = (data ?? []).filter((p) => p.transactions?.type === 'income');
   if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
+  if (dateFrom) rows = rows.filter((p) => p.payment_date >= dateFrom);
+  if (dateTo) rows = rows.filter((p) => p.payment_date <= dateTo);
   const mapped = rows
     .map((p) => ({
       id: p.id,
@@ -71,13 +89,15 @@ export async function fetchPaymentsReceivedBreakdown(concernId) {
 // Project Profit already follows: a salary/bill only counts here once it's
 // actually been paid, same as profit only counts once a project is
 // actually wrapped — not the moment it's merely committed to.
-export async function fetchExpenseBreakdown(concernId) {
+export async function fetchExpenseBreakdown(concernId, { dateFrom, dateTo } = {}) {
   const { data, error } = await supabase
     .from('payments')
     .select('id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, concerns(name))');
   if (error) throw error;
   let rows = (data ?? []).filter((p) => p.transactions?.type === 'expense');
   if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
+  if (dateFrom) rows = rows.filter((p) => p.payment_date >= dateFrom);
+  if (dateTo) rows = rows.filter((p) => p.payment_date <= dateTo);
   const mapped = rows
     .map((p) => ({
       id: p.id,
@@ -95,21 +115,38 @@ export async function fetchExpenseBreakdown(concernId) {
 // Profit only means something once the money has actually finished moving
 // both ways — the client has paid in full AND every team member's salary
 // on that project is fully paid — not the moment someone flips the status
-// dropdown to "Completed" (mirrors the same gate on ProjectDetail).
-export async function fetchProjectProfitBreakdown(concernId) {
+// dropdown to "Completed" (mirrors the same gate on ProjectDetail). When a
+// month range is given, a project's profit counts toward the month it was
+// actually settled in — the date of its last payment (either side) — not
+// the month the project started.
+export async function fetchProjectProfitBreakdown(concernId, { dateFrom, dateTo } = {}) {
   let query = supabase.from('projects').select('id, title, concerns(name)');
   if (concernId) query = query.eq('concern_id', concernId);
-  const [{ data, error }, { data: balances, error: balError }] = await Promise.all([
+  const [{ data, error }, { data: balances, error: balError }, { data: txns, error: txnError }] = await Promise.all([
     query,
     supabase.from('project_balances').select('project_id, total_due, total_expense_due, profit'),
+    supabase.from('transactions').select('project_id, payments(payment_date)').not('project_id', 'is', null),
   ]);
   if (error) throw error;
   if (balError) throw balError;
+  if (txnError) throw txnError;
+
   const balanceMap = new Map((balances ?? []).map((b) => [b.project_id, b]));
+  const settledDateByProject = new Map();
+  for (const t of txns ?? []) {
+    for (const p of t.payments ?? []) {
+      const cur = settledDateByProject.get(t.project_id);
+      if (!cur || p.payment_date > cur) settledDateByProject.set(t.project_id, p.payment_date);
+    }
+  }
+
   const rows = (data ?? [])
     .map((p) => {
       const b = balanceMap.get(p.id);
       if (!b || Number(b.total_due) > 0 || Number(b.total_expense_due) > 0) return null;
+      const settledDate = settledDateByProject.get(p.id);
+      if (dateFrom && (!settledDate || settledDate < dateFrom)) return null;
+      if (dateTo && (!settledDate || settledDate > dateTo)) return null;
       return { id: p.id, title: p.title, concernName: p.concerns?.name, profit: Number(b.profit) };
     })
     .filter(Boolean)
