@@ -42,7 +42,7 @@ export default function Clients() {
         <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
         <button
           onClick={() => setFormOpen(true)}
-          className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover"
+          className="px-3 py-1.5 rounded-full text-sm bg-blue-100 text-blue-700 border border-blue-200"
         >
           + New client
         </button>
