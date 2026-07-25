@@ -43,7 +43,7 @@ export default function Clients() {
         <PageTitle colorClass="bg-blue-100 border-blue-200 text-blue-700">Clients</PageTitle>
         <button
           onClick={() => setFormOpen(true)}
-          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200"
+          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-primary/15 text-primary border border-primary/30"
         >
           + New client
         </button>

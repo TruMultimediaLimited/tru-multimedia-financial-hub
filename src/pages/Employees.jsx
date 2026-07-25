@@ -44,7 +44,7 @@ export default function Employees() {
         <PageTitle colorClass="bg-teal-100 border-teal-200 text-teal-700">Employees</PageTitle>
         <button
           onClick={() => setFormOpen(true)}
-          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-teal-100 text-teal-700 border border-teal-200"
+          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-primary/15 text-primary border border-primary/30"
         >
           + New employee
         </button>

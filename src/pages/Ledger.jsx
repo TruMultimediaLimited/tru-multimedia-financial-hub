@@ -200,7 +200,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-income/15 text-income border border-income/30"
+              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-primary/15 text-primary border border-primary/30"
             >
               + Add income
             </button>
@@ -208,7 +208,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-expense/15 text-expense border border-expense/30"
+              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-primary/15 text-primary border border-primary/30"
             >
               + Add expense
             </button>
