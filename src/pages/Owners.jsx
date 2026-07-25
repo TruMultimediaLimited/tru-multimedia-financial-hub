@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award } from 'lucide-react';
-import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import PageTitle from '../components/PageTitle.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
-import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
 
 export default function Owners() {
@@ -50,27 +48,10 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className={`${ENTITY_COLORS.owner.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
+              className={`${ENTITY_COLORS.owner.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface flex items-center justify-between`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-900 font-medium">{o.name}</span>
-                <span className="text-xs text-slate-500">
-                  {o.role || 'Partner'}
-                  {o.company_share_percent != null && ` · ${o.company_share_percent}% share`}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm text-slate-500">
-                <span>Received {formatMoney(o.totalReceived)}</span>
-                <span>Given {formatMoney(o.totalGiven)}</span>
-                <span>Invested {formatMoney(o.totalInvested)}</span>
-                {o.netOwedToOwner !== 0 && (
-                  <Badge className={o.netOwedToOwner > 0 ? 'bg-due/15 text-due border-due/30' : 'bg-income/15 text-income border-income/30'}>
-                    {o.netOwedToOwner > 0
-                      ? `Company owes ${formatMoney(o.netOwedToOwner)}`
-                      : `Owes company ${formatMoney(-o.netOwedToOwner)}`}
-                  </Badge>
-                )}
-              </div>
+              <span className="text-slate-900 font-medium">{o.name}</span>
+              <span className="text-xs text-primary underline underline-offset-2">View more</span>
             </div>
           ))}
         </div>
