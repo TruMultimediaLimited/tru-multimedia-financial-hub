@@ -89,7 +89,7 @@ export default function Dashboard() {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-        <h1 className="h-9 flex items-center bg-surfaceRaised border border-slate-200 rounded-full px-4 text-sm font-bold text-slate-900">
+        <h1 className="h-9 flex items-center bg-primary/10 border border-primary/25 rounded-full px-4 text-sm font-bold text-primary">
           Dashboard
         </h1>
         <MonthToggle
@@ -111,11 +111,19 @@ export default function Dashboard() {
               <SummaryCard
                 icon={Folder}
                 iconClass={ENTITY_COLORS.project.icon}
-                label="Total Project Value"
+                label={
+                  <>
+                    Total Project
+                    <br />
+                    Value
+                  </>
+                }
                 value={formatMoney(projectValue.total)}
                 accent="text-slate-900"
                 active={expandedCard === 'value'}
                 onClick={() => toggleCard('value')}
+                cardBg="bg-violet-50"
+                cardBorder="border-violet-200"
               />
               <SummaryCard
                 icon={Wallet}
@@ -125,15 +133,25 @@ export default function Dashboard() {
                 accent="text-income"
                 active={expandedCard === 'received'}
                 onClick={() => toggleCard('received')}
+                cardBg="bg-income/5"
+                cardBorder="border-income/30"
               />
               <SummaryCard
                 icon={projectProfit.total >= 0 ? TrendingUp : TrendingDown}
                 iconClass={projectProfit.total >= 0 ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}
-                label="Total Project Profit"
+                label={
+                  <>
+                    Total Project
+                    <br />
+                    Profit
+                  </>
+                }
                 value={formatMoney(projectProfit.total)}
                 accent={projectProfit.total >= 0 ? 'text-income' : 'text-expense'}
                 active={expandedCard === 'profit'}
                 onClick={() => toggleCard('profit')}
+                cardBg={projectProfit.total >= 0 ? 'bg-income/5' : 'bg-expense/5'}
+                cardBorder={projectProfit.total >= 0 ? 'border-income/30' : 'border-expense/30'}
               />
             </div>
             <div className="flex flex-col gap-3">
@@ -305,15 +323,25 @@ function SortButton({ active, label, onClick }) {
   );
 }
 
-function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onClick }) {
+function SummaryCard({
+  icon: Icon,
+  iconClass,
+  label,
+  value,
+  accent,
+  active,
+  onClick,
+  cardBg = 'bg-surfaceRaised',
+  cardBorder = 'border-slate-200',
+}) {
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surfaceRaised border rounded-2xl shadow-card px-3.5 py-3 transition-colors hover:border-slate-300 ${
-        active ? 'border-primary' : 'border-slate-200'
+      className={`text-left border rounded-2xl shadow-card px-3.5 py-2.5 transition-colors hover:border-slate-300 ${cardBg} ${
+        active ? 'border-primary' : cardBorder
       }`}
     >
-      <div className="flex items-start justify-between mb-1.5 min-h-[2.1rem]">
+      <div className="flex items-start justify-between mb-1 min-h-[2.1rem]">
         <span className="text-[11px] leading-tight text-slate-500">{label}</span>
         {Icon && (
           <span className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center ${iconClass}`}>
