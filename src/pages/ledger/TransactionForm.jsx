@@ -210,6 +210,10 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   if (!open) return null;
 
+  // A fully paid project has nothing left to record income against — only
+  // partial/fully-due projects are worth showing here, with their
+  // remaining due right in the option so it doesn't need a second lookup.
+  const dueClientProjects = clientProjects.filter((p) => Number(p.totalDue) > 0);
   const selectedProject = clientProjects.find((p) => p.id === projectId) ?? null;
 
   async function handleSaveNewClient() {
@@ -438,12 +442,14 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                   </button>
                   .
                 </p>
+              ) : dueClientProjects.length === 0 ? (
+                <p className="text-xs text-slate-500">All of this client's projects are already fully paid.</p>
               ) : (
                 <select className={inputClass} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
                   <option value="">Select project</option>
-                  {clientProjects.map((p) => (
+                  {dueClientProjects.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.title}
+                      {p.title} — Due {formatMoney(p.totalDue)}
                     </option>
                   ))}
                 </select>
