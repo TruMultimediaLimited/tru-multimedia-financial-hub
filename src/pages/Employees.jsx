@@ -41,7 +41,7 @@ export default function Employees() {
       <BackButton />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover">
+        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-700 border border-teal-200">
           + New employee
         </button>
       </div>

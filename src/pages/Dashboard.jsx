@@ -163,6 +163,8 @@ export default function Dashboard() {
                 accent="text-expense"
                 active={expandedCard === 'projectExpense'}
                 onClick={() => toggleCard('projectExpense')}
+                cardBg="bg-expense/5"
+                cardBorder="border-expense/30"
               />
               <SummaryCard
                 icon={Building2}
@@ -172,6 +174,8 @@ export default function Dashboard() {
                 accent="text-expense"
                 active={expandedCard === 'office'}
                 onClick={() => toggleCard('office')}
+                cardBg="bg-expense/5"
+                cardBorder="border-expense/30"
               />
               <SummaryCard
                 icon={Layers}
@@ -181,6 +185,8 @@ export default function Dashboard() {
                 accent="text-expense"
                 active={expandedCard === 'expense'}
                 onClick={() => toggleCard('expense')}
+                cardBg="bg-expense/5"
+                cardBorder="border-expense/30"
               />
             </div>
           </div>

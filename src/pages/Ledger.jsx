@@ -193,7 +193,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="px-3 py-1.5 rounded-xl text-sm bg-income/15 text-income border border-income/30"
+              className="px-3 py-1.5 rounded-full text-sm bg-income/15 text-income border border-income/30"
             >
               + Add income
             </button>
@@ -201,7 +201,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="px-3 py-1.5 rounded-xl text-sm bg-expense/15 text-expense border border-expense/30"
+              className="px-3 py-1.5 rounded-full text-sm bg-expense/15 text-expense border border-expense/30"
             >
               + Add expense
             </button>

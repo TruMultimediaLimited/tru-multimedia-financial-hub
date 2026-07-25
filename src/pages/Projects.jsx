@@ -100,8 +100,7 @@ export default function Projects() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Projects</h1>
-      <p className="text-xs text-slate-500 mb-4">Browse by client</p>
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Projects</h1>
 
       <div className="grid grid-cols-2 gap-2 mb-4">
         {stats.map((s) => (
