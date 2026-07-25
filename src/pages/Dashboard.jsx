@@ -89,7 +89,9 @@ export default function Dashboard() {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="h-9 flex items-center bg-surfaceRaised border border-slate-200 rounded-full px-4 text-sm font-bold text-slate-900">
+          Dashboard
+        </h1>
         <MonthToggle
           label={monthLabel}
           offset={offset}
@@ -311,10 +313,10 @@ function SummaryCard({ icon: Icon, iconClass, label, value, accent, active, onCl
         active ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] text-slate-500">{label}</span>
+      <div className="flex items-start justify-between mb-1.5 min-h-[2.1rem]">
+        <span className="text-[11px] leading-tight text-slate-500">{label}</span>
         {Icon && (
-          <span className={`w-6 h-6 rounded-full flex items-center justify-center ${iconClass}`}>
+          <span className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center ${iconClass}`}>
             <Icon className="w-3 h-3" />
           </span>
         )}
