@@ -92,7 +92,9 @@ export async function fetchPaymentsReceivedBreakdown(concernId, { dateFrom, date
 export async function fetchExpenseBreakdown(concernId, { dateFrom, dateTo } = {}) {
   const { data, error } = await supabase
     .from('payments')
-    .select('id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, concerns(name))');
+    .select(
+      'id, amount, payment_date, channel, transaction_id, transactions(type, concern_id, category, project_id, projects(title), concerns(name))'
+    );
   if (error) throw error;
   let rows = (data ?? []).filter((p) => p.transactions?.type === 'expense');
   if (concernId) rows = rows.filter((p) => p.transactions?.concern_id === concernId);
@@ -107,6 +109,8 @@ export async function fetchExpenseBreakdown(concernId, { dateFrom, dateTo } = {}
       channel: p.channel,
       category: p.transactions?.category || 'Uncategorized',
       concernName: p.transactions?.concerns?.name,
+      projectId: p.transactions?.project_id ?? null,
+      projectTitle: p.transactions?.projects?.title ?? null,
     }))
     .sort((a, b) => (a.date < b.date ? 1 : -1));
   return { total: mapped.reduce((sum, r) => sum + r.amount, 0), rows: mapped };
