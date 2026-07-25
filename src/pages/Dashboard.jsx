@@ -89,7 +89,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center justify-between gap-2 mb-2">
         <PageTitle colorClass="bg-primary/10 border-primary/25 text-primary">Dashboard</PageTitle>
         <MonthToggle
           label={monthLabel}

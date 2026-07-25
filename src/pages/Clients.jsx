@@ -39,11 +39,11 @@ export default function Clients() {
   return (
     <div>
       <BackButton />
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <PageTitle colorClass="bg-blue-100 border-blue-200 text-blue-700">Clients</PageTitle>
         <button
           onClick={() => setFormOpen(true)}
-          className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200"
+          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200"
         >
           + New client
         </button>

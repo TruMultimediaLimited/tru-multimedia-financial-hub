@@ -194,13 +194,13 @@ export default function Ledger({ fixedType = null }) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <PageTitle colorClass={titleColorClass}>{title}</PageTitle>
-        <div className="flex-1 flex gap-2">
+        <div className="flex gap-2">
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-income/15 text-income border border-income/30"
+              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-income/15 text-income border border-income/30"
             >
               + Add income
             </button>
@@ -208,7 +208,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-expense/15 text-expense border border-expense/30"
+              className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-expense/15 text-expense border border-expense/30"
             >
               + Add expense
             </button>
