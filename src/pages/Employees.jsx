@@ -40,11 +40,11 @@ export default function Employees() {
   return (
     <div>
       <BackButton />
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <PageTitle colorClass="bg-teal-100 border-teal-200 text-teal-700">Employees</PageTitle>
         <button
           onClick={() => setFormOpen(true)}
-          className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-teal-100 text-teal-700 border border-teal-200"
+          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-teal-100 text-teal-700 border border-teal-200"
         >
           + New employee
         </button>

@@ -1,6 +1,6 @@
 export default function MonthToggle({ label, offset, onPrev, onNext, onCurrent }) {
   return (
-    <div className="flex-1 h-8 flex items-center justify-center gap-0.5 bg-primary/10 border border-primary/25 rounded-full px-1">
+    <div className="h-8 inline-flex items-center gap-0.5 bg-primary/10 border border-primary/25 rounded-full px-1">
       <button
         onClick={onPrev}
         aria-label="Previous month"
