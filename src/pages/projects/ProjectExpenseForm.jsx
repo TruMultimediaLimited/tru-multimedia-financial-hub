@@ -1,32 +1,29 @@
 import { useEffect, useState } from 'react';
 import Sheet from '../../components/Sheet.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
-import { createTransaction } from '../../lib/ledgerData.js';
+import { createTransaction, addPayment, fetchEmployees } from '../../lib/ledgerData.js';
+import { fetchOwners } from '../../lib/ownerData.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-// Categories a project's non-employee cost usually falls into, minus
-// Salary/Payroll — that one's covered by the dedicated "+ Add team member"
-// flow, not this generic one.
-const OTHER_CATEGORIES = [
-  'Office Rent',
-  'Electricity Bill',
-  'Equipment',
-  'Food & Refreshments',
-  'Guest Entertainment',
-  'Transport',
-  'Internet & Phone',
-  'Maintenance',
-  'Other',
-];
+// The 3 most common non-employee project costs — anything else goes through
+// "+ Add new" rather than growing this list.
+const FIXED_CATEGORIES = ['Transport', 'Food & Refreshments', 'Equipment'];
 
-// Records a non-employee project cost (food, rent, gear, etc.) as its own
-// expense transaction linked to this project — same shape as a team
-// member's salary, just without an employee attached. `fixedCategory` locks
-// the category for the Food/Rent quick-add buttons; leave it unset for the
-// generic "+ Other expense" button, which lets the category be picked.
-export default function ProjectExpenseForm({ open, onClose, onSaved, project, fixedCategory }) {
-  const [category, setCategory] = useState(fixedCategory ?? '');
+// Records a non-employee project cost (transport, food, gear, etc.) as its
+// own expense transaction linked to this project, paid immediately — same
+// "who gave it and how" capture as the generic Add expense form, plus an
+// optional "Given to" for when the money was handed to a specific person
+// without it being that person's salary (e.g. cash given to someone for
+// transport). Salary itself still goes through "+ Add team member".
+export default function ProjectExpenseForm({ open, onClose, onSaved, project }) {
+  const [category, setCategory] = useState('');
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [givenToEmployeeId, setGivenToEmployeeId] = useState('');
+  const [employees, setEmployees] = useState([]);
+  const [owners, setOwners] = useState([]);
+  const [handledByOwnerId, setHandledByOwnerId] = useState('');
+  const [channel, setChannel] = useState('bkash');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayStr());
   const [saving, setSaving] = useState(false);
@@ -34,30 +31,46 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project, fi
 
   useEffect(() => {
     if (!open) return;
-    setCategory(fixedCategory ?? '');
+    setCategory('');
+    setShowCustomCategory(false);
+    setGivenToEmployeeId('');
+    setHandledByOwnerId('');
+    setChannel('bkash');
     setAmount('');
     setDate(todayStr());
     setError('');
-  }, [open, fixedCategory]);
+    fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
+    fetchOwners().then(setOwners).catch((e) => setError(e.message));
+  }, [open]);
 
   if (!open) return null;
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!category) return setError('Category is required.');
+    setError('');
+    if (!category.trim()) return setError('Category is required.');
     if (!amount || Number(amount) <= 0) return setError('Amount must be greater than 0.');
+    if (!channel) return setError('Channel is required.');
+    if (!handledByOwnerId) return setError('Handled by is required.');
 
     setSaving(true);
-    setError('');
     try {
-      await createTransaction({
+      const txn = await createTransaction({
         concern_id: project.concern_id,
         project_id: project.id,
-        employee_id: null,
+        employee_id: givenToEmployeeId || null,
         type: 'expense',
-        category,
+        category: category.trim(),
         total_amount: Number(amount),
         transaction_date: date,
+      });
+      await addPayment({
+        transaction_id: txn.id,
+        amount: Number(amount),
+        channel,
+        payment_date: date,
+        note: null,
+        handled_by_owner_id: handledByOwnerId,
       });
       onSaved();
       onClose();
@@ -69,20 +82,60 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project, fi
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={fixedCategory ? `Add ${fixedCategory}` : 'Add project expense'}>
+    <Sheet open={open} onClose={onClose} title="Add project expense">
       <form onSubmit={handleSubmit}>
-        {!fixedCategory && (
-          <Field label="Category" required>
-            <select className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Select category</option>
-              {OTHER_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
+        <Field label="Category" required>
+          <div className="flex gap-2 flex-wrap mb-2">
+            {FIXED_CATEGORIES.map((c) => (
+              <button
+                type="button"
+                key={c}
+                onClick={() => {
+                  setCategory(c);
+                  setShowCustomCategory(false);
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+                  category === c && !showCustomCategory
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-surfaceRaised text-slate-600 border-slate-200'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setShowCustomCategory(true);
+                setCategory('');
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+                showCustomCategory ? 'bg-primary text-white border-primary' : 'bg-surfaceRaised text-slate-600 border-slate-200'
+              }`}
+            >
+              + Add new
+            </button>
+          </div>
+          {showCustomCategory && (
+            <input
+              className={inputClass}
+              placeholder="Category name"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+          )}
+        </Field>
+
+        <Field label="Given to" hint="Optional — leave blank if not for a specific person">
+          <select className={inputClass} value={givenToEmployeeId} onChange={(e) => setGivenToEmployeeId(e.target.value)}>
+            <option value="">No one specific</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         <Field label="Amount" required>
           <input
@@ -93,6 +146,27 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project, fi
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
+        </Field>
+
+        <Field label="Handled by" required hint="Who gave the money">
+          <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+            <option value="">Select</option>
+            {owners.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Channel" required hint="How it was given">
+          <select className={inputClass} value={channel} onChange={(e) => setChannel(e.target.value)}>
+            <option value="bkash">bKash</option>
+            <option value="nagad">Nagad</option>
+            <option value="bank">Bank</option>
+            <option value="cash">Cash</option>
+            <option value="other">Other</option>
+          </select>
         </Field>
 
         <Field label="Date" required>
