@@ -22,6 +22,14 @@ export const STATUS_LABELS = {
   pending: 'Due',
 };
 
+// Same paid/partial/due colors as STATUS_STYLES, but as a light card
+// background + left-border tint for a whole row, rather than a small badge.
+export const PAYMENT_ROW_TINT = {
+  paid: 'bg-income/5 border-l-income/40',
+  partial: 'bg-due/5 border-l-due/40',
+  pending: 'bg-slate-500/5 border-l-slate-400/40',
+};
+
 export const CHANNEL_LABELS = {
   bkash: 'bKash',
   nagad: 'Nagad',

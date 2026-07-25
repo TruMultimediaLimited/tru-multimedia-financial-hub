@@ -25,6 +25,35 @@ export async function fetchEmployeesFull() {
   return data ?? [];
 }
 
+// Each employee's overall salary/payment status across every expense
+// transaction linked to them — 'due' (nothing paid), 'partial', 'paid'
+// (fully settled), or 'none' (no salary history at all yet) — so the list
+// page can color-code rows without a second lookup per employee.
+export async function fetchEmployeesWithTotals() {
+  const [{ data: employees, error }, { data: txns, error: txnError }] = await Promise.all([
+    supabase.from('employees').select(EMPLOYEE_SELECT).order('name'),
+    supabase.from('transactions').select('employee_id, total_amount, payments(amount)').eq('type', 'expense').not('employee_id', 'is', null),
+  ]);
+  if (error) throw error;
+  if (txnError) throw txnError;
+
+  const totals = new Map();
+  for (const t of txns ?? []) {
+    const paid = (t.payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
+    const existing = totals.get(t.employee_id) ?? { total: 0, paid: 0 };
+    existing.total += Number(t.total_amount);
+    existing.paid += paid;
+    totals.set(t.employee_id, existing);
+  }
+
+  return (employees ?? []).map((e) => {
+    const t = totals.get(e.id) ?? { total: 0, paid: 0 };
+    const due = t.total - t.paid;
+    const status = t.total === 0 ? 'none' : due <= 0 ? 'paid' : t.paid > 0 ? 'partial' : 'pending';
+    return { ...e, totalSalary: t.total, totalPaid: t.paid, totalDue: due, status };
+  });
+}
+
 // Roles aren't a lookup table — just the distinct values already in use,
 // so a role typed for one employee becomes a pickable option for the
 // next one without any schema change.
