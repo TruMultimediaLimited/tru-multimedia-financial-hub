@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserCog } from 'lucide-react';
 import BackButton from '../components/BackButton.jsx';
+import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
-import { fetchEmployeesFull } from '../lib/employeeData.js';
+import { formatMoney, STATUS_STYLES, STATUS_LABELS, PAYMENT_ROW_TINT } from '../lib/format.js';
+import { fetchEmployeesWithTotals } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
 
 export default function Employees() {
@@ -20,7 +22,7 @@ export default function Employees() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchEmployeesFull()
+    fetchEmployeesWithTotals()
       .then((rows) => !cancelled && setEmployees(rows))
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -62,16 +64,30 @@ export default function Employees() {
 
       {!loading && filtered.length > 0 && (
         <div className="space-y-2">
-          {filtered.map((emp) => (
-            <div
-              key={emp.id}
-              onClick={() => navigate(`/employees/${emp.id}`)}
-              className={`flex items-center justify-between ${ENTITY_COLORS.employee.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.employee.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
-            >
-              <span className="text-slate-900 font-medium">{emp.name}</span>
-              <span className="text-sm text-slate-500">{emp.role || 'No role set'}</span>
-            </div>
-          ))}
+          {filtered.map((emp) => {
+            const rowTint =
+              emp.status === 'none'
+                ? `${ENTITY_COLORS.employee.bg} ${ENTITY_COLORS.employee.border}`
+                : PAYMENT_ROW_TINT[emp.status];
+            return (
+              <div
+                key={emp.id}
+                onClick={() => navigate(`/employees/${emp.id}`)}
+                className={`flex items-center justify-between border border-slate-200 border-l-4 rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface ${rowTint}`}
+              >
+                <div>
+                  <div className="text-slate-900 font-medium">{emp.name}</div>
+                  <div className="text-sm text-slate-500">{emp.role || 'No role set'}</div>
+                </div>
+                {emp.status !== 'none' && (
+                  <div className="text-right">
+                    <Badge className={STATUS_STYLES[emp.status]}>{STATUS_LABELS[emp.status]}</Badge>
+                    {emp.totalDue > 0 && <div className="text-xs text-due mt-1">{formatMoney(emp.totalDue)} due</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
