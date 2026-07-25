@@ -500,39 +500,15 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
             </Field>
 
             <Field label="Handled by" required>
-              {!showNewEmployee ? (
-                <div className="flex gap-2">
-                  <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
-                    <option value="">Select</option>
-                    {currentUser && <option value="self">Myself ({currentUser.email})</option>}
-                    {owners.map((o) => (
-                      <option key={o.id} value={`owner:${o.id}`}>
-                        {o.name} (Owner)
-                      </option>
-                    ))}
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={`employee:${emp.id}`}>
-                        {emp.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewEmployee(true)}
-                    className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
-                  >
-                    + New
-                  </button>
-                </div>
-              ) : (
-                <NewEmployeeMiniForm
-                  name={newEmployeeName}
-                  setName={setNewEmployeeName}
-                  saving={savingEmployee}
-                  onSave={handleSaveNewEmployee}
-                  onCancel={() => setShowNewEmployee(false)}
-                />
-              )}
+              <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
+                <option value="">Select</option>
+                {currentUser && <option value="self">Myself ({currentUser.email})</option>}
+                {owners.map((o) => (
+                  <option key={o.id} value={`owner:${o.id}`}>
+                    {o.name} (Owner)
+                  </option>
+                ))}
+              </select>
             </Field>
 
             <Field label="Date" required>
