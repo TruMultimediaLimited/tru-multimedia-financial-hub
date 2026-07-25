@@ -233,20 +233,21 @@ export default function Dashboard() {
                     <th className="py-2 pr-3 font-normal">Channel</th>
                     <th className="py-2 pr-3 font-normal">Handled by</th>
                     <th className="py-2 pr-3 font-normal text-right">Total</th>
-                    <th className="py-2 pr-3 font-normal text-right">Payments</th>
                   </tr>
                 </thead>
                 <tbody>
                   {channels.map((row) => (
-                    <tr key={`${row.channel}|${row.handler}`} className="border-b border-slate-200/60">
+                    <tr key={`${row.channel}|${row.handler}|${row.type}`} className="border-b border-slate-200/60">
                       <td className="py-2 pr-3">
                         <Badge className="bg-surfaceRaised text-slate-700 border-slate-300">
                           {CHANNEL_LABELS[row.channel] ?? row.channel}
                         </Badge>
                       </td>
                       <td className="py-2 pr-3 text-slate-700">{row.handler}</td>
-                      <td className="py-2 pr-3 text-right text-slate-900">{formatMoney(row.total)}</td>
-                      <td className="py-2 pr-3 text-right text-slate-500">{row.count}</td>
+                      <td className={`py-2 pr-3 text-right ${row.type === 'income' ? 'text-income' : 'text-expense'}`}>
+                        {row.type === 'income' ? '+' : '−'}
+                        {formatMoney(row.total)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
