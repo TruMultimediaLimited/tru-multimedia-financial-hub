@@ -28,7 +28,6 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
 
   useEffect(() => {
     if (!open) return;
-    fetchClients().then(setClients).catch((e) => setError(e.message));
     fetchProjectCategories().then(setCategories).catch((e) => setError(e.message));
     setConcernId(project?.concern_id ?? '');
     setClientId(project?.client_id ?? defaultClientId ?? '');
@@ -41,6 +40,20 @@ export default function ProjectForm({ open, onClose, onSaved, project = null, de
     setShowNewCategory(false);
     setError('');
   }, [open, project, defaultClientId]);
+
+  // Scoped to the selected concern — a client tagged to multiple concerns
+  // still shows up under each, but re-fetches every time the concern
+  // changes so switching concerns narrows the list instead of always
+  // showing every client regardless of which concern is selected.
+  useEffect(() => {
+    if (!open) return;
+    fetchClients(concernId || null)
+      .then((rows) => {
+        setClients(rows);
+        setClientId((prev) => (prev && !rows.some((c) => c.id === prev) ? '' : prev));
+      })
+      .catch((e) => setError(e.message));
+  }, [open, concernId]);
 
   if (!open) return null;
 

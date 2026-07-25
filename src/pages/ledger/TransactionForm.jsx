@@ -167,7 +167,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   useEffect(() => {
     if (!open) return;
-    fetchClients().then(setClients).catch((e) => setError(e.message));
     fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
 
@@ -206,6 +205,22 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     }
     fetchProjects(concernId).then(setProjects).catch((e) => setError(e.message));
   }, [concernId]);
+
+  // Scoped to the selected concern — a client tagged to multiple concerns
+  // still shows up under each, but re-fetches every time the concern
+  // changes so switching concerns narrows the list instead of always
+  // showing every client regardless of which concern is selected.
+  useEffect(() => {
+    if (!open) return;
+    fetchClients(concernId || null)
+      .then((rows) => {
+        setClients(rows);
+        // If the previously selected client isn't valid under the newly
+        // selected concern, clear it rather than leaving a stale selection.
+        setClientId((prev) => (prev && !rows.some((c) => c.id === prev) ? '' : prev));
+      })
+      .catch((e) => setError(e.message));
+  }, [open, concernId]);
 
   useEffect(() => {
     if (!isNewIncome || !concernId || !clientId) {
