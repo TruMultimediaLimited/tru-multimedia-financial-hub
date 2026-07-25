@@ -282,11 +282,17 @@ function partyName(t) {
 
 function TransactionRow({ t, onClick }) {
   const { paidAmount, dueAmount, status } = computeBalances(t);
+  const typeClass = t.type === 'income' ? 'text-income' : 'text-expense';
   return (
-    <tr onClick={onClick} className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60">
+    <tr
+      onClick={onClick}
+      className={`border-b border-l-4 ${
+        t.type === 'income' ? 'border-l-income/40 bg-income/5' : 'border-l-expense/40 bg-expense/5'
+      } border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60`}
+    >
       <td className="py-2.5 pr-3 text-slate-700">{t.concerns?.name}</td>
       <td className="py-2.5 pr-3 text-slate-900">{partyName(t)}</td>
-      <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(t.total_amount)}</td>
+      <td className={`py-2.5 pr-3 text-right ${typeClass}`}>{formatMoney(t.total_amount)}</td>
       <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(paidAmount)}</td>
       <td className="py-2.5 pr-3 text-right text-slate-700">{dueAmount > 0 ? formatMoney(dueAmount) : '—'}</td>
       <td className="py-2.5 pr-3">
@@ -299,10 +305,13 @@ function TransactionRow({ t, onClick }) {
 
 function TransactionCard({ t, onClick }) {
   const { paidAmount, dueAmount, status } = computeBalances(t);
+  const typeClass = t.type === 'income' ? 'text-income' : 'text-expense';
   return (
     <div
       onClick={onClick}
-      className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface"
+      className={`border border-l-4 rounded-2xl shadow-card p-4 cursor-pointer active:bg-surface ${
+        t.type === 'income' ? 'bg-income/5 border-slate-200 border-l-income/50' : 'bg-expense/5 border-slate-200 border-l-expense/50'
+      }`}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-slate-900 font-medium">{partyName(t)}</span>
@@ -312,7 +321,7 @@ function TransactionCard({ t, onClick }) {
         {t.concerns?.name} · {formatDate(t.transaction_date)}
       </div>
       <div className="flex justify-between text-sm">
-        <span className="text-slate-500">Total {formatMoney(t.total_amount)}</span>
+        <span className={typeClass}>Total {formatMoney(t.total_amount)}</span>
         <span className="text-slate-500">Paid {formatMoney(paidAmount)}</span>
         {dueAmount > 0 && <span className="text-due">Due {formatMoney(dueAmount)}</span>}
       </div>
