@@ -177,7 +177,7 @@ export default function Dashboard() {
           )}
 
           {expandedCard === 'profit' && (
-            <BreakdownPanel emptyText="No completed projects yet.">
+            <BreakdownPanel emptyText="No fully paid-off projects yet.">
               {projectProfit.rows.map((r) => (
                 <BreakdownRow
                   key={r.id}

@@ -92,22 +92,27 @@ export async function fetchExpenseBreakdown(concernId) {
   return { total: mapped.reduce((sum, r) => sum + r.amount, 0), rows: mapped };
 }
 
-// Profit only means something once a project is actually wrapped — this
-// business routinely collects/pays out months after the fact, so a
-// same-period net figure would be meaningless. Scoped to
-// status = 'completed' only.
+// Profit only means something once the money has actually finished moving
+// both ways — the client has paid in full AND every team member's salary
+// on that project is fully paid — not the moment someone flips the status
+// dropdown to "Completed" (mirrors the same gate on ProjectDetail).
 export async function fetchProjectProfitBreakdown(concernId) {
-  let query = supabase.from('projects').select('id, title, status, concerns(name)').eq('status', 'completed');
+  let query = supabase.from('projects').select('id, title, concerns(name)');
   if (concernId) query = query.eq('concern_id', concernId);
   const [{ data, error }, { data: balances, error: balError }] = await Promise.all([
     query,
-    supabase.from('project_balances').select('project_id, profit'),
+    supabase.from('project_balances').select('project_id, total_due, total_expense_due, profit'),
   ]);
   if (error) throw error;
   if (balError) throw balError;
-  const profitMap = new Map((balances ?? []).map((b) => [b.project_id, Number(b.profit)]));
+  const balanceMap = new Map((balances ?? []).map((b) => [b.project_id, b]));
   const rows = (data ?? [])
-    .map((p) => ({ id: p.id, title: p.title, concernName: p.concerns?.name, profit: profitMap.get(p.id) ?? 0 }))
+    .map((p) => {
+      const b = balanceMap.get(p.id);
+      if (!b || Number(b.total_due) > 0 || Number(b.total_expense_due) > 0) return null;
+      return { id: p.id, title: p.title, concernName: p.concerns?.name, profit: Number(b.profit) };
+    })
+    .filter(Boolean)
     .sort((a, b) => b.profit - a.profit);
   return { total: rows.reduce((sum, r) => sum + r.profit, 0), rows };
 }
