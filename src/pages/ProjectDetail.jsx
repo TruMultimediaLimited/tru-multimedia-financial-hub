@@ -22,15 +22,9 @@ export default function ProjectDetail() {
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [teamFormOpen, setTeamFormOpen] = useState(false);
-  const [expenseFormCategory, setExpenseFormCategory] = useState(null);
   const [expenseFormOpen, setExpenseFormOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [txnFilter, setTxnFilter] = useState('all');
-
-  function openExpenseForm(category) {
-    setExpenseFormCategory(category);
-    setExpenseFormOpen(true);
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -244,27 +238,12 @@ export default function ProjectDetail() {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-sm font-medium text-slate-700 mb-2">Add expense</h2>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => openExpenseForm('Food & Refreshments')}
-            className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
-          >
-            + Food
-          </button>
-          <button
-            onClick={() => openExpenseForm('Office Rent')}
-            className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
-          >
-            + Rent
-          </button>
-          <button
-            onClick={() => openExpenseForm(null)}
-            className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
-          >
-            + Other expense
-          </button>
-        </div>
+        <button
+          onClick={() => setExpenseFormOpen(true)}
+          className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
+        >
+          + Other Expense
+        </button>
       </div>
 
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
@@ -319,7 +298,6 @@ export default function ProjectDetail() {
         onClose={() => setExpenseFormOpen(false)}
         onSaved={() => setReloadKey((k) => k + 1)}
         project={project}
-        fixedCategory={expenseFormCategory}
       />
     </div>
   );
