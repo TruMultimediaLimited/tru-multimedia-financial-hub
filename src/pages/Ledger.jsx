@@ -152,6 +152,21 @@ export default function Ledger({ fixedType = null }) {
     categoryGroups.push(...catMap.values());
   }
 
+  // Same idea on the Income page — a client paying across several projects
+  // (or several installments on one) otherwise shows up as one card per
+  // payment; group by client instead, one summary row each.
+  const clientGroups = [];
+  if (fixedType === 'income') {
+    const cliMap = new Map();
+    for (const t of visibleTransactions) {
+      const key = t.clients?.id ?? 'other';
+      const g = cliMap.get(key) ?? { key, title: t.clients?.name ?? t.category ?? 'Uncategorized', entries: [] };
+      g.entries.push(t);
+      cliMap.set(key, g);
+    }
+    clientGroups.push(...cliMap.values());
+  }
+
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
   const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
   const activeSecondaryFilters = [handledByFilter, channelFilter, dateFrom, dateTo].filter(Boolean).length;
@@ -256,9 +271,10 @@ export default function Ledger({ fixedType = null }) {
               <h2 className="text-sm font-medium text-slate-700 mb-2">Team / Salaries</h2>
               <div className="space-y-2">
                 {employeeGroups.map((g) => (
-                  <ExpenseGroupCard
+                  <GroupCard
                     key={`emp:${g.key}`}
                     group={g}
+                    tone="expense"
                     expanded={expandedGroups.has(`emp:${g.key}`)}
                     onToggle={() => toggleGroup(`emp:${g.key}`)}
                     onEntryClick={(id) => navigate(`/ledger/${id}`)}
@@ -273,9 +289,10 @@ export default function Ledger({ fixedType = null }) {
               <h2 className="text-sm font-medium text-slate-700 mb-2">Office &amp; Other Expenses</h2>
               <div className="space-y-2">
                 {categoryGroups.map((g) => (
-                  <ExpenseGroupCard
+                  <GroupCard
                     key={`cat:${g.key}`}
                     group={g}
+                    tone="expense"
                     expanded={expandedGroups.has(`cat:${g.key}`)}
                     onToggle={() => toggleGroup(`cat:${g.key}`)}
                     onEntryClick={(id) => navigate(`/ledger/${id}`)}
@@ -288,7 +305,27 @@ export default function Ledger({ fixedType = null }) {
         </div>
       )}
 
-      {!loading && fixedType !== 'expense' && visibleTransactions.length > 0 && (
+      {!loading && fixedType === 'income' && visibleTransactions.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-slate-700 mb-2">By Client</h2>
+          <div className="space-y-2">
+            {clientGroups.map((g) => (
+              <GroupCard
+                key={`cli:${g.key}`}
+                group={g}
+                tone="income"
+                expanded={expandedGroups.has(`cli:${g.key}`)}
+                onToggle={() => toggleGroup(`cli:${g.key}`)}
+                onEntryClick={(id) => navigate(`/ledger/${id}`)}
+                viewLabel="View more"
+                entryLabel={(t) => `${t.projects?.title ?? t.category ?? 'Uncategorized'} · ${formatDate(t.transaction_date)}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && !fixedType && visibleTransactions.length > 0 && (
         <>
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
@@ -379,16 +416,26 @@ function partyName(t) {
   return t.clients?.name ?? t.employees?.name ?? (t.category || 'Uncategorized');
 }
 
-// One row per employee/category instead of one row per payment — an
-// employee paid across several projects, or a recurring cost like
-// Electricity Bill, otherwise turns the Expense page into a very long
+const GROUP_CARD_TONE = {
+  expense: { card: 'bg-expense/5 border-l-expense/50', amount: 'text-expense' },
+  income: { card: 'bg-income/5 border-l-income/50', amount: 'text-income' },
+};
+
+function defaultEntryLabel(t) {
+  return `${t.category || 'Uncategorized'} · ${formatDate(t.transaction_date)}${t.projects?.title ? ` · ${t.projects.title}` : ''}`;
+}
+
+// One row per employee/category (Expense) or per client (Income) instead of
+// one row per payment — the same person, category, or client can rack up
+// many entries over time, which otherwise turns the page into a very long
 // list. Total/Paid roll up every entry in the group; expanding shows each
 // one individually.
-function ExpenseGroupCard({ group, expanded, onToggle, onEntryClick, viewLabel }) {
+function GroupCard({ group, tone, expanded, onToggle, onEntryClick, viewLabel, entryLabel = defaultEntryLabel }) {
   const totalAmount = group.entries.reduce((s, t) => s + Number(t.total_amount), 0);
   const paidAmount = group.entries.reduce((s, t) => s + computeBalances(t).paidAmount, 0);
+  const toneClasses = GROUP_CARD_TONE[tone];
   return (
-    <div className="bg-expense/5 border border-slate-200 border-l-4 border-l-expense/50 rounded-2xl shadow-card p-4">
+    <div className={`border border-slate-200 border-l-4 rounded-2xl shadow-card p-4 ${toneClasses.card}`}>
       <div onClick={onToggle} className="flex items-center justify-between cursor-pointer">
         <div>
           <div className="text-slate-900 font-medium">{group.title}</div>
@@ -397,7 +444,7 @@ function ExpenseGroupCard({ group, expanded, onToggle, onEntryClick, viewLabel }
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm text-expense">{formatMoney(paidAmount)}</div>
+          <div className={`text-sm ${toneClasses.amount}`}>{formatMoney(paidAmount)}</div>
           <span className="text-xs text-primary underline underline-offset-2">{expanded ? 'Hide' : viewLabel}</span>
         </div>
       </div>
@@ -417,10 +464,7 @@ function ExpenseGroupCard({ group, expanded, onToggle, onEntryClick, viewLabel }
                   }}
                   className="flex items-center justify-between bg-surfaceRaised rounded-xl px-3 py-2 cursor-pointer hover:bg-surface"
                 >
-                  <div className="text-xs text-slate-600">
-                    {t.category || 'Uncategorized'} · {formatDate(t.transaction_date)}
-                    {t.projects?.title && ` · ${t.projects.title}`}
-                  </div>
+                  <div className="text-xs text-slate-600">{entryLabel(t)}</div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-slate-900">{formatMoney(entryPaid)}</span>
                     <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
