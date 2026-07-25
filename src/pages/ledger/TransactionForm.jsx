@@ -10,11 +10,9 @@ import {
   addPayment,
   fetchClients,
   fetchProjects,
-  fetchEmployees,
   fetchProjectIncomeTotal,
   createClient,
 } from '../../lib/ledgerData.js';
-import { createEmployee } from '../../lib/employeeData.js';
 import { fetchOwners } from '../../lib/ownerData.js';
 import { fetchProjectsWithTotals, syncProjectCompletion } from '../../lib/projectData.js';
 import { formatMoney } from '../../lib/format.js';
@@ -98,27 +96,6 @@ function ClientPicker({
   );
 }
 
-function NewEmployeeMiniForm({ name, setName, saving, onSave, onCancel }) {
-  return (
-    <div className="border border-slate-300 rounded-xl p-3 space-y-2">
-      <input className={inputClass} placeholder="Employee name" value={name} onChange={(e) => setName(e.target.value)} />
-      <div className="flex gap-2">
-        <button
-          type="button"
-          disabled={saving}
-          onClick={onSave}
-          className="px-3 py-1.5 rounded-xl text-sm bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-xl text-sm border border-slate-300 text-slate-700">
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function TransactionForm({ open, onClose, onSaved, defaultType = 'income', transaction = null, fixedType = null }) {
   const navigate = useNavigate();
   const { concerns, selectedConcernId } = useConcern();
@@ -135,7 +112,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   const [projectId, setProjectId] = useState('');
 
   const [clients, setClients] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
 
   // New-income-only: this project belongs to the selected client, and its
@@ -153,10 +129,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   const [newClientPhone, setNewClientPhone] = useState('');
   const [savingClient, setSavingClient] = useState(false);
 
-  const [showNewEmployee, setShowNewEmployee] = useState(false);
-  const [newEmployeeName, setNewEmployeeName] = useState('');
-  const [savingEmployee, setSavingEmployee] = useState(false);
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -167,7 +139,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   useEffect(() => {
     if (!open) return;
-    fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
 
     if (transaction) {
@@ -194,7 +165,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     setChannel('bkash');
     setHandledByOwnerId('');
     setShowNewClient(false);
-    setShowNewEmployee(false);
     setError('');
   }, [open, transaction, defaultType, selectedConcernId]);
 
@@ -261,24 +231,6 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       setError(e.message);
     } finally {
       setSavingClient(false);
-    }
-  }
-
-  async function handleSaveNewEmployee() {
-    if (!newEmployeeName.trim()) return;
-    setSavingEmployee(true);
-    setError('');
-    try {
-      const parentConcern = concerns.find((c) => c.parent_concern_id === null);
-      const row = await createEmployee({ concern_id: parentConcern?.id, name: newEmployeeName.trim() });
-      setEmployees((prev) => [...prev, row]);
-      setEmployeeId(row.id);
-      setShowNewEmployee(false);
-      setNewEmployeeName('');
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSavingEmployee(false);
     }
   }
 
@@ -550,37 +502,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                   onSave={handleSaveNewClient}
                 />
               </Field>
-            ) : (
-              <Field label="Employee" hint="Optional — leave blank for expenses not tied to a specific person">
-                {!showNewEmployee ? (
-                  <div className="flex gap-2">
-                    <select className={inputClass} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
-                      <option value="">No employee</option>
-                      {employees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewEmployee(true)}
-                      className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
-                    >
-                      + New
-                    </button>
-                  </div>
-                ) : (
-                  <NewEmployeeMiniForm
-                    name={newEmployeeName}
-                    setName={setNewEmployeeName}
-                    saving={savingEmployee}
-                    onSave={handleSaveNewEmployee}
-                    onCancel={() => setShowNewEmployee(false)}
-                  />
-                )}
-              </Field>
-            )}
+            ) : null}
 
             <Field label="Category">
               {type === 'expense' ? (
@@ -621,16 +543,18 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
               />
             </Field>
 
-            <Field label="Project" hint="Optional">
-              <select className={inputClass} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-                <option value="">No project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            {type === 'income' && (
+              <Field label="Project" hint="Optional">
+                <select className={inputClass} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                  <option value="">No project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
           </>
         )}
 
