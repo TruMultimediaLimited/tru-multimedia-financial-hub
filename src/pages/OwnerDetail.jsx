@@ -68,15 +68,15 @@ export default function OwnerDetail() {
       <BackButton />
 
       <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 mb-4`}>
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <div className="text-2xl font-bold text-slate-900">{owner.name}</div>
+        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+          <div className="min-w-0">
+            <div className="text-2xl font-bold text-slate-900 break-words">{owner.name}</div>
             <div className="text-xs text-slate-500">
               {owner.role || 'Partner'}
               {owner.company_share_percent != null && ` · ${owner.company_share_percent}% share`}
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 flex-wrap">
             <button onClick={() => setEditOpen(true)} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
               Edit
             </button>
