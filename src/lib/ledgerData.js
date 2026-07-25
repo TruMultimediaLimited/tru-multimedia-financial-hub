@@ -109,10 +109,16 @@ export async function deletePayment(id) {
   if (error) throw error;
 }
 
-export async function fetchClients() {
-  const { data, error } = await supabase.from('clients').select('id, name').order('name');
+// Scoped to a concern when one is given — a client tagged to multiple
+// concerns (client_concerns) still shows up under each of them, but a
+// client tagged only to Truphoto shouldn't appear while adding income
+// under 4R Studio. Pass no concernId for the full, unscoped client list.
+export async function fetchClients(concernId) {
+  const { data, error } = await supabase.from('clients').select('id, name, client_concerns(concern_id)').order('name');
   if (error) throw error;
-  return data ?? [];
+  const rows = (data ?? []).map(({ client_concerns, ...c }) => ({ ...c, concernIds: (client_concerns ?? []).map((cc) => cc.concern_id) }));
+  if (!concernId) return rows;
+  return rows.filter((c) => c.concernIds.includes(concernId));
 }
 
 export async function fetchProjects(concernId) {
