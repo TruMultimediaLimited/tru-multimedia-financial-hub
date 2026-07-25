@@ -5,8 +5,10 @@ import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import MonthToggle from '../components/MonthToggle.jsx';
 import { formatMoney, formatDate, CHANNEL_LABELS } from '../lib/format.js';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
+import { useMonthRange } from '../lib/monthRange.js';
 import {
   fetchDueSummary,
   fetchChannelBreakdown,
@@ -21,6 +23,7 @@ const EMPTY_BREAKDOWN = { total: 0, rows: [] };
 export default function Dashboard() {
   const navigate = useNavigate();
   const { selectedConcernId } = useConcern();
+  const { offset, setOffset, monthStart, monthEnd, label: monthLabel } = useMonthRange();
 
   const [projectValue, setProjectValue] = useState(EMPTY_BREAKDOWN);
   const [paymentsReceived, setPaymentsReceived] = useState(EMPTY_BREAKDOWN);
@@ -46,13 +49,14 @@ export default function Dashboard() {
     setError('');
 
     const concernId = selectedConcernId || null;
+    const monthRange = { dateFrom: monthStart, dateTo: monthEnd };
     Promise.all([
-      fetchProjectValueBreakdown(concernId),
-      fetchPaymentsReceivedBreakdown(concernId),
-      fetchExpenseBreakdown(concernId),
-      fetchProjectProfitBreakdown(concernId),
+      fetchProjectValueBreakdown(concernId, monthRange),
+      fetchPaymentsReceivedBreakdown(concernId, monthRange),
+      fetchExpenseBreakdown(concernId, monthRange),
+      fetchProjectProfitBreakdown(concernId, monthRange),
       fetchDueSummary(concernId),
-      fetchChannelBreakdown({ concernId, currentUserId: currentUser?.id ?? null }),
+      fetchChannelBreakdown({ concernId, currentUserId: currentUser?.id ?? null, ...monthRange }),
     ])
       .then(([valueResult, receivedResult, expenseResult, profitResult, dueResult, channelResult]) => {
         if (cancelled) return;
@@ -69,7 +73,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [selectedConcernId, currentUser]);
+  }, [selectedConcernId, currentUser, monthStart, monthEnd]);
 
   function sortRows(rows) {
     return [...rows].sort((a, b) =>
@@ -86,7 +90,19 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-4">Dashboard</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <MonthToggle
+          label={monthLabel}
+          offset={offset}
+          onPrev={() => setOffset((o) => o - 1)}
+          onNext={() => setOffset((o) => Math.min(0, o + 1))}
+          onCurrent={() => setOffset(0)}
+        />
+      </div>
+      <p className="text-xs text-slate-500 -mt-2 mb-4">
+        Summary cards below reflect {offset === 0 ? 'this month' : monthLabel} only — Due list is always all-time.
+      </p>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
