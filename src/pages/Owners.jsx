@@ -58,7 +58,7 @@ export default function Owners() {
             <div
               key={o.id}
               onClick={() => navigate(`/owners/${o.id}`)}
-              className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
+              className={`${ENTITY_COLORS.owner.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-slate-900 font-medium">{o.name}</span>

@@ -151,7 +151,7 @@ export default function Projects() {
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3`}
+            className={`${ENTITY_COLORS.project.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3`}
           >
             <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
               {initials(c.name)}

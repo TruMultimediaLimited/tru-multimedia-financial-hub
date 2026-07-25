@@ -37,6 +37,16 @@ export const PROJECT_STATUS_STYLES = {
   completed: 'bg-income/15 text-income border-income/30',
 };
 
+// Same status→color mapping as PROJECT_STATUS_STYLES, but as a light card
+// background + left-border tint for a whole project row, rather than a
+// small badge.
+export const PROJECT_ROW_TINT = {
+  running: 'bg-primary/5 border-l-primary/40',
+  hold: 'bg-due/5 border-l-due/40',
+  cancelled: 'bg-expense/5 border-l-expense/40',
+  completed: 'bg-income/5 border-l-income/40',
+};
+
 // Payment-progress bucket — separate from a project's own active/completed/
 // stalled status, this is purely about how much of the contract value has
 // actually been collected.

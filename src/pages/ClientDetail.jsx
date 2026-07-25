@@ -3,7 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
-import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, PROJECT_STATUS_STYLES, PAYMENT_BUCKET_STYLES, PAYMENT_BUCKET_LABELS } from '../lib/format.js';
+import {
+  formatMoney,
+  formatDate,
+  STATUS_STYLES,
+  STATUS_LABELS,
+  PROJECT_STATUS_STYLES,
+  PROJECT_ROW_TINT,
+  PAYMENT_BUCKET_STYLES,
+  PAYMENT_BUCKET_LABELS,
+} from '../lib/format.js';
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchClient, deleteClient } from '../lib/partyData.js';
 import { fetchInvoicesForClient } from '../lib/invoiceData.js';
@@ -74,7 +83,7 @@ export default function ClientDetail() {
     <div>
       <BackButton />
 
-      <div className={`bg-surfaceRaised border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 mb-4`}>
+      <div className={`${ENTITY_COLORS.client.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.client.border} rounded-2xl shadow-card p-4 mb-4`}>
         <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
           <div className="min-w-0">
             <div className="text-2xl font-bold text-slate-900 break-words">{client.name}</div>
@@ -121,46 +130,50 @@ export default function ClientDetail() {
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium text-slate-700">Projects</h2>
-        <button
-          onClick={() => setProjectFormOpen(true)}
-          className="px-2.5 py-1 rounded-xl text-xs border border-slate-300 text-slate-700"
-        >
-          + New project
-        </button>
+      <div className={`${ENTITY_COLORS.project.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-2xl shadow-card p-4 mb-4`}>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-medium text-slate-700">Projects</h2>
+          <button
+            onClick={() => setProjectFormOpen(true)}
+            className="px-2.5 py-1 rounded-xl text-xs border border-slate-300 text-slate-700"
+          >
+            + New project
+          </button>
+        </div>
+
+        {projects.length === 0 && <p className="text-sm text-slate-500">No projects yet.</p>}
+
+        {projects.length > 0 && (
+          <>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mb-2">
+              <span>{projects.length} total</span>
+              <span>{projects.filter((p) => p.status === 'completed').length} completed</span>
+              <span>{projects.filter((p) => paymentBucket(p) === 'complete').length} paid</span>
+              <span>{projects.filter((p) => paymentBucket(p) !== 'complete').length} due</span>
+            </div>
+            <div className="space-y-2">
+              {projects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projects/${p.id}`)}
+                  className={`flex items-center justify-between border border-l-4 rounded-xl p-3 cursor-pointer hover:bg-surface ${
+                    PROJECT_ROW_TINT[p.status] ?? 'border-slate-200'
+                  }`}
+                >
+                  <div>
+                    <div className="text-sm text-slate-900">{p.title}</div>
+                    <div className="text-xs text-slate-500">{p.concerns?.name}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
+                    <Badge className={PAYMENT_BUCKET_STYLES[paymentBucket(p)]}>{PAYMENT_BUCKET_LABELS[paymentBucket(p)]}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
-
-      {projects.length === 0 && <p className="text-sm text-slate-500 mb-4">No projects yet.</p>}
-
-      {projects.length > 0 && (
-        <>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mb-2">
-            <span>{projects.length} total</span>
-            <span>{projects.filter((p) => p.status === 'completed').length} completed</span>
-            <span>{projects.filter((p) => paymentBucket(p) === 'complete').length} paid</span>
-            <span>{projects.filter((p) => paymentBucket(p) !== 'complete').length} due</span>
-          </div>
-          <div className="space-y-2 mb-4">
-            {projects.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => navigate(`/projects/${p.id}`)}
-                className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
-              >
-                <div>
-                  <div className="text-sm text-slate-900">{p.title}</div>
-                  <div className="text-xs text-slate-500">{p.concerns?.name}</div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
-                  <Badge className={PAYMENT_BUCKET_STYLES[paymentBucket(p)]}>{PAYMENT_BUCKET_LABELS[paymentBucket(p)]}</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
 
       {invoices.length > 0 && (
         <>
@@ -180,31 +193,33 @@ export default function ClientDetail() {
         </>
       )}
 
-      <h2 className="text-sm font-medium text-slate-700 mb-2">Transaction history</h2>
-      {transactions.length === 0 && <p className="text-sm text-slate-500">No transactions yet.</p>}
-      <div className="space-y-2">
-        {transactions.map((t) => {
-          const { paidAmount, dueAmount, status } = computeBalances(t);
-          return (
-            <div
-              key={t.id}
-              onClick={() => navigate(`/ledger/${t.id}`)}
-              className="flex items-center justify-between border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-surfaceRaised/60"
-            >
-              <div>
-                <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
-                <div className="text-xs text-slate-500">
-                  {t.concerns?.name} · {formatDate(t.transaction_date)}
-                  {t.projects?.title && ` · ${t.projects.title}`}
+      <div className="bg-income/5 border border-slate-200 border-l-4 border-l-income/40 rounded-2xl shadow-card p-4">
+        <h2 className="text-sm font-medium text-slate-700 mb-2">Transaction history</h2>
+        {transactions.length === 0 && <p className="text-sm text-slate-500">No transactions yet.</p>}
+        <div className="space-y-2">
+          {transactions.map((t) => {
+            const { paidAmount, dueAmount, status } = computeBalances(t);
+            return (
+              <div
+                key={t.id}
+                onClick={() => navigate(`/ledger/${t.id}`)}
+                className="flex items-center justify-between bg-income/5 border border-slate-200 border-l-4 border-l-income/50 rounded-xl p-3 cursor-pointer hover:bg-surface"
+              >
+                <div>
+                  <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
+                  <div className="text-xs text-slate-500">
+                    {t.concerns?.name} · {formatDate(t.transaction_date)}
+                    {t.projects?.title && ` · ${t.projects.title}`}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-income">{formatMoney(t.total_amount)}</div>
+                  <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-slate-900">{formatMoney(t.total_amount)}</div>
-                <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <PartyForm
