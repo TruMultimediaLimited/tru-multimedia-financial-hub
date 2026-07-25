@@ -4,6 +4,7 @@ import { UserCog } from 'lucide-react';
 import BackButton from '../components/BackButton.jsx';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PageTitle from '../components/PageTitle.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney, STATUS_STYLES, STATUS_LABELS, PAYMENT_ROW_TINT } from '../lib/format.js';
 import { fetchEmployeesWithTotals } from '../lib/employeeData.js';
@@ -39,9 +40,12 @@ export default function Employees() {
   return (
     <div>
       <BackButton />
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
-        <button onClick={() => setFormOpen(true)} className="px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-700 border border-teal-200">
+      <div className="flex items-center gap-2 mb-4">
+        <PageTitle colorClass="bg-teal-100 border-teal-200 text-teal-700">Employees</PageTitle>
+        <button
+          onClick={() => setFormOpen(true)}
+          className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-teal-100 text-teal-700 border border-teal-200"
+        >
           + New employee
         </button>
       </div>

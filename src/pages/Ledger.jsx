@@ -5,6 +5,7 @@ import { useConcern } from '../context/ConcernContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PageTitle from '../components/PageTitle.jsx';
 import Sheet from '../components/Sheet.jsx';
 import Dropdown from '../components/Dropdown.jsx';
 import { inputClass } from '../components/Field.jsx';
@@ -168,6 +169,12 @@ export default function Ledger({ fixedType = null }) {
   }
 
   const title = fixedType ? (fixedType === 'income' ? 'Income' : 'Expense') : 'Ledger';
+  const titleColorClass =
+    fixedType === 'income'
+      ? 'bg-income/10 border-income/25 text-income'
+      : fixedType === 'expense'
+      ? 'bg-expense/10 border-expense/25 text-expense'
+      : 'bg-primary/10 border-primary/25 text-primary';
   const handledByLabel = fixedType === 'expense' ? 'Paid By' : 'Received By';
   const activeSecondaryFilters = [handledByFilter, channelFilter, dateFrom, dateTo].filter(Boolean).length;
   const projectOptions = [
@@ -187,13 +194,13 @@ export default function Ledger({ fixedType = null }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        <div className="flex gap-2">
+      <div className="flex items-center gap-2 mb-4">
+        <PageTitle colorClass={titleColorClass}>{title}</PageTitle>
+        <div className="flex-1 flex gap-2">
           {(!fixedType || fixedType === 'income') && (
             <button
               onClick={() => openAdd('income')}
-              className="px-3 py-1.5 rounded-full text-sm bg-income/15 text-income border border-income/30"
+              className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-income/15 text-income border border-income/30"
             >
               + Add income
             </button>
@@ -201,7 +208,7 @@ export default function Ledger({ fixedType = null }) {
           {(!fixedType || fixedType === 'expense') && (
             <button
               onClick={() => openAdd('expense')}
-              className="px-3 py-1.5 rounded-full text-sm bg-expense/15 text-expense border border-expense/30"
+              className="flex-1 h-8 flex items-center justify-center rounded-full text-xs font-bold bg-expense/15 text-expense border border-expense/30"
             >
               + Add expense
             </button>
