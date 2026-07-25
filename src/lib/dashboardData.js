@@ -15,7 +15,7 @@ const CHANNEL_SELECT = `
   amount, channel, payment_date, handled_by_employee_id, handled_by_user_id, handled_by_owner_id,
   employees(id, name),
   owners(id, name),
-  transactions(concern_id)
+  transactions(type, concern_id)
 `;
 
 function dueAmount(t) {
@@ -222,6 +222,9 @@ export async function fetchChannelBreakdown({ concernId, currentUserId, dateFrom
   if (dateFrom) rows = rows.filter((p) => p.payment_date >= dateFrom);
   if (dateTo) rows = rows.filter((p) => p.payment_date <= dateTo);
 
+  // Grouped by channel + handler + type — income and expense payments on
+  // the same channel/handler must never merge into one figure, since
+  // there'd be no way to tell whether that total is money in or money out.
   const groups = new Map();
   for (const p of rows) {
     const handlerLabel = p.employees?.name
@@ -233,10 +236,10 @@ export async function fetchChannelBreakdown({ concernId, currentUserId, dateFrom
         ? 'Myself'
         : 'Owner/Partner'
       : 'Unspecified';
-    const key = `${p.channel}|${handlerLabel}`;
-    const existing = groups.get(key) ?? { channel: p.channel, handler: handlerLabel, total: 0, count: 0 };
+    const type = p.transactions?.type ?? 'expense';
+    const key = `${p.channel}|${handlerLabel}|${type}`;
+    const existing = groups.get(key) ?? { channel: p.channel, handler: handlerLabel, type, total: 0 };
     existing.total += Number(p.amount);
-    existing.count += 1;
     groups.set(key, existing);
   }
 

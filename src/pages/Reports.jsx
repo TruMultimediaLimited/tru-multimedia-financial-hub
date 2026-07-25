@@ -256,10 +256,13 @@ export default function Reports() {
                   </thead>
                   <tbody>
                     {channels.map((row) => (
-                      <tr key={`${row.channel}|${row.handler}`} className="border-b border-slate-200/60">
+                      <tr key={`${row.channel}|${row.handler}|${row.type}`} className="border-b border-slate-200/60">
                         <td className="py-2 pr-3 text-slate-700">{CHANNEL_LABELS[row.channel] ?? row.channel}</td>
                         <td className="py-2 pr-3 text-slate-700">{row.handler}</td>
-                        <td className="py-2 pr-3 text-right text-slate-900">{formatMoney(row.total)}</td>
+                        <td className={`py-2 pr-3 text-right ${row.type === 'income' ? 'text-income' : 'text-expense'}`}>
+                          {row.type === 'income' ? '+' : '−'}
+                          {formatMoney(row.total)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
