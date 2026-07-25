@@ -27,11 +27,16 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, proje
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // Client money only ever lands in the company's own hands — one of the
+  // 3 partners, or the company bank account directly — never an employee,
+  // so the employee picker/creator is skipped entirely for income payments.
+  const canHandleAsEmployee = transactionType !== 'income';
+
   useEffect(() => {
-    if (concernId) fetchEmployees(concernId).then(setEmployees).catch((e) => setError(e.message));
+    if (concernId && canHandleAsEmployee) fetchEmployees(concernId).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
-  }, [concernId]);
+  }, [concernId, canHandleAsEmployee]);
 
   async function handleSaveNewEmployee() {
     if (!newEmployeeName.trim()) return;
@@ -131,19 +136,22 @@ export default function PaymentForm({ transactionId, concernId, dueAmount, proje
                   {o.name} (Owner)
                 </option>
               ))}
-              {employees.map((emp) => (
-                <option key={emp.id} value={`employee:${emp.id}`}>
-                  {emp.name}
-                </option>
-              ))}
+              {canHandleAsEmployee &&
+                employees.map((emp) => (
+                  <option key={emp.id} value={`employee:${emp.id}`}>
+                    {emp.name}
+                  </option>
+                ))}
             </select>
-            <button
-              type="button"
-              onClick={() => setShowNewEmployee(true)}
-              className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
-            >
-              + New
-            </button>
+            {canHandleAsEmployee && (
+              <button
+                type="button"
+                onClick={() => setShowNewEmployee(true)}
+                className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
+              >
+                + New
+              </button>
+            )}
           </div>
         ) : (
           <div className="border border-slate-300 rounded-xl p-3 space-y-2">
