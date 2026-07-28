@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Inbox, Filter } from 'lucide-react';
 import { useConcern } from '../context/ConcernContext.jsx';
-import { supabase } from '../lib/supabase.js';
 import Badge from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import PageTitle from '../components/PageTitle.jsx';
@@ -10,7 +9,7 @@ import Sheet from '../components/Sheet.jsx';
 import Dropdown from '../components/Dropdown.jsx';
 import { inputClass } from '../components/Field.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
-import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
+import { fetchTransactions, fetchProjects, computeBalances } from '../lib/ledgerData.js';
 import { fetchOwners } from '../lib/ownerData.js';
 import { fetchLoans } from '../lib/loanData.js';
 import TransactionForm from './ledger/TransactionForm.jsx';
@@ -29,10 +28,8 @@ export default function Ledger({ fixedType = null }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [projects, setProjects] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [owners, setOwners] = useState([]);
   const [loans, setLoans] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +55,7 @@ export default function Ledger({ fixedType = null }) {
 
   useEffect(() => {
     fetchProjects(concernFilter || null).then(setProjects).catch((e) => setError(e.message));
-    fetchEmployees(concernFilter || null).then(setEmployees).catch((e) => setError(e.message));
   }, [concernFilter]);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user ?? null));
-  }, []);
 
   useEffect(() => {
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
@@ -79,9 +71,7 @@ export default function Ledger({ fixedType = null }) {
     setError('');
 
     const handledBy = handledByFilter
-      ? handledByFilter === 'self'
-        ? { kind: 'user', id: currentUser?.id }
-        : { kind: handledByFilter.split(':')[0], id: handledByFilter.split(':')[1] }
+      ? { kind: handledByFilter.split(':')[0], id: handledByFilter.split(':')[1] }
       : null;
 
     fetchTransactions({
@@ -106,7 +96,7 @@ export default function Ledger({ fixedType = null }) {
     return () => {
       cancelled = true;
     };
-  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, channelFilter, currentUser, reloadKey, fixedType]);
+  }, [concernFilter, projectFilter, typeTab, dateFrom, dateTo, handledByFilter, channelFilter, reloadKey, fixedType]);
 
   function openAdd(type) {
     setFormType(type);
@@ -187,12 +177,13 @@ export default function Ledger({ fixedType = null }) {
     { value: '', label: 'All projects' },
     ...projects.map((p) => ({ value: p.id, label: p.title })),
   ];
+  // Money only ever moves through one of the 3 partners or a loan (see
+  // PaymentForm.jsx/TransactionForm.jsx) — employee and "Myself" options
+  // here would never actually match anything, so they're left out.
   const handledByOptions = [
     { value: '', label: 'Anyone' },
-    ...(currentUser ? [{ value: 'self', label: 'Myself' }] : []),
     ...owners.map((o) => ({ value: `owner:${o.id}`, label: `${o.name} (Owner)` })),
     ...loans.map((l) => ({ value: `loan:${l.id}`, label: `${l.name} (Loan)` })),
-    ...employees.map((emp) => ({ value: `employee:${emp.id}`, label: emp.name })),
   ];
   const channelOptions = [
     { value: '', label: 'All channels' },
