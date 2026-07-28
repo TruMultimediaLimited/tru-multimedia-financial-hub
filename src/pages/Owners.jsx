@@ -5,6 +5,7 @@ import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import PageTitle from '../components/PageTitle.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
+import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
 
 export default function Owners() {
@@ -43,18 +44,49 @@ export default function Owners() {
       )}
 
       {!loading && owners.length > 0 && (
-        <div className="space-y-2">
-          {owners.map((o) => (
-            <div
-              key={o.id}
-              onClick={() => navigate(`/owners/${o.id}`)}
-              className={`${ENTITY_COLORS.owner.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface flex items-center justify-between`}
-            >
-              <span className="text-slate-900 font-medium">{o.name}</span>
-              <span className="text-xs text-primary underline underline-offset-2">View more</span>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-slate-500 border-b border-slate-200">
+                  <th className="py-2 pr-3 font-normal">Name</th>
+                  <th className="py-2 pr-3 font-normal text-right">Received</th>
+                  <th className="py-2 pr-3 font-normal text-right">Given</th>
+                  <th className="py-2 pr-3 font-normal text-right">Net</th>
+                  <th className="py-2 pr-3 font-normal text-right">Invested</th>
+                </tr>
+              </thead>
+              <tbody>
+                {owners.map((o) => (
+                  <tr
+                    key={o.id}
+                    onClick={() => navigate(`/owners/${o.id}`)}
+                    className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                  >
+                    <td className="py-2.5 pr-3 text-slate-900">{o.name}</td>
+                    <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(o.totalReceived)}</td>
+                    <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(o.totalGiven)}</td>
+                    <td className="py-2.5 pr-3 text-right text-due">{formatMoney(o.netOwedToOwner)}</td>
+                    <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(o.totalInvested)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden space-y-2">
+            {owners.map((o) => (
+              <div
+                key={o.id}
+                onClick={() => navigate(`/owners/${o.id}`)}
+                className={`${ENTITY_COLORS.owner.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.owner.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface flex items-center justify-between`}
+              >
+                <span className="text-slate-900 font-medium">{o.name}</span>
+                <span className="text-xs text-primary underline underline-offset-2">View more</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

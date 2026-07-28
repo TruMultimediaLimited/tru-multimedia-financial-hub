@@ -151,7 +151,38 @@ export default function ClientDetail() {
               <span>{projects.filter((p) => paymentBucket(p) === 'complete').length} paid</span>
               <span>{projects.filter((p) => paymentBucket(p) !== 'complete').length} due</span>
             </div>
-            <div className="space-y-2">
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
+                    <th className="py-2 pr-3 font-normal">Project</th>
+                    <th className="py-2 pr-3 font-normal">Concern</th>
+                    <th className="py-2 pr-3 font-normal">Status</th>
+                    <th className="py-2 pr-3 font-normal">Payment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.map((p) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => navigate(`/projects/${p.id}`)}
+                      className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                    >
+                      <td className="py-2.5 pr-3 text-slate-900">{p.title}</td>
+                      <td className="py-2.5 pr-3 text-slate-500">{p.concerns?.name}</td>
+                      <td className="py-2.5 pr-3">
+                        <Badge className={PROJECT_STATUS_STYLES[p.status]}>{p.status}</Badge>
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <Badge className={PAYMENT_BUCKET_STYLES[paymentBucket(p)]}>{PAYMENT_BUCKET_LABELS[paymentBucket(p)]}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden space-y-2">
               {projects.map((p) => (
                 <div
                   key={p.id}
@@ -196,30 +227,72 @@ export default function ClientDetail() {
       <div className="bg-income/5 border border-slate-200 border-l-4 border-l-income/40 rounded-2xl shadow-card p-4">
         <h2 className="text-sm font-medium text-slate-700 mb-2">Transaction history</h2>
         {transactions.length === 0 && <p className="text-sm text-slate-500">No transactions yet.</p>}
-        <div className="space-y-2">
-          {transactions.map((t) => {
-            const { paidAmount, dueAmount, status } = computeBalances(t);
-            return (
-              <div
-                key={t.id}
-                onClick={() => navigate(`/ledger/${t.id}`)}
-                className="flex items-center justify-between bg-income/5 border border-slate-200 border-l-4 border-l-income/50 rounded-xl p-3 cursor-pointer hover:bg-surface"
-              >
-                <div>
-                  <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
-                  <div className="text-xs text-slate-500">
-                    {t.concerns?.name} · {formatDate(t.transaction_date)}
-                    {t.projects?.title && ` · ${t.projects.title}`}
+
+        {transactions.length > 0 && (
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-500 border-b border-slate-200">
+                    <th className="py-2 pr-3 font-normal">Date</th>
+                    <th className="py-2 pr-3 font-normal">Category</th>
+                    <th className="py-2 pr-3 font-normal">Concern / Project</th>
+                    <th className="py-2 pr-3 font-normal text-right">Amount</th>
+                    <th className="py-2 pr-3 font-normal">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((t) => {
+                    const { status } = computeBalances(t);
+                    return (
+                      <tr
+                        key={t.id}
+                        onClick={() => navigate(`/ledger/${t.id}`)}
+                        className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                      >
+                        <td className="py-2.5 pr-3 text-slate-500">{formatDate(t.transaction_date)}</td>
+                        <td className="py-2.5 pr-3 text-slate-900">{t.category || 'Uncategorized'}</td>
+                        <td className="py-2.5 pr-3 text-slate-500">
+                          {t.concerns?.name}
+                          {t.projects?.title && ` · ${t.projects.title}`}
+                        </td>
+                        <td className="py-2.5 pr-3 text-right text-income">{formatMoney(t.total_amount)}</td>
+                        <td className="py-2.5 pr-3">
+                          <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden space-y-2">
+              {transactions.map((t) => {
+                const { status } = computeBalances(t);
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => navigate(`/ledger/${t.id}`)}
+                    className="flex items-center justify-between bg-income/5 border border-slate-200 border-l-4 border-l-income/50 rounded-xl p-3 cursor-pointer hover:bg-surface"
+                  >
+                    <div>
+                      <div className="text-sm text-slate-900">{t.category || 'Uncategorized'}</div>
+                      <div className="text-xs text-slate-500">
+                        {t.concerns?.name} · {formatDate(t.transaction_date)}
+                        {t.projects?.title && ` · ${t.projects.title}`}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-income">{formatMoney(t.total_amount)}</div>
+                      <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-income">{formatMoney(t.total_amount)}</div>
-                  <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       <PartyForm

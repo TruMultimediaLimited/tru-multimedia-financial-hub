@@ -73,7 +73,7 @@ export default function PaymentForm({ transactionId, dueAmount, projectId, trans
   const remaining = dueAmount - (Number(amount) || 0);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
+    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 md:max-w-md">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Amount" required>
           <input

@@ -14,7 +14,7 @@ export default function AppShell({ userEmail, onSignOut }) {
 
       <div className="flex-1 min-w-0">
         <TopBar />
-        <main className="px-4 py-4 md:px-8 md:py-6 pb-20 md:pb-6 max-w-5xl mx-auto">
+        <main className="px-4 py-4 md:px-8 md:py-6 pb-20 md:pb-6 max-w-5xl lg:max-w-6xl mx-auto">
           <Outlet />
         </main>
       </div>

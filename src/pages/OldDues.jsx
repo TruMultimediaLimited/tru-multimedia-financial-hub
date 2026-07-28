@@ -70,7 +70,7 @@ export default function OldDues() {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {!loading && (
-        <div className="space-y-4">
+        <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4 md:items-start">
           <OldDueSection
             title="Receivable"
             colorKey="client"

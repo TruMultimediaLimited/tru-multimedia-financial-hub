@@ -52,7 +52,7 @@ export default function InvoiceDetail() {
     <div>
       <BackButton className="print:hidden" />
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-6 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-6 mb-4 md:max-w-2xl md:mx-auto">
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-xs text-slate-500">Tru Multimedia Limited</div>
@@ -103,7 +103,7 @@ export default function InvoiceDetail() {
         )}
       </div>
 
-      <div className="flex gap-2 print:hidden">
+      <div className="flex gap-2 print:hidden md:max-w-2xl md:mx-auto">
         <button onClick={() => window.print()} className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700">
           Print
         </button>

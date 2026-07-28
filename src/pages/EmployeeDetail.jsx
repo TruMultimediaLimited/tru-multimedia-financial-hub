@@ -106,7 +106,46 @@ export default function EmployeeDetail() {
       {transactions.length > 0 && visibleTransactions.length === 0 && (
         <p className="text-sm text-slate-500">No entries match this filter.</p>
       )}
-      <div className="space-y-2">
+      {visibleTransactions.length > 0 && (
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-slate-500 border-b border-slate-200">
+                <th className="py-2 pr-3 font-normal">Date</th>
+                <th className="py-2 pr-3 font-normal">Category</th>
+                <th className="py-2 pr-3 font-normal">Concern / Project</th>
+                <th className="py-2 pr-3 font-normal text-right">Amount</th>
+                <th className="py-2 pr-3 font-normal">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleTransactions.map((t) => {
+                const { status } = computeBalances(t);
+                return (
+                  <tr
+                    key={t.id}
+                    onClick={() => navigate(`/ledger/${t.id}`)}
+                    className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                  >
+                    <td className="py-2.5 pr-3 text-slate-500">{formatDate(t.transaction_date)}</td>
+                    <td className="py-2.5 pr-3 text-slate-900">{t.category || 'Uncategorized'}</td>
+                    <td className="py-2.5 pr-3 text-slate-500">
+                      {t.concerns?.name}
+                      {t.projects?.title && ` · ${t.projects.title}`}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right text-slate-900">{formatMoney(t.total_amount)}</td>
+                    <td className="py-2.5 pr-3">
+                      <Badge className={STATUS_STYLES[status]}>{STATUS_LABELS[status]}</Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="md:hidden space-y-2">
         {visibleTransactions.map((t) => {
           const { status } = computeBalances(t);
           return (
