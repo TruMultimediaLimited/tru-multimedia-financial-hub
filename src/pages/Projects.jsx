@@ -101,20 +101,20 @@ export default function Projects() {
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="mb-3">
         <PageTitle colorClass="bg-violet-100 border-violet-200 text-violet-700">Projects</PageTitle>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-1.5 mb-3">
         {stats.map((s) => (
-          <div key={s.key} className={`border rounded-2xl shadow-card px-3 py-2 ${s.classes}`}>
-            <div className="text-base font-semibold leading-tight">{s.value}</div>
-            <div className="text-xs text-slate-500">{s.label}</div>
+          <div key={s.key} className={`border rounded-xl shadow-card px-2.5 py-1.5 ${s.classes}`}>
+            <div className="text-sm font-semibold leading-tight">{s.value}</div>
+            <div className="text-[11px] text-slate-500">{s.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 space-y-2.5 mb-4">
+      <div className="bg-surfaceRaised border border-slate-200 rounded-xl shadow-card p-3 space-y-2 mb-3">
         <div>
           <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Client</span>
           <SearchSelect
@@ -125,7 +125,7 @@ export default function Projects() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Project status</span>
             <Dropdown value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
@@ -148,18 +148,18 @@ export default function Projects() {
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {clientRows.map((c) => (
           <div
             key={c.id}
             onClick={() => navigate(`/clients/${c.id}`)}
-            className={`${ENTITY_COLORS.project.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-2xl shadow-card p-4 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-3`}
+            className={`${ENTITY_COLORS.project.bg} border border-slate-200 border-l-4 ${ENTITY_COLORS.project.border} rounded-xl shadow-card p-3 cursor-pointer hover:border-slate-300 hover:bg-surface flex items-center gap-2.5`}
           >
-            <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
+            <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold ${avatarColor(c.id)}`}>
               {initials(c.name)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-slate-900 font-medium truncate">{c.name}</div>
+              <div className="text-sm text-slate-900 font-medium truncate">{c.name}</div>
               <div className="text-xs text-slate-500">
                 {c.count} project{c.count !== 1 ? 's' : ''}
               </div>
