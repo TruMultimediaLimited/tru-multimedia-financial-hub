@@ -19,9 +19,10 @@
 --   * payments.transaction_id cascades on delete: deleting a
 --     transaction removes its payments with it, rather than blocking
 --     the delete with a foreign key error.
---   * RLS is intentionally left disabled here — it gets layered in
---     once the core modules are built and stable (see architecture
---     doc, "Future scalability").
+--   * RLS is enabled on every table with a single "must be signed in"
+--     policy each — this app has exactly 3 users (the 3 partners),
+--     created directly in the Supabase Dashboard, so there's no need
+--     for per-row ownership rules, just "logged in or not".
 -- ============================================================================
 
 
@@ -396,29 +397,57 @@ create index idx_opening_due_payments_due on opening_due_payments(opening_due_id
 
 
 -- ============================================================================
--- 8b. RLS — explicitly OFF for now
--- Supabase enables Row Level Security by default on some project setups;
--- since no policies exist yet, that silently blocks every read/write from
--- the anon key ("new row violates row-level security policy"). RLS is a
--- deliberate later phase (see docs/architecture.md, "Future scalability"),
--- not skipped — turned off explicitly here rather than left to whatever
--- the project default happens to be.
+-- 8b. RLS — locked down to signed-in users only
+-- Supabase grants full CRUD on every public-schema table to both the
+-- "anon" and "authenticated" roles by default — RLS is the only thing
+-- that actually restricts access. Enabling it with a policy scoped to
+-- "authenticated" (and none for "anon") means the anon key baked into
+-- the deployed frontend bundle can no longer read or write anything
+-- without a real login — only the 3 accounts created in the Supabase
+-- Dashboard (Authentication → Users) can.
 -- ============================================================================
 
-alter table concerns disable row level security;
-alter table clients disable row level security;
-alter table client_concerns disable row level security;
-alter table project_categories disable row level security;
-alter table employees disable row level security;
-alter table owners disable row level security;
-alter table owner_investments disable row level security;
-alter table loans disable row level security;
-alter table projects disable row level security;
-alter table transactions disable row level security;
-alter table payments disable row level security;
-alter table invoices disable row level security;
-alter table opening_dues disable row level security;
-alter table opening_due_payments disable row level security;
+alter table concerns enable row level security;
+create policy "authenticated_full_access" on concerns for all to authenticated using (true) with check (true);
+
+alter table clients enable row level security;
+create policy "authenticated_full_access" on clients for all to authenticated using (true) with check (true);
+
+alter table client_concerns enable row level security;
+create policy "authenticated_full_access" on client_concerns for all to authenticated using (true) with check (true);
+
+alter table project_categories enable row level security;
+create policy "authenticated_full_access" on project_categories for all to authenticated using (true) with check (true);
+
+alter table employees enable row level security;
+create policy "authenticated_full_access" on employees for all to authenticated using (true) with check (true);
+
+alter table owners enable row level security;
+create policy "authenticated_full_access" on owners for all to authenticated using (true) with check (true);
+
+alter table owner_investments enable row level security;
+create policy "authenticated_full_access" on owner_investments for all to authenticated using (true) with check (true);
+
+alter table loans enable row level security;
+create policy "authenticated_full_access" on loans for all to authenticated using (true) with check (true);
+
+alter table projects enable row level security;
+create policy "authenticated_full_access" on projects for all to authenticated using (true) with check (true);
+
+alter table transactions enable row level security;
+create policy "authenticated_full_access" on transactions for all to authenticated using (true) with check (true);
+
+alter table payments enable row level security;
+create policy "authenticated_full_access" on payments for all to authenticated using (true) with check (true);
+
+alter table invoices enable row level security;
+create policy "authenticated_full_access" on invoices for all to authenticated using (true) with check (true);
+
+alter table opening_dues enable row level security;
+create policy "authenticated_full_access" on opening_dues for all to authenticated using (true) with check (true);
+
+alter table opening_due_payments enable row level security;
+create policy "authenticated_full_access" on opening_due_payments for all to authenticated using (true) with check (true);
 
 
 -- ============================================================================
@@ -440,7 +469,8 @@ create table audit_log (
 
 create index idx_audit_log_table_record on audit_log(table_name, record_id);
 
-alter table audit_log disable row level security;
+alter table audit_log enable row level security;
+create policy "authenticated_full_access" on audit_log for all to authenticated using (true) with check (true);
 
 create or replace function log_audit_event()
 returns trigger

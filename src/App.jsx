@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase.js';
 import { ConcernProvider } from './context/ConcernContext.jsx';
+import Login from './pages/Login.jsx';
 import AppShell from './layout/AppShell.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Ledger from './pages/Ledger.jsx';
@@ -23,19 +24,26 @@ import Reports from './pages/Reports.jsx';
 import AuditLog from './pages/AuditLog.jsx';
 
 export default function App() {
-  const [userEmail, setUserEmail] = useState(null);
+  const [session, setSession] = useState(undefined);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? null);
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
+      setSession(session ?? null);
     });
 
     return () => subscription.subscription.unsubscribe();
   }, []);
+
+  // undefined = still checking for an existing session; render nothing
+  // rather than flashing the Login screen or the app before we know.
+  if (session === undefined) return null;
+  if (session === null) return <Login />;
+
+  const userEmail = session.user?.email ?? null;
 
   return (
     <ConcernProvider>
