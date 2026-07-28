@@ -14,6 +14,8 @@ import Employees from './pages/Employees.jsx';
 import EmployeeDetail from './pages/EmployeeDetail.jsx';
 import Owners from './pages/Owners.jsx';
 import OwnerDetail from './pages/OwnerDetail.jsx';
+import Loans from './pages/Loans.jsx';
+import LoanDetail from './pages/LoanDetail.jsx';
 import Invoices from './pages/Invoices.jsx';
 import InvoiceDetail from './pages/InvoiceDetail.jsx';
 import Reports from './pages/Reports.jsx';
@@ -52,6 +54,8 @@ export default function App() {
             <Route path="/employees/:id" element={<EmployeeDetail />} />
             <Route path="/owners" element={<Owners />} />
             <Route path="/owners/:id" element={<OwnerDetail />} />
+            <Route path="/loans" element={<Loans />} />
+            <Route path="/loans/:id" element={<LoanDetail />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/invoices/:id" element={<InvoiceDetail />} />
             <Route path="/reports" element={<Reports />} />

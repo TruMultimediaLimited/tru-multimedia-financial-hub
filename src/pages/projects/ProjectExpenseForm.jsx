@@ -3,6 +3,7 @@ import Sheet from '../../components/Sheet.jsx';
 import Field, { inputClass } from '../../components/Field.jsx';
 import { createTransaction, addPayment, fetchEmployees } from '../../lib/ledgerData.js';
 import { fetchOwners } from '../../lib/ownerData.js';
+import { fetchLoans } from '../../lib/loanData.js';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -22,7 +23,8 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project }) 
   const [givenToEmployeeId, setGivenToEmployeeId] = useState('');
   const [employees, setEmployees] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [handledByOwnerId, setHandledByOwnerId] = useState('');
+  const [loans, setLoans] = useState([]);
+  const [handledBy, setHandledBy] = useState('');
   const [channel, setChannel] = useState('bkash');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayStr());
@@ -34,13 +36,14 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project }) 
     setCategory('');
     setShowCustomCategory(false);
     setGivenToEmployeeId('');
-    setHandledByOwnerId('');
+    setHandledBy('');
     setChannel('bkash');
     setAmount('');
     setDate(todayStr());
     setError('');
     fetchEmployees(null).then(setEmployees).catch((e) => setError(e.message));
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
+    fetchLoans().then(setLoans).catch((e) => setError(e.message));
   }, [open]);
 
   if (!open) return null;
@@ -51,7 +54,9 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project }) 
     if (!category.trim()) return setError('Category is required.');
     if (!amount || Number(amount) <= 0) return setError('Amount must be greater than 0.');
     if (!channel) return setError('Channel is required.');
-    if (!handledByOwnerId) return setError('Handled by is required.');
+    if (!handledBy) return setError('Handled by is required.');
+
+    const [handledByKind, handledById] = handledBy.split(':');
 
     setSaving(true);
     try {
@@ -70,7 +75,8 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project }) 
         channel,
         payment_date: date,
         note: null,
-        handled_by_owner_id: handledByOwnerId,
+        handled_by_owner_id: handledByKind === 'owner' ? handledById : null,
+        handled_by_loan_id: handledByKind === 'loan' ? handledById : null,
       });
       onSaved();
       onClose();
@@ -149,11 +155,16 @@ export default function ProjectExpenseForm({ open, onClose, onSaved, project }) 
         </Field>
 
         <Field label="Handled by" required hint="Who gave the money">
-          <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+          <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
             <option value="">Select</option>
             {owners.map((o) => (
-              <option key={o.id} value={o.id}>
+              <option key={o.id} value={`owner:${o.id}`}>
                 {o.name}
+              </option>
+            ))}
+            {loans.map((l) => (
+              <option key={l.id} value={`loan:${l.id}`}>
+                {l.name} (Loan)
               </option>
             ))}
           </select>

@@ -6,6 +6,7 @@ const AUDIT_TABLES = [
   'employees',
   'owners',
   'owner_investments',
+  'loans',
   'projects',
   'transactions',
   'payments',

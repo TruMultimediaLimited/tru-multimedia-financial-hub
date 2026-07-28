@@ -12,6 +12,7 @@ import { inputClass } from '../components/Field.jsx';
 import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, CHANNEL_LABELS } from '../lib/format.js';
 import { fetchTransactions, fetchProjects, fetchEmployees, computeBalances } from '../lib/ledgerData.js';
 import { fetchOwners } from '../lib/ownerData.js';
+import { fetchLoans } from '../lib/loanData.js';
 import TransactionForm from './ledger/TransactionForm.jsx';
 
 export default function Ledger({ fixedType = null }) {
@@ -30,6 +31,7 @@ export default function Ledger({ fixedType = null }) {
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [owners, setOwners] = useState([]);
+  const [loans, setLoans] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -65,6 +67,10 @@ export default function Ledger({ fixedType = null }) {
 
   useEffect(() => {
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    fetchLoans().then(setLoans).catch((e) => setError(e.message));
   }, []);
 
   useEffect(() => {
@@ -185,6 +191,7 @@ export default function Ledger({ fixedType = null }) {
     { value: '', label: 'Anyone' },
     ...(currentUser ? [{ value: 'self', label: 'Myself' }] : []),
     ...owners.map((o) => ({ value: `owner:${o.id}`, label: `${o.name} (Owner)` })),
+    ...loans.map((l) => ({ value: `loan:${l.id}`, label: `${l.name} (Loan)` })),
     ...employees.map((emp) => ({ value: `employee:${emp.id}`, label: emp.name })),
   ];
   const channelOptions = [

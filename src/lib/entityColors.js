@@ -34,4 +34,11 @@ export const ENTITY_COLORS = {
     text: 'text-rose-700',
     dot: 'bg-rose-400',
   },
+  loan: {
+    icon: 'bg-amber-100 text-amber-600',
+    bg: 'bg-amber-50',
+    border: 'border-l-amber-300',
+    text: 'text-amber-700',
+    dot: 'bg-amber-400',
+  },
 };
