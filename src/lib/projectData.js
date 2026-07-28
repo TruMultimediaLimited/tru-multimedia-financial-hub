@@ -97,9 +97,19 @@ export async function deleteProject(id) {
 // contract value set (nothing to reach).
 export async function syncProjectCompletion(projectId) {
   if (!projectId) return;
-  const { data, error } = await supabase.from('project_balances').select('project_id, contract_value, total_received');
-  if (error) throw error;
-  const balance = (data ?? []).find((b) => b.project_id === projectId);
+  const [{ data: balanceRows, error: balError }, { data: project, error: projError }] = await Promise.all([
+    supabase.from('project_balances').select('project_id, contract_value, total_received'),
+    supabase.from('projects').select('id, status').eq('id', projectId).single(),
+  ]);
+  if (balError) throw balError;
+  if (projError) throw projError;
+  // Only auto-complete a project that's actually still running — a
+  // project manually marked cancelled/hold must not get silently flipped
+  // back to completed just because a later payment (e.g. a correction)
+  // crosses the contract-value threshold.
+  if (!project || project.status !== 'running') return;
+
+  const balance = (balanceRows ?? []).find((b) => b.project_id === projectId);
   if (!balance) return;
   if (Number(balance.contract_value) > 0 && Number(balance.total_received) >= Number(balance.contract_value)) {
     await supabase.from('projects').update({ status: 'completed' }).eq('id', projectId);

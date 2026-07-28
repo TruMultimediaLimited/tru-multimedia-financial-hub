@@ -34,6 +34,7 @@ const EXPENSE_CATEGORIES = [
 ];
 
 function ClientPicker({
+  concernId,
   clientId,
   setClientId,
   clients,
@@ -88,8 +89,10 @@ function ClientPicker({
       </select>
       <button
         type="button"
+        disabled={!concernId}
         onClick={() => setShowNewClient(true)}
-        className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900"
+        title={!concernId ? 'Select a Concern above first' : undefined}
+        className="shrink-0 px-3 rounded-xl text-sm border border-slate-300 text-slate-700 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         + New
       </button>
@@ -221,6 +224,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
 
   async function handleSaveNewClient() {
     if (!newClientName.trim()) return;
+    if (!concernId) return setError('Select a Concern first.');
     setSavingClient(true);
     setError('');
     try {
@@ -414,6 +418,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
           <>
             <Field label="Client" required>
               <ClientPicker
+                concernId={concernId}
                 clientId={clientId}
                 setClientId={setClientId}
                 clients={clients}

@@ -100,6 +100,10 @@ export default function Dashboard() {
         />
       </div>
 
+      <p className="text-[11px] text-slate-400 mb-3">
+        Cash-basis — these totals count money actually received or paid, not full billed/invoiced amounts.
+      </p>
+
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
@@ -303,7 +307,7 @@ export default function Dashboard() {
               rows={sortRows(dueSummary.payables)}
               expandedId={expandedPayable}
               onToggle={(id) => setExpandedPayable((cur) => (cur === id ? null : id))}
-              onBreakdownClick={(b) => navigate(`/employees/${b.id}`)}
+              onBreakdownClick={(b) => b.employeeId && navigate(`/employees/${b.employeeId}`)}
               emptyText="No outstanding employee dues."
               colorKey="project"
               breakdownColorKey="employee"

@@ -122,7 +122,10 @@ export default function Reports() {
       {!loading && (
         <>
           {/* Income vs Expense */}
-          <Section title="Income vs Expense">
+          <Section
+            title="Income vs Expense"
+            caption="Accrual-basis — includes full transaction amounts, even portions still unpaid."
+          >
             <div className="flex gap-4 mb-3 text-sm">
               <span className="text-income">Income {formatMoney(incomeExpense.totals.income)}</span>
               <span className="text-expense">Expense {formatMoney(incomeExpense.totals.expense)}</span>
@@ -158,7 +161,10 @@ export default function Reports() {
           </Section>
 
           {/* Profit / Loss */}
-          <Section title="Profit / Loss">
+          <Section
+            title="Profit / Loss"
+            caption="Accrual-basis — includes full transaction amounts, even portions still unpaid."
+          >
             <div className="flex gap-1 mb-3">
               {['month', 'quarter', 'year'].map((p) => (
                 <button
@@ -308,13 +314,14 @@ export default function Reports() {
   );
 }
 
-function Section({ title, action, children }) {
+function Section({ title, caption, action, children }) {
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1">
         <h2 className="text-sm font-medium text-slate-700">{title}</h2>
         {action}
       </div>
+      {caption && <p className="text-[11px] text-slate-400 mb-2">{caption}</p>}
       {children}
     </div>
   );
