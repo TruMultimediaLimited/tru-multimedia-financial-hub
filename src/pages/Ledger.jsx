@@ -39,6 +39,7 @@ export default function Ledger({ fixedType = null }) {
   const [formOpen, setFormOpen] = useState(false);
   const [formType, setFormType] = useState(fixedType ?? 'income');
   const [expandedGroups, setExpandedGroups] = useState(() => new Set());
+  const [hiddenExpanded, setHiddenExpanded] = useState(false);
 
   function toggleGroup(key) {
     setExpandedGroups((prev) => {
@@ -122,7 +123,9 @@ export default function Ledger({ fixedType = null }) {
   // still visible via the Payable due list and each project's Team table).
   const visibleTransactions =
     fixedType === 'expense' ? transactions.filter((t) => computeBalances(t).paidAmount > 0) : transactions;
-  const hiddenDueCount = transactions.length - visibleTransactions.length;
+  const hiddenTransactions =
+    fixedType === 'expense' ? transactions.filter((t) => computeBalances(t).paidAmount === 0) : [];
+  const hiddenDueCount = hiddenTransactions.length;
 
   // On the Expense page specifically, group by employee (salary/reimbursement
   // entries) or by category (office rent, bills, etc.) instead of listing
@@ -181,7 +184,7 @@ export default function Ledger({ fixedType = null }) {
   // PaymentForm.jsx/TransactionForm.jsx) — employee and "Myself" options
   // here would never actually match anything, so they're left out.
   const handledByOptions = [
-    { value: '', label: 'Anyone' },
+    { value: '', label: 'All' },
     ...owners.map((o) => ({ value: `owner:${o.id}`, label: `${o.name} (Owner)` })),
     ...loans.map((l) => ({ value: `loan:${l.id}`, label: `${l.name} (Loan)` })),
   ];
@@ -263,10 +266,32 @@ export default function Ledger({ fixedType = null }) {
           />
         </div>
       )}
-      {!loading && hiddenDueCount > 0 && visibleTransactions.length > 0 && (
-        <p className="text-xs text-slate-500 mb-3">
-          {hiddenDueCount} due but unpaid {hiddenDueCount === 1 ? 'entry is' : 'entries are'} hidden until paid.
-        </p>
+      {!loading && hiddenDueCount > 0 && (
+        <div className="mb-3">
+          <button
+            onClick={() => setHiddenExpanded((v) => !v)}
+            className="text-xs text-slate-500 underline underline-offset-2"
+          >
+            {hiddenDueCount} due but unpaid {hiddenDueCount === 1 ? 'entry is' : 'entries are'} hidden until paid —{' '}
+            {hiddenExpanded ? 'hide' : 'view'}
+          </button>
+          {hiddenExpanded && (
+            <div className="mt-1.5 space-y-1.5">
+              {hiddenTransactions.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => navigate(`/ledger/${t.id}`)}
+                  className="flex items-center justify-between bg-due/5 border border-due/20 rounded-lg px-2.5 py-1.5 cursor-pointer hover:bg-due/10"
+                >
+                  <div className="text-xs text-slate-600">
+                    {partyName(t)} · {formatDate(t.transaction_date)}
+                  </div>
+                  <span className="text-xs text-due font-medium">{formatMoney(t.total_amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {!loading && fixedType === 'expense' && visibleTransactions.length > 0 && (
