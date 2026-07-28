@@ -201,7 +201,7 @@ export default function Ledger({ fixedType = null }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-3">
         <PageTitle colorClass={titleColorClass}>{title}</PageTitle>
         <div className="flex gap-2">
           {(!fixedType || fixedType === 'income') && (
@@ -224,7 +224,7 @@ export default function Ledger({ fixedType = null }) {
       </div>
 
       {!fixedType && (
-        <div className="flex gap-1 mb-4">
+        <div className="flex gap-1 mb-3">
           {['all', 'income', 'expense'].map((t) => (
             <button
               key={t}
@@ -239,13 +239,13 @@ export default function Ledger({ fixedType = null }) {
         </div>
       )}
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-3">
         <div className="flex-1 min-w-0">
           <Dropdown value={projectFilter} onChange={setProjectFilter} options={projectOptions} />
         </div>
         <button
           onClick={() => setFiltersOpen(true)}
-          className="relative w-11 h-11 shrink-0 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:border-slate-300 transition-colors"
+          className="relative w-9 h-9 shrink-0 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:border-slate-300 transition-colors"
           aria-label="Filters"
         >
           <Filter className="w-4 h-4" />
@@ -279,11 +279,11 @@ export default function Ledger({ fixedType = null }) {
       )}
 
       {!loading && fixedType === 'expense' && visibleTransactions.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {employeeGroups.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-slate-700 mb-2">Team / Salaries</h2>
-              <div className="space-y-2">
+              <h2 className="text-sm font-medium text-slate-700 mb-1.5">Team / Salaries</h2>
+              <div className="space-y-1.5">
                 {employeeGroups.map((g) => (
                   <GroupCard
                     key={`emp:${g.key}`}
@@ -300,8 +300,8 @@ export default function Ledger({ fixedType = null }) {
           )}
           {categoryGroups.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-slate-700 mb-2">Office &amp; Other Expenses</h2>
-              <div className="space-y-2">
+              <h2 className="text-sm font-medium text-slate-700 mb-1.5">Office &amp; Other Expenses</h2>
+              <div className="space-y-1.5">
                 {categoryGroups.map((g) => (
                   <GroupCard
                     key={`cat:${g.key}`}
@@ -321,8 +321,8 @@ export default function Ledger({ fixedType = null }) {
 
       {!loading && fixedType === 'income' && visibleTransactions.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-slate-700 mb-2">By Client</h2>
-          <div className="space-y-2">
+          <h2 className="text-sm font-medium text-slate-700 mb-1.5">By Client</h2>
+          <div className="space-y-1.5">
             {clientGroups.map((g) => (
               <GroupCard
                 key={`cli:${g.key}`}
@@ -449,10 +449,10 @@ function GroupCard({ group, tone, expanded, onToggle, onEntryClick, viewLabel, e
   const paidAmount = group.entries.reduce((s, t) => s + computeBalances(t).paidAmount, 0);
   const toneClasses = GROUP_CARD_TONE[tone];
   return (
-    <div className={`border border-slate-200 border-l-4 rounded-2xl shadow-card p-4 ${toneClasses.card}`}>
+    <div className={`border border-slate-200 border-l-4 rounded-xl shadow-card p-3 ${toneClasses.card}`}>
       <div onClick={onToggle} className="flex items-center justify-between cursor-pointer">
         <div>
-          <div className="text-slate-900 font-medium">{group.title}</div>
+          <div className="text-sm text-slate-900 font-medium">{group.title}</div>
           <div className="text-xs text-slate-500">
             {group.entries.length} {group.entries.length === 1 ? 'entry' : 'entries'} · Total {formatMoney(totalAmount)}
           </div>
@@ -463,7 +463,7 @@ function GroupCard({ group, tone, expanded, onToggle, onEntryClick, viewLabel, e
         </div>
       </div>
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+        <div className="mt-2 pt-2 border-t border-slate-200 space-y-1.5">
           {group.entries
             .slice()
             .sort((a, b) => (a.transaction_date < b.transaction_date ? 1 : -1))
@@ -476,7 +476,7 @@ function GroupCard({ group, tone, expanded, onToggle, onEntryClick, viewLabel, e
                     e.stopPropagation();
                     onEntryClick(t.id);
                   }}
-                  className="flex items-center justify-between bg-surfaceRaised rounded-xl px-3 py-2 cursor-pointer hover:bg-surface"
+                  className="flex items-center justify-between bg-surfaceRaised rounded-lg px-2.5 py-1.5 cursor-pointer hover:bg-surface"
                 >
                   <div className="text-xs text-slate-600">{entryLabel(t)}</div>
                   <div className="flex items-center gap-2 shrink-0">
