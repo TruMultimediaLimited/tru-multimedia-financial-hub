@@ -22,11 +22,11 @@ export default function Dropdown({ value, onChange, options }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 transition-colors hover:border-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="w-full flex items-center justify-between bg-surfaceRaised border border-slate-300 rounded-xl px-2.5 py-1.5 text-sm text-slate-900 transition-colors hover:border-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
       >
         <span>{selected?.label}</span>
         <svg
-          className={`w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-3.5 h-3.5 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -46,7 +46,7 @@ export default function Dropdown({ value, onChange, options }) {
                 onChange(o.value);
                 setOpen(false);
               }}
-              className={`w-full text-left px-3 py-1.5 text-sm ${
+              className={`w-full text-left px-2.5 py-1 text-sm ${
                 o.value === value ? 'bg-surface text-slate-900 font-medium' : 'text-slate-700 hover:bg-surface'
               }`}
             >
