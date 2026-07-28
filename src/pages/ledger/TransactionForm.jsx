@@ -14,6 +14,7 @@ import {
   createClient,
 } from '../../lib/ledgerData.js';
 import { fetchOwners } from '../../lib/ownerData.js';
+import { fetchLoans } from '../../lib/loanData.js';
 import { fetchProjectsWithTotals, syncProjectCompletion } from '../../lib/projectData.js';
 import { formatMoney } from '../../lib/format.js';
 
@@ -121,8 +122,9 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   const [clientProjects, setClientProjects] = useState([]);
   const [loadingClientProjects, setLoadingClientProjects] = useState(false);
   const [channel, setChannel] = useState('bkash');
-  const [handledByOwnerId, setHandledByOwnerId] = useState('');
+  const [handledBy, setHandledBy] = useState('');
   const [owners, setOwners] = useState([]);
+  const [loans, setLoans] = useState([]);
 
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState('');
@@ -140,6 +142,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
   useEffect(() => {
     if (!open) return;
     fetchOwners().then(setOwners).catch((e) => setError(e.message));
+    fetchLoans().then(setLoans).catch((e) => setError(e.message));
 
     if (transaction) {
       setConcernId(transaction.concern_id ?? '');
@@ -163,7 +166,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
       setProjectId('');
     }
     setChannel('bkash');
-    setHandledByOwnerId('');
+    setHandledBy('');
     setShowNewClient(false);
     setError('');
   }, [open, transaction, defaultType, selectedConcernId]);
@@ -248,7 +251,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     const amount = Number(totalAmount);
     if (!(amount > 0)) return setError('Amount must be greater than 0.');
     if (!channel) return setError('Channel is required.');
-    if (!handledByOwnerId) return setError('Handled by is required.');
+    if (!handledBy) return setError('Handled by is required.');
 
     if (selectedProject && Number(selectedProject.contract_value) > 0) {
       try {
@@ -275,13 +278,14 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
         description: description.trim() || null,
         transaction_date: date,
       });
+      const [incomeHandledByKind, incomeHandledById] = handledBy.split(':');
       await addPayment({
         transaction_id: txn.id,
         amount,
         channel,
         payment_date: date,
         note: null,
-        handled_by_owner_id: handledByOwnerId,
+        handled_by_owner_id: incomeHandledByKind === 'owner' ? incomeHandledById : null,
       });
       await syncProjectCompletion(projectId);
       onSaved();
@@ -308,7 +312,7 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
     // step afterward.
     if (!transaction) {
       if (!channel) return setError('Channel is required.');
-      if (!handledByOwnerId) return setError('Handled by is required.');
+      if (!handledBy) return setError('Handled by is required.');
     }
 
     if (type === 'income' && projectId) {
@@ -344,13 +348,15 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
         await updateTransaction(transaction.id, payload);
       } else {
         const txn = await createTransaction(payload);
+        const [genericHandledByKind, genericHandledById] = handledBy.split(':');
         await addPayment({
           transaction_id: txn.id,
           amount,
           channel,
           payment_date: date,
           note: null,
-          handled_by_owner_id: handledByOwnerId,
+          handled_by_owner_id: genericHandledByKind === 'owner' ? genericHandledById : null,
+          handled_by_loan_id: genericHandledByKind === 'loan' ? genericHandledById : null,
         });
       }
       onSaved();
@@ -484,10 +490,10 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
             </Field>
 
             <Field label="Handled by" required>
-              <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+              <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
                 <option value="">Select</option>
                 {owners.map((o) => (
-                  <option key={o.id} value={o.id}>
+                  <option key={o.id} value={`owner:${o.id}`}>
                     {o.name}
                   </option>
                 ))}
@@ -566,11 +572,16 @@ export default function TransactionForm({ open, onClose, onSaved, defaultType = 
                 </Field>
 
                 <Field label="Handled by" required>
-                  <select className={inputClass} value={handledByOwnerId} onChange={(e) => setHandledByOwnerId(e.target.value)}>
+                  <select className={inputClass} value={handledBy} onChange={(e) => setHandledBy(e.target.value)}>
                     <option value="">Select</option>
                     {owners.map((o) => (
-                      <option key={o.id} value={o.id}>
+                      <option key={o.id} value={`owner:${o.id}`}>
                         {o.name}
+                      </option>
+                    ))}
+                    {loans.map((l) => (
+                      <option key={l.id} value={`loan:${l.id}`}>
+                        {l.name} (Loan)
                       </option>
                     ))}
                   </select>

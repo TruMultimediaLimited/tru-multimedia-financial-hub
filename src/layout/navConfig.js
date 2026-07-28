@@ -9,6 +9,7 @@ export const modules = [
   { path: '/clients', label: 'Clients', icon: 'clients', bottomTab: false, group: 'Management' },
   { path: '/employees', label: 'Employees', icon: 'employees', bottomTab: false, group: 'Management' },
   { path: '/owners', label: 'Owners', icon: 'owners', bottomTab: false, group: 'Management' },
+  { path: '/loans', label: 'Loans', icon: 'loans', bottomTab: false, group: 'Management' },
   { path: '/invoices', label: 'Invoices', icon: 'invoices', bottomTab: false, group: 'Business' },
   { path: '/reports', label: 'Reports', icon: 'reports', bottomTab: false, group: 'Business' },
   { path: '/audit-log', label: 'Audit Log', icon: 'audit', bottomTab: false, group: 'System' },

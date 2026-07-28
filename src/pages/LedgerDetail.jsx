@@ -179,6 +179,8 @@ function PaymentRow({ payment, employees, currentUser, onChanged }) {
     ? payment.employees.name
     : payment.owners?.name
     ? `${payment.owners.name} (Owner)`
+    : payment.loans?.name
+    ? `${payment.loans.name} (Loan)`
     : payment.handled_by_user_id
     ? payment.handled_by_user_id === currentUser?.id
       ? 'Myself'

@@ -39,6 +39,7 @@ drop table if exists project_categories cascade;
 drop table if exists employees cascade;
 drop table if exists owner_investments cascade;
 drop table if exists owners cascade;
+drop table if exists loans cascade;
 drop table if exists client_concerns cascade;
 drop table if exists clients cascade;
 drop table if exists concerns cascade;
@@ -59,6 +60,7 @@ drop view if exists project_balances;
 drop view if exists concern_pl_view;
 drop view if exists client_balances;
 drop view if exists owner_balances;
+drop view if exists loan_balances;
 
 drop function if exists log_audit_event() cascade;
 
@@ -202,6 +204,30 @@ create index idx_owner_investments_owner on owner_investments(owner_id);
 
 
 -- ============================================================================
+-- 4c. LOANS
+-- An external funding source (e.g. a bank loan) used to cover company
+-- expenses instead of a partner's own pocket — see
+-- payments.handled_by_loan_id (section 7) and loan_balances (section 10),
+-- which tracks principal_amount minus every expense payment drawn against
+-- it. monthly_interest_amount is informational only — interest is paid as
+-- a normal recurring expense transaction (e.g. category "Loan Interest"),
+-- not tracked against this table, since it's paid separately from the
+-- principal rather than drawn from it.
+-- ============================================================================
+
+create table loans (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  principal_amount numeric not null check (principal_amount > 0),
+  monthly_interest_amount numeric,
+  start_date date not null default current_date,
+  term_months integer,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+
+-- ============================================================================
 -- 5. PROJECTS
 -- category_id is an open-ended, owner-extendable list (project_categories)
 -- rather than a hardcoded enum — new categories get added often enough
@@ -276,9 +302,11 @@ create index idx_transactions_date on transactions(transaction_date);
 -- ============================================================================
 -- 7. PAYMENTS
 -- Real money movement against a transaction. handled_by is at most one of
--- an employee, a logged-in user, or an owner/partner (see owner_balances,
+-- an employee, a logged-in user, an owner/partner (see owner_balances,
 -- section 10, for the running "who gave/received how much" tally this
--- feeds — e.g. an owner paying a salary out of pocket).
+-- feeds — e.g. an owner paying a salary out of pocket), or a loan (see
+-- loan_balances, section 10 — an expense funded from a loan pool rather
+-- than a partner's own pocket, so it must never affect owner_balances).
 -- ============================================================================
 
 create table payments (
@@ -289,6 +317,7 @@ create table payments (
   handled_by_employee_id uuid references employees(id),
   handled_by_user_id uuid references auth.users(id),
   handled_by_owner_id uuid references owners(id),
+  handled_by_loan_id uuid references loans(id),
   payment_date date not null default current_date,
   note text,
   created_by uuid references auth.users(id),
@@ -296,7 +325,8 @@ create table payments (
   constraint payments_handler_check check (
     (case when handled_by_employee_id is not null then 1 else 0 end)
     + (case when handled_by_user_id is not null then 1 else 0 end)
-    + (case when handled_by_owner_id is not null then 1 else 0 end) <= 1
+    + (case when handled_by_owner_id is not null then 1 else 0 end)
+    + (case when handled_by_loan_id is not null then 1 else 0 end) <= 1
   )
 );
 
@@ -342,6 +372,7 @@ alter table project_categories disable row level security;
 alter table employees disable row level security;
 alter table owners disable row level security;
 alter table owner_investments disable row level security;
+alter table loans disable row level security;
 alter table projects disable row level security;
 alter table transactions disable row level security;
 alter table payments disable row level security;
@@ -395,6 +426,7 @@ create trigger audit_clients after insert or update or delete on clients for eac
 create trigger audit_employees after insert or update or delete on employees for each row execute function log_audit_event();
 create trigger audit_owners after insert or update or delete on owners for each row execute function log_audit_event();
 create trigger audit_owner_investments after insert or update or delete on owner_investments for each row execute function log_audit_event();
+create trigger audit_loans after insert or update or delete on loans for each row execute function log_audit_event();
 create trigger audit_projects after insert or update or delete on projects for each row execute function log_audit_event();
 create trigger audit_transactions after insert or update or delete on transactions for each row execute function log_audit_event();
 create trigger audit_payments after insert or update or delete on payments for each row execute function log_audit_event();
@@ -507,3 +539,25 @@ from owners o
 left join payments p on p.handled_by_owner_id = o.id
 left join transactions t on t.id = p.transaction_id
 group by o.id, o.name;
+
+-- Remaining balance of a loan: principal minus every expense payment drawn
+-- against it. Payments pre-aggregated in a derived table first so a loan
+-- with many payments never gets fanned out/duplicated by the join.
+create or replace view loan_balances as
+select
+  l.id as loan_id,
+  l.name,
+  l.principal_amount,
+  l.monthly_interest_amount,
+  l.start_date,
+  l.term_months,
+  coalesce(spent.total_spent, 0) as total_spent,
+  l.principal_amount - coalesce(spent.total_spent, 0) as remaining_balance
+from loans l
+left join (
+  select p.handled_by_loan_id as loan_id, sum(p.amount) as total_spent
+  from payments p
+  join transactions t on t.id = p.transaction_id
+  where t.type = 'expense' and p.handled_by_loan_id is not null
+  group by p.handled_by_loan_id
+) spent on spent.loan_id = l.id;

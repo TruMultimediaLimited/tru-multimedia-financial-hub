@@ -7,7 +7,7 @@ const TRANSACTION_SELECT = `
   clients(id, name),
   employees(id, name, role),
   projects(id, title),
-  payments(id, amount, channel, payment_date, note, handled_by_employee_id, handled_by_user_id, handled_by_owner_id, employees(id, name), owners(id, name))
+  payments(id, amount, channel, payment_date, note, handled_by_employee_id, handled_by_user_id, handled_by_owner_id, handled_by_loan_id, employees(id, name), owners(id, name), loans(id, name))
 `;
 
 async function currentUserId() {
@@ -47,6 +47,7 @@ export async function fetchTransactions(filters = {}) {
       (t.payments ?? []).some((p) => {
         if (kind === 'employee') return p.handled_by_employee_id === id;
         if (kind === 'owner') return p.handled_by_owner_id === id;
+        if (kind === 'loan') return p.handled_by_loan_id === id;
         return p.handled_by_user_id === id;
       })
     );
