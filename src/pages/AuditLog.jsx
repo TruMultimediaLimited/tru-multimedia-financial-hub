@@ -4,7 +4,9 @@ import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { inputClass } from '../components/Field.jsx';
-import { fetchAuditLog, AUDIT_TABLES } from '../lib/auditData.js';
+import { fetchAuditLog, restoreAuditRow, AUDIT_TABLES } from '../lib/auditData.js';
+import { fetchFullBackup } from '../lib/backupData.js';
+import { downloadJson } from '../lib/reportsData.js';
 
 const ACTION_STYLES = {
   insert: 'bg-income/15 text-income border-income/30',
@@ -29,6 +31,22 @@ export default function AuditLog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupError, setBackupError] = useState('');
+
+  async function handleDownloadBackup() {
+    setBackupLoading(true);
+    setBackupError('');
+    try {
+      const backup = await fetchFullBackup();
+      downloadJson(`tru-erp-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
+    } catch (e) {
+      setBackupError(e.message);
+    } finally {
+      setBackupLoading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +76,24 @@ export default function AuditLog() {
     <div>
       <BackButton />
       <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Log</h1>
+
+      <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4 text-sm text-slate-600 space-y-1.5">
+        <p>Every change is logged below, and deleted rows can be restored instantly (expand a "delete" entry).</p>
+        <p>A full snapshot of every table is also taken automatically once a day and kept for 30 days, inside Supabase.</p>
+        <p>Tap below anytime to save a full copy to your phone — the only copy that lives outside Supabase.</p>
+        <p className="text-slate-400">
+          None of this protects against the Supabase project itself being deleted — for that, download a copy
+          periodically (below) and keep it somewhere safe, e.g. email it to yourself or save it to Google Drive.
+        </p>
+        <button
+          onClick={handleDownloadBackup}
+          disabled={backupLoading}
+          className="mt-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+        >
+          {backupLoading ? 'Preparing…' : 'Download all my data (JSON)'}
+        </button>
+        {backupError && <p className="text-xs text-expense mt-1">{backupError}</p>}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
         <select className={inputClass} value={tableName} onChange={(e) => setTableName(e.target.value)}>
@@ -115,19 +151,22 @@ export default function AuditLog() {
                 </div>
               </div>
               {expandedId === e.id && (
-                <div className="border-t border-slate-200 p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-xs text-slate-500 mb-1">Old value</div>
-                    <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
-                      {e.old_data ? JSON.stringify(e.old_data, null, 2) : '—'}
-                    </pre>
+                <div className="border-t border-slate-200 p-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Old value</div>
+                      <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
+                        {e.old_data ? JSON.stringify(e.old_data, null, 2) : '—'}
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">New value</div>
+                      <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
+                        {e.new_data ? JSON.stringify(e.new_data, null, 2) : '—'}
+                      </pre>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs text-slate-500 mb-1">New value</div>
-                    <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
-                      {e.new_data ? JSON.stringify(e.new_data, null, 2) : '—'}
-                    </pre>
-                  </div>
+                  {e.action === 'delete' && <RestoreButton entry={e} />}
                 </div>
               )}
             </div>
@@ -143,6 +182,40 @@ export default function AuditLog() {
           Load more
         </button>
       )}
+    </div>
+  );
+}
+
+function RestoreButton({ entry }) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  async function handleRestore() {
+    if (!window.confirm(`Restore this row back into "${entry.table_name}"?`)) return;
+    setSaving(true);
+    setError('');
+    try {
+      await restoreAuditRow(entry);
+      setDone(true);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (done) return <p className="text-xs text-income mt-2">Restored.</p>;
+  return (
+    <div className="mt-2">
+      <button
+        onClick={handleRestore}
+        disabled={saving}
+        className="px-3 py-1.5 rounded-xl text-xs bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+      >
+        {saving ? 'Restoring…' : 'Restore this'}
+      </button>
+      {error && <p className="text-xs text-expense mt-1">{error}</p>}
     </div>
   );
 }
