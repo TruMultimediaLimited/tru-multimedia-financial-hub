@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { inputClass } from './Field.jsx';
+
+// Matches Dropdown.jsx's compact sizing — this and Dropdown sit side by
+// side in the same filter box (see Projects.jsx), so they stay visually
+// consistent rather than using the larger form-field inputClass.
+const searchInputClass =
+  'w-full bg-surfaceRaised border border-slate-300 rounded-xl px-2.5 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15';
 
 // Text input + custom dropdown of options — type to filter, or open it
 // empty to browse the full alphabetical list. Stands in for a native
@@ -29,7 +34,7 @@ export default function SearchSelect({ value, onChange, options, placeholder }) 
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        className={inputClass}
+        className={searchInputClass}
       />
 
       {open && filtered.length > 0 && (
@@ -42,7 +47,7 @@ export default function SearchSelect({ value, onChange, options, placeholder }) 
                 onChange(name);
                 setOpen(false);
               }}
-              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-surface"
+              className="w-full text-left px-2.5 py-1 text-sm text-slate-700 hover:bg-surface"
             >
               {name}
             </button>
