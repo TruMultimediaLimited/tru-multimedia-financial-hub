@@ -7,6 +7,8 @@ const AUDIT_TABLES = [
   'owners',
   'owner_investments',
   'loans',
+  'opening_dues',
+  'opening_due_payments',
   'projects',
   'transactions',
   'payments',

@@ -30,6 +30,8 @@
 -- ============================================================================
 
 drop table if exists audit_log cascade;
+drop table if exists opening_due_payments cascade;
+drop table if exists opening_dues cascade;
 drop table if exists invoices cascade;
 drop table if exists work_logs cascade;
 drop table if exists payments cascade;
@@ -61,6 +63,7 @@ drop view if exists concern_pl_view;
 drop view if exists client_balances;
 drop view if exists owner_balances;
 drop view if exists loan_balances;
+drop view if exists opening_due_balances;
 
 drop function if exists log_audit_event() cascade;
 
@@ -69,6 +72,7 @@ drop type if exists payment_channel cascade;
 drop type if exists employee_type cascade;
 drop type if exists project_status cascade;
 drop type if exists audit_action cascade;
+drop type if exists opening_due_type cascade;
 
 create extension if not exists pgcrypto;
 
@@ -356,6 +360,42 @@ create index idx_invoices_client on invoices(client_id);
 
 
 -- ============================================================================
+-- 8c. OPENING DUES — pre-cutover balances, deliberately isolated
+-- Old amounts owed to/from before the owner started fresh bookkeeping.
+-- party_name is plain text (NOT a foreign key to clients/employees) and
+-- these tables are never joined by any Dashboard/Reports query — that's
+-- the whole point: entering or paying down an opening due must never
+-- affect the live Income/Expense/Projects system, now or ever, not even
+-- via a date filter or toggle. Only two things exist here: how much is
+-- owed to us (receivable) vs. how much we owe (payable), each shrinking
+-- as opening_due_payments are logged against it, with no other effect
+-- anywhere in the app.
+-- ============================================================================
+
+create type opening_due_type as enum ('receivable', 'payable');
+
+create table opening_dues (
+  id uuid primary key default gen_random_uuid(),
+  party_name text not null,
+  type opening_due_type not null,
+  opening_amount numeric not null check (opening_amount > 0),
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create table opening_due_payments (
+  id uuid primary key default gen_random_uuid(),
+  opening_due_id uuid not null references opening_dues(id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  payment_date date not null default current_date,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index idx_opening_due_payments_due on opening_due_payments(opening_due_id);
+
+
+-- ============================================================================
 -- 8b. RLS — explicitly OFF for now
 -- Supabase enables Row Level Security by default on some project setups;
 -- since no policies exist yet, that silently blocks every read/write from
@@ -377,6 +417,8 @@ alter table projects disable row level security;
 alter table transactions disable row level security;
 alter table payments disable row level security;
 alter table invoices disable row level security;
+alter table opening_dues disable row level security;
+alter table opening_due_payments disable row level security;
 
 
 -- ============================================================================
@@ -431,6 +473,8 @@ create trigger audit_projects after insert or update or delete on projects for e
 create trigger audit_transactions after insert or update or delete on transactions for each row execute function log_audit_event();
 create trigger audit_payments after insert or update or delete on payments for each row execute function log_audit_event();
 create trigger audit_invoices after insert or update or delete on invoices for each row execute function log_audit_event();
+create trigger audit_opening_dues after insert or update or delete on opening_dues for each row execute function log_audit_event();
+create trigger audit_opening_due_payments after insert or update or delete on opening_due_payments for each row execute function log_audit_event();
 
 -- Resolves changed_by to an email without exposing the rest of auth.users.
 create or replace view audit_log_with_user as
@@ -561,3 +605,19 @@ left join (
   where t.type = 'expense' and p.handled_by_loan_id is not null
   group by p.handled_by_loan_id
 ) spent on spent.loan_id = l.id;
+
+-- Remaining balance of a pre-cutover opening due: opening amount minus
+-- every payment logged against it. Deliberately built only from
+-- opening_dues/opening_due_payments — never touches transactions or
+-- payments, so it can never leak into any live-system figure.
+create or replace view opening_due_balances as
+select
+  d.id as opening_due_id,
+  d.party_name,
+  d.type,
+  d.opening_amount,
+  coalesce(sum(p.amount), 0) as paid_amount,
+  d.opening_amount - coalesce(sum(p.amount), 0) as remaining_amount
+from opening_dues d
+left join opening_due_payments p on p.opening_due_id = d.id
+group by d.id, d.party_name, d.type, d.opening_amount;
