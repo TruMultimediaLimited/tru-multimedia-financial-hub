@@ -4,7 +4,7 @@ import { supabase } from './supabase.js';
 // ledgerData's TRANSACTION_SELECT (no payment channel/note), since the
 // Dashboard only needs enough to sum due amounts per party/project.
 const DUE_SELECT = `
-  id, type, concern_id, client_id, employee_id, project_id, total_amount, transaction_date,
+  id, type, concern_id, client_id, employee_id, project_id, category, total_amount, transaction_date,
   clients(id, name),
   employees(id, name),
   projects(id, title),
@@ -230,7 +230,7 @@ async function fetchPayables(concernId) {
   const groups = new Map();
   for (const t of expenseRows) {
     const due = dueAmount(t);
-    if (due <= 0 || !t.employees) continue;
+    if (due <= 0) continue;
     const key = t.project_id ?? 'other';
     let g = groups.get(key);
     if (!g) {
@@ -239,9 +239,18 @@ async function fetchPayables(concernId) {
     }
     g.due += due;
     if (t.transaction_date < g.oldestDate) g.oldestDate = t.transaction_date;
-    const existing = g.breakdown.get(t.employees.id) ?? { id: t.employees.id, label: t.employees.name, due: 0 };
+    // Not every due expense has an employee attached (e.g. office rent) —
+    // those still need to surface here, grouped by category instead, with
+    // no employee to link through to (see breakdownClick in Dashboard.jsx).
+    const breakdownKey = t.employees ? `emp:${t.employees.id}` : `cat:${t.category || 'Uncategorized'}`;
+    const existing = g.breakdown.get(breakdownKey) ?? {
+      id: breakdownKey,
+      employeeId: t.employees ? t.employees.id : null,
+      label: t.employees ? t.employees.name : t.category || 'Uncategorized',
+      due: 0,
+    };
     existing.due += due;
-    g.breakdown.set(t.employees.id, existing);
+    g.breakdown.set(breakdownKey, existing);
   }
   return Array.from(groups.values()).map((g) => ({ ...g, breakdown: Array.from(g.breakdown.values()) }));
 }
