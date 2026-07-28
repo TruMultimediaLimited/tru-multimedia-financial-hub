@@ -148,7 +148,7 @@ export default function Projects() {
         </div>
       )}
 
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
         {clientRows.map((c) => (
           <div
             key={c.id}

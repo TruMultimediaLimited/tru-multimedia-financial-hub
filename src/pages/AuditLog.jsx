@@ -120,7 +120,7 @@ export default function AuditLog() {
         placeholder="Search table, action, or field values"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
+        className="w-full bg-surfaceRaised border border-slate-300 rounded-xl px-3 py-3 md:py-2 text-sm text-slate-900 transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 mb-4"
       />
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}

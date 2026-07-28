@@ -37,7 +37,7 @@ export default function OwnerInvestmentForm({ ownerId, onSaved }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4">
+    <form onSubmit={handleSubmit} className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 md:max-w-md">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Amount" required>
           <input type="number" min="0" step="0.01" className={inputClass} value={amount} onChange={(e) => setAmount(e.target.value)} />

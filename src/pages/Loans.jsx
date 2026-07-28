@@ -53,26 +53,55 @@ export default function Loans() {
       )}
 
       {!loading && loans.length > 0 && (
-        <div className="space-y-2">
-          {loans.map((loan) => (
-            <div
-              key={loan.id}
-              onClick={() => navigate(`/loans/${loan.id}`)}
-              className={`flex items-center justify-between border border-slate-200 border-l-4 ${ENTITY_COLORS.loan.bg} ${ENTITY_COLORS.loan.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
-            >
-              <div>
-                <div className="text-slate-900 font-medium">{loan.name}</div>
-                <div className="text-xs text-slate-500">
-                  Principal {formatMoney(loan.principal_amount)} · since {formatDate(loan.start_date)}
+        <>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-slate-500 border-b border-slate-200">
+                  <th className="py-2 pr-3 font-normal">Name</th>
+                  <th className="py-2 pr-3 font-normal text-right">Principal</th>
+                  <th className="py-2 pr-3 font-normal">Since</th>
+                  <th className="py-2 pr-3 font-normal text-right">Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loans.map((loan) => (
+                  <tr
+                    key={loan.id}
+                    onClick={() => navigate(`/loans/${loan.id}`)}
+                    className="border-b border-slate-200/60 cursor-pointer hover:bg-surfaceRaised/60"
+                  >
+                    <td className="py-2.5 pr-3 text-slate-900">{loan.name}</td>
+                    <td className="py-2.5 pr-3 text-right text-slate-700">{formatMoney(loan.principal_amount)}</td>
+                    <td className="py-2.5 pr-3 text-slate-500">{formatDate(loan.start_date)}</td>
+                    <td className="py-2.5 pr-3 text-right text-slate-900 font-medium">{formatMoney(loan.remainingBalance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden space-y-2">
+            {loans.map((loan) => (
+              <div
+                key={loan.id}
+                onClick={() => navigate(`/loans/${loan.id}`)}
+                className={`flex items-center justify-between border border-slate-200 border-l-4 ${ENTITY_COLORS.loan.bg} ${ENTITY_COLORS.loan.border} rounded-2xl shadow-card p-4 cursor-pointer hover:bg-surface`}
+              >
+                <div>
+                  <div className="text-slate-900 font-medium">{loan.name}</div>
+                  <div className="text-xs text-slate-500">
+                    Principal {formatMoney(loan.principal_amount)} · since {formatDate(loan.start_date)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-slate-500">Remaining</div>
+                  <div className="text-lg font-bold text-slate-900">{formatMoney(loan.remainingBalance)}</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-xs text-slate-500">Remaining</div>
-                <div className="text-lg font-bold text-slate-900">{formatMoney(loan.remainingBalance)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       <LoanForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} />
