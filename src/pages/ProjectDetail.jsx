@@ -328,6 +328,7 @@ export default function ProjectDetail() {
       <TeamMemberForm
         open={teamFormOpen}
         onClose={() => setTeamFormOpen(false)}
+        existingEmployeeIds={team.map((m) => m.id)}
         onSaved={() => setReloadKey((k) => k + 1)}
         project={project}
       />

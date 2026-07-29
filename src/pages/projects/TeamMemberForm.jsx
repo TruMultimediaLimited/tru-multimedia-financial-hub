@@ -14,7 +14,7 @@ const emptyRow = () => ({ key: `row-${Math.random().toString(36).slice(2)}`, emp
 // up automatically, no separate "assignment" concept needed. Supports
 // adding several team members in one go, since a project is usually
 // staffed with more than one person at a time.
-export default function TeamMemberForm({ open, onClose, onSaved, project }) {
+export default function TeamMemberForm({ open, onClose, onSaved, project, existingEmployeeIds = [] }) {
   const { concerns } = useConcern();
   const parentConcern = concerns.find((c) => c.parent_concern_id === null);
 
@@ -43,6 +43,17 @@ export default function TeamMemberForm({ open, onClose, onSaved, project }) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
+  // An employee already on this project's team (or already picked in a
+  // different row of this same form) can't be selected again — a project
+  // should only list each employee once, not accumulate duplicate salary
+  // entries for the same person.
+  function availableEmployees(rowKey) {
+    const takenElsewhere = new Set(
+      rows.filter((r) => r.key !== rowKey && r.employeeId).map((r) => r.employeeId)
+    );
+    return employees.filter((emp) => !existingEmployeeIds.includes(emp.id) && !takenElsewhere.has(emp.id));
+  }
+
   function removeRow(key) {
     setRows((prev) => prev.filter((r) => r.key !== key));
   }
@@ -69,6 +80,13 @@ export default function TeamMemberForm({ open, onClose, onSaved, project }) {
 
     if (rows.some((r) => !r.employeeId)) return setError('Select an employee for every row.');
     if (rows.some((r) => !r.salary || Number(r.salary) <= 0)) return setError('Salary must be greater than 0 for every row.');
+    if (rows.some((r) => existingEmployeeIds.includes(r.employeeId))) {
+      return setError('One of the selected employees is already on this project\'s team.');
+    }
+    const pickedIds = rows.map((r) => r.employeeId);
+    if (new Set(pickedIds).size !== pickedIds.length) {
+      return setError('The same employee is selected in more than one row.');
+    }
 
     setSaving(true);
     try {
@@ -116,7 +134,7 @@ export default function TeamMemberForm({ open, onClose, onSaved, project }) {
                 onChange={(e) => updateRow(row.key, { employeeId: e.target.value })}
               >
                 <option value="">Select employee</option>
-                {employees.map((emp) => (
+                {availableEmployees(row.key).map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.name}
                   </option>
