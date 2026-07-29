@@ -161,7 +161,7 @@ create table employees (
   concern_id uuid not null references concerns(id),
   name text not null,
   role text,
-  type employee_type not null default 'fixed',
+  type employee_type not null default 'project_based',
   monthly_salary numeric,
   status text not null default 'active' check (status in ('active', 'on_leave', 'inactive')),
   auth_user_id uuid references auth.users(id),

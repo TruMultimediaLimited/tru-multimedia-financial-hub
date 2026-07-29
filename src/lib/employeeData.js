@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js';
 
-const EMPLOYEE_SELECT = 'id, concern_id, name, role';
+const EMPLOYEE_SELECT = 'id, concern_id, name, role, type, monthly_salary';
 
 // Both transactions (employee_id) and payments (handled_by_employee_id)
 // carry a foreign key to employees — name the actual blocker instead of

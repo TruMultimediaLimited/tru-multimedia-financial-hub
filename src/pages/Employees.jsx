@@ -10,6 +10,8 @@ import { formatMoney, STATUS_STYLES, STATUS_LABELS, PAYMENT_ROW_TINT } from '../
 import { fetchEmployeesWithTotals } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
 
+const TYPE_LABELS = { fixed: 'Fixed Salary', project_based: 'Project', remote: 'Remote' };
+
 export default function Employees() {
   const navigate = useNavigate();
 
@@ -74,6 +76,7 @@ export default function Employees() {
                 <tr className="text-left text-slate-500 border-b border-slate-200">
                   <th className="py-2 pr-3 font-normal">Name</th>
                   <th className="py-2 pr-3 font-normal">Role</th>
+                  <th className="py-2 pr-3 font-normal">Type</th>
                   <th className="py-2 pr-3 font-normal">Status</th>
                   <th className="py-2 pr-3 font-normal text-right">Due</th>
                 </tr>
@@ -87,6 +90,7 @@ export default function Employees() {
                   >
                     <td className="py-2.5 pr-3 text-slate-900">{emp.name}</td>
                     <td className="py-2.5 pr-3 text-slate-500">{emp.role || '—'}</td>
+                    <td className="py-2.5 pr-3 text-slate-500">{TYPE_LABELS[emp.type] ?? emp.type}</td>
                     <td className="py-2.5 pr-3">
                       {emp.status !== 'none' ? (
                         <Badge className={STATUS_STYLES[emp.status]}>{STATUS_LABELS[emp.status]}</Badge>
@@ -117,7 +121,10 @@ export default function Employees() {
                 >
                   <div>
                     <div className="text-slate-900 font-medium">{emp.name}</div>
-                    <div className="text-sm text-slate-500">{emp.role || 'No role set'}</div>
+                    <div className="text-sm text-slate-500">
+                      {emp.role || 'No role set'}
+                      {emp.type === 'fixed' && ' · Fixed Salary'}
+                    </div>
                   </div>
                   {emp.status !== 'none' && (
                     <div className="text-right">
