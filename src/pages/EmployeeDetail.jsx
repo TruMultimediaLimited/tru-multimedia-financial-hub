@@ -7,6 +7,11 @@ import { formatMoney, formatDate, STATUS_STYLES, STATUS_LABELS, PAYMENT_ROW_TINT
 import { fetchTransactions, computeBalances } from '../lib/ledgerData.js';
 import { fetchEmployee, deleteEmployee } from '../lib/employeeData.js';
 import EmployeeForm from './employees/EmployeeForm.jsx';
+import PaySalaryForm from './employees/PaySalaryForm.jsx';
+import GiveAdvanceForm from './employees/GiveAdvanceForm.jsx';
+
+const monthKey = (dateStr) => dateStr.slice(0, 7);
+const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export default function EmployeeDetail() {
   const { id } = useParams();
@@ -17,6 +22,8 @@ export default function EmployeeDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+  const [paySalaryOpen, setPaySalaryOpen] = useState(false);
+  const [giveAdvanceOpen, setGiveAdvanceOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [paymentFilter, setPaymentFilter] = useState('all');
 
@@ -56,6 +63,15 @@ export default function EmployeeDetail() {
     (t) => paymentFilter === 'all' || computeBalances(t).status === paymentFilter
   );
 
+  const isFixedSalary = employee.type === 'fixed';
+  const thisMonthSalaryTxn = transactions.find(
+    (t) => t.category === 'Fixed Salary' && monthKey(t.transaction_date) === monthKey(todayStr())
+  );
+  const thisMonthStatus = thisMonthSalaryTxn ? computeBalances(thisMonthSalaryTxn).status : null;
+  const advanceTotal = transactions
+    .filter((t) => t.category === 'Salary Advance')
+    .reduce((s, t) => s + Number(t.total_amount), 0);
+
   return (
     <div>
       <BackButton />
@@ -88,6 +104,43 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
+      {isFixedSalary && (
+        <div className="bg-surfaceRaised border border-slate-200 rounded-2xl shadow-card p-4 mb-4">
+          <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+            <div>
+              <div className="text-xs text-slate-500">Monthly salary</div>
+              <div className="text-slate-900">{formatMoney(employee.monthly_salary)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">This month</div>
+              {thisMonthStatus ? (
+                <Badge className={STATUS_STYLES[thisMonthStatus]}>{STATUS_LABELS[thisMonthStatus]}</Badge>
+              ) : (
+                <span className="text-slate-500 text-sm">Not added yet</span>
+              )}
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Advance given</div>
+              <div className={advanceTotal > 0 ? 'text-due' : 'text-slate-900'}>{formatMoney(advanceTotal)}</div>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setPaySalaryOpen(true)}
+              className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
+            >
+              + Pay this month's salary
+            </button>
+            <button
+              onClick={() => setGiveAdvanceOpen(true)}
+              className="px-3 py-1.5 rounded-xl text-xs border border-slate-300 text-slate-700 hover:text-slate-900"
+            >
+              + Give advance
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
 
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
@@ -100,7 +153,9 @@ export default function EmployeeDetail() {
         </div>
       </div>
       <p className="text-xs text-slate-500 mb-2">
-        Who was given how much and when — add a new entry from a project's own page ("+ Add team member" or "+ Other Expense").
+        {isFixedSalary
+          ? 'Who was given how much and when — includes salary and advances added above.'
+          : 'Who was given how much and when — add a new entry from a project\'s own page ("+ Add team member" or "+ Other Expense").'}
       </p>
       {transactions.length === 0 && <p className="text-sm text-slate-500">No expenses recorded for this employee yet.</p>}
       {transactions.length > 0 && visibleTransactions.length === 0 && (
@@ -171,6 +226,22 @@ export default function EmployeeDetail() {
       </div>
 
       <EmployeeForm open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} employee={employee} />
+      {isFixedSalary && (
+        <>
+          <PaySalaryForm
+            open={paySalaryOpen}
+            onClose={() => setPaySalaryOpen(false)}
+            onSaved={() => setReloadKey((k) => k + 1)}
+            employee={employee}
+          />
+          <GiveAdvanceForm
+            open={giveAdvanceOpen}
+            onClose={() => setGiveAdvanceOpen(false)}
+            onSaved={() => setReloadKey((k) => k + 1)}
+            employee={employee}
+          />
+        </>
+      )}
     </div>
   );
 }

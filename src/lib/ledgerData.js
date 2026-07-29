@@ -154,7 +154,7 @@ async function fetchParentConcernId() {
 }
 
 export async function fetchEmployees(concernId) {
-  let query = supabase.from('employees').select('id, name, role').order('name');
+  let query = supabase.from('employees').select('id, name, role, type').order('name');
   if (concernId) {
     const parentId = await fetchParentConcernId();
     const ids = parentId && parentId !== concernId ? [concernId, parentId] : [concernId];

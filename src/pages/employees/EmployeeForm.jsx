@@ -22,6 +22,8 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
 
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
+  const [type, setType] = useState('project_based');
+  const [monthlySalary, setMonthlySalary] = useState('');
   const [roleOptions, setRoleOptions] = useState(DEFAULT_ROLES);
   const [showNewRole, setShowNewRole] = useState(false);
   const [newRoleName, setNewRoleName] = useState('');
@@ -32,6 +34,8 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
     if (!open) return;
     setName(employee?.name ?? '');
     setRole(employee?.role ?? '');
+    setType(employee?.type ?? 'project_based');
+    setMonthlySalary(employee?.monthly_salary != null ? String(employee.monthly_salary) : '');
     setShowNewRole(false);
     setNewRoleName('');
     setError('');
@@ -54,10 +58,15 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return setError('Name is required.');
+    if (type === 'fixed' && !(Number(monthlySalary) > 0)) {
+      return setError('Monthly salary must be greater than 0.');
+    }
 
     const payload = {
       name: name.trim(),
       role: role || null,
+      type,
+      monthly_salary: type === 'fixed' ? Number(monthlySalary) : null,
     };
     if (!employee) payload.concern_id = parentConcern?.id;
 
@@ -81,6 +90,42 @@ export default function EmployeeForm({ open, onClose, onSaved, employee = null }
         <Field label="Name" required>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
+
+        <Field label="Type" required>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setType('project_based')}
+              className={`py-2 rounded-xl text-sm border ${
+                type === 'project_based' ? 'bg-primary/15 border-primary text-primary' : 'border-slate-300 text-slate-500'
+              }`}
+            >
+              Project-based
+            </button>
+            <button
+              type="button"
+              onClick={() => setType('fixed')}
+              className={`py-2 rounded-xl text-sm border ${
+                type === 'fixed' ? 'bg-primary/15 border-primary text-primary' : 'border-slate-300 text-slate-500'
+              }`}
+            >
+              Fixed Salary
+            </button>
+          </div>
+        </Field>
+
+        {type === 'fixed' && (
+          <Field label="Monthly salary" required>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className={inputClass}
+              value={monthlySalary}
+              onChange={(e) => setMonthlySalary(e.target.value)}
+            />
+          </Field>
+        )}
 
         <Field label="Role">
           {!showNewRole ? (
