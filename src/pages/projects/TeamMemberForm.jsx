@@ -46,16 +46,16 @@ export default function TeamMemberForm({ open, onClose, onSaved, project, existi
   // An employee already on this project's team (or already picked in a
   // different row of this same form) can't be selected again — a project
   // should only list each employee once, not accumulate duplicate salary
-  // entries for the same person. Fixed-salary employees are paid monthly
-  // regardless of project (see EmployeeDetail.jsx's "Pay this month's
-  // salary" flow), so offering them here would just invite a second,
-  // competing salary transaction for the same person.
+  // entries for the same person. Fixed-salary employees are NOT excluded
+  // here — many of them also pick up project work for extra income on
+  // top of their fixed monthly salary, tracked as its own separate
+  // project-linked entry.
   function availableEmployees(rowKey) {
     const takenElsewhere = new Set(
       rows.filter((r) => r.key !== rowKey && r.employeeId).map((r) => r.employeeId)
     );
     return employees.filter(
-      (emp) => emp.type !== 'fixed' && !existingEmployeeIds.includes(emp.id) && !takenElsewhere.has(emp.id)
+      (emp) => !existingEmployeeIds.includes(emp.id) && !takenElsewhere.has(emp.id)
     );
   }
 
