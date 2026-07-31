@@ -4,9 +4,14 @@ import Badge from '../components/Badge.jsx';
 import BackButton from '../components/BackButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { inputClass } from '../components/Field.jsx';
-import { fetchAuditLog, restoreAuditRow, AUDIT_TABLES } from '../lib/auditData.js';
+import { useConcern } from '../context/ConcernContext.jsx';
+import { fetchAuditLog, restoreAuditRow, summarizeAuditEntry, AUDIT_TABLES } from '../lib/auditData.js';
 import { fetchFullBackup } from '../lib/backupData.js';
 import { downloadJson } from '../lib/reportsData.js';
+import { fetchClients, fetchEmployees, fetchProjects } from '../lib/ledgerData.js';
+import { fetchOwners } from '../lib/ownerData.js';
+import { fetchLoans } from '../lib/loanData.js';
+import { fetchProjectCategories } from '../lib/projectData.js';
 
 const ACTION_STYLES = {
   insert: 'bg-income/15 text-income border-income/30',
@@ -20,6 +25,7 @@ function formatTimestamp(ts) {
 }
 
 export default function AuditLog() {
+  const { concerns } = useConcern();
   const [tableName, setTableName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -34,6 +40,45 @@ export default function AuditLog() {
 
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupError, setBackupError] = useState('');
+
+  // Every "old value"/"new value" panel needs to turn raw foreign-key ids
+  // into real names — these lean id→name lookups are fetched once, up
+  // front, rather than per-entry.
+  const [nameLookups, setNameLookups] = useState({
+    clients: new Map(),
+    employees: new Map(),
+    owners: new Map(),
+    loans: new Map(),
+    projects: new Map(),
+    categories: new Map(),
+  });
+
+  useEffect(() => {
+    Promise.all([
+      fetchClients(null),
+      fetchEmployees(null),
+      fetchOwners(),
+      fetchLoans(),
+      fetchProjects(null),
+      fetchProjectCategories(),
+    ])
+      .then(([clients, employees, owners, loans, projects, categories]) => {
+        setNameLookups({
+          clients: new Map(clients.map((c) => [c.id, c.name])),
+          employees: new Map(employees.map((e) => [e.id, e.name])),
+          owners: new Map(owners.map((o) => [o.id, o.name])),
+          loans: new Map(loans.map((l) => [l.id, l.name])),
+          projects: new Map(projects.map((p) => [p.id, p.title])),
+          categories: new Map(categories.map((c) => [c.id, c.name])),
+        });
+      })
+      .catch(() => {}); // names are a display nicety — fall back to short ids silently if this fails
+  }, []);
+
+  const lookups = useMemo(
+    () => ({ ...nameLookups, concerns: new Map(concerns.map((c) => [c.id, c.name])) }),
+    [nameLookups, concerns]
+  );
 
   async function handleDownloadBackup() {
     setBackupLoading(true);
@@ -154,16 +199,12 @@ export default function AuditLog() {
                 <div className="border-t border-slate-200 p-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">Old value</div>
-                      <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
-                        {e.old_data ? JSON.stringify(e.old_data, null, 2) : '—'}
-                      </pre>
+                      <div className="text-xs text-slate-500 mb-1">Before</div>
+                      <FieldList row={e.old_data} lookups={lookups} />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">New value</div>
-                      <pre className="text-xs text-slate-500 bg-surface rounded-xl p-2 overflow-x-auto whitespace-pre-wrap">
-                        {e.new_data ? JSON.stringify(e.new_data, null, 2) : '—'}
-                      </pre>
+                      <div className="text-xs text-slate-500 mb-1">After</div>
+                      <FieldList row={e.new_data} lookups={lookups} />
                     </div>
                   </div>
                   {e.action === 'delete' && <RestoreButton entry={e} />}
@@ -182,6 +223,25 @@ export default function AuditLog() {
           Load more
         </button>
       )}
+    </div>
+  );
+}
+
+// Plain label→value rows instead of raw JSON — foreign-key ids are
+// already resolved to real names by summarizeAuditEntry.
+function FieldList({ row, lookups }) {
+  const fields = summarizeAuditEntry(row, lookups);
+  if (fields.length === 0) {
+    return <p className="text-xs text-slate-400 bg-surface rounded-xl p-2">—</p>;
+  }
+  return (
+    <div className="bg-surface rounded-xl p-2 space-y-1">
+      {fields.map((f) => (
+        <div key={f.key} className="flex items-start justify-between gap-2 text-xs">
+          <span className="text-slate-500 shrink-0">{f.label}</span>
+          <span className="text-slate-900 text-right break-words">{f.value}</span>
+        </div>
+      ))}
     </div>
   );
 }
