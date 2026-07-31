@@ -1,3 +1,4 @@
+import writeExcelFile from 'write-excel-file/universal';
 import { supabase } from './supabase.js';
 
 const LEAN_SELECT = 'type, category, total_amount, transaction_date, concern_id, project_id';
@@ -116,6 +117,40 @@ export function toCsv(rows, columns) {
 
 export function downloadCsv(filename, csvText) {
   const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function humanizeSheetName(tableName) {
+  return tableName
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+    .slice(0, 31); // Excel sheet name limit
+}
+
+function tableRowsToSheetData(rows) {
+  if (!rows || rows.length === 0) return [['No data']];
+  const keys = Object.keys(rows[0]);
+  const header = keys.map((k) => k.replace(/_/g, ' '));
+  const body = rows.map((row) => keys.map((k) => row[k] ?? ''));
+  return [header, ...body];
+}
+
+// Same full-data export as downloadJson, just readable in Excel/Google
+// Sheets/phone spreadsheet apps — one sheet per table — for anyone who
+// wants to actually look through their data rather than keep it purely
+// as a disaster-recovery file.
+export async function downloadXlsx(filename, backup) {
+  const sheets = Object.entries(backup.tables).map(([table, rows]) => ({
+    data: tableRowsToSheetData(rows),
+    sheet: humanizeSheetName(table),
+  }));
+  const blob = await writeExcelFile(sheets).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

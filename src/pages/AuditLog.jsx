@@ -7,7 +7,7 @@ import { inputClass } from '../components/Field.jsx';
 import { useConcern } from '../context/ConcernContext.jsx';
 import { fetchAuditLog, restoreAuditRow, summarizeAuditEntry, AUDIT_TABLES } from '../lib/auditData.js';
 import { fetchFullBackup } from '../lib/backupData.js';
-import { downloadJson } from '../lib/reportsData.js';
+import { downloadJson, downloadXlsx } from '../lib/reportsData.js';
 import { fetchClients, fetchEmployees, fetchProjects } from '../lib/ledgerData.js';
 import { fetchOwners } from '../lib/ownerData.js';
 import { fetchLoans } from '../lib/loanData.js';
@@ -93,6 +93,19 @@ export default function AuditLog() {
     }
   }
 
+  async function handleDownloadExcel() {
+    setBackupLoading(true);
+    setBackupError('');
+    try {
+      const backup = await fetchFullBackup();
+      await downloadXlsx(`tru-erp-backup-${new Date().toISOString().slice(0, 10)}.xlsx`, backup);
+    } catch (e) {
+      setBackupError(e.message);
+    } finally {
+      setBackupLoading(false);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -130,13 +143,26 @@ export default function AuditLog() {
           None of this protects against the Supabase project itself being deleted — for that, download a copy
           periodically (below) and keep it somewhere safe, e.g. email it to yourself or save it to Google Drive.
         </p>
-        <button
-          onClick={handleDownloadBackup}
-          disabled={backupLoading}
-          className="mt-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
-        >
-          {backupLoading ? 'Preparing…' : 'Download all my data (JSON)'}
-        </button>
+        <div className="flex gap-2 flex-wrap mt-2">
+          <button
+            onClick={handleDownloadExcel}
+            disabled={backupLoading}
+            className="px-3 py-1.5 rounded-xl text-xs font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50"
+          >
+            {backupLoading ? 'Preparing…' : 'Download as Excel'}
+          </button>
+          <button
+            onClick={handleDownloadBackup}
+            disabled={backupLoading}
+            className="px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-300 text-slate-700 hover:text-slate-900 disabled:opacity-50"
+          >
+            {backupLoading ? 'Preparing…' : 'Download as JSON'}
+          </button>
+        </div>
+        <p className="text-xs text-slate-400">
+          Excel is easiest to open and look through yourself; JSON preserves the exact structure, useful if this ever needs
+          to be restored back into the database.
+        </p>
         {backupError && <p className="text-xs text-expense mt-1">{backupError}</p>}
       </div>
 
