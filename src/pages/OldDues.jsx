@@ -62,10 +62,6 @@ export default function OldDues() {
           + New entry
         </button>
       </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Pre-cutover balances only — separate from Income/Expense/Projects, never affects the Dashboard or any report.
-      </p>
-
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 

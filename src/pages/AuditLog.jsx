@@ -139,10 +139,6 @@ export default function AuditLog() {
         <p>Every change is logged below, and deleted rows can be restored instantly (expand a "delete" entry).</p>
         <p>A full snapshot of every table is also taken automatically once a day and kept for 30 days, inside Supabase.</p>
         <p>Tap below anytime to save a full copy to your phone — the only copy that lives outside Supabase.</p>
-        <p className="text-slate-400">
-          None of this protects against the Supabase project itself being deleted — for that, download a copy
-          periodically (below) and keep it somewhere safe, e.g. email it to yourself or save it to Google Drive.
-        </p>
         <div className="flex gap-2 flex-wrap mt-2">
           <button
             onClick={handleDownloadExcel}

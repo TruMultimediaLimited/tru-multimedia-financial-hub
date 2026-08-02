@@ -122,10 +122,7 @@ export default function Reports() {
       {!loading && (
         <>
           {/* Income vs Expense */}
-          <Section
-            title="Income vs Expense"
-            caption="Accrual-basis — includes full transaction amounts, even portions still unpaid."
-          >
+          <Section title="Income vs Expense">
             <div className="flex gap-4 mb-3 text-sm">
               <span className="text-income">Income {formatMoney(incomeExpense.totals.income)}</span>
               <span className="text-expense">Expense {formatMoney(incomeExpense.totals.expense)}</span>
@@ -161,10 +158,7 @@ export default function Reports() {
           </Section>
 
           {/* Profit / Loss */}
-          <Section
-            title="Profit / Loss"
-            caption="Accrual-basis — includes full transaction amounts, even portions still unpaid."
-          >
+          <Section title="Profit / Loss">
             <div className="flex gap-1 mb-3">
               {['month', 'quarter', 'year'].map((p) => (
                 <button

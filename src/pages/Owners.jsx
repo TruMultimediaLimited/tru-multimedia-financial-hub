@@ -7,6 +7,7 @@ import PageTitle from '../components/PageTitle.jsx';
 import { ENTITY_COLORS } from '../lib/entityColors.js';
 import { formatMoney } from '../lib/format.js';
 import { fetchOwnersWithTotals } from '../lib/ownerData.js';
+import OwnerForm from './owners/OwnerForm.jsx';
 
 export default function Owners() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function Owners() {
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,13 +28,19 @@ export default function Owners() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   return (
     <div>
       <BackButton />
-      <div className="mb-4">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <PageTitle colorClass="bg-rose-100 border-rose-200 text-rose-700">Owners</PageTitle>
+        <button
+          onClick={() => setFormOpen(true)}
+          className="h-8 inline-flex items-center justify-center rounded-full px-3 text-xs font-bold bg-primary/15 text-primary border border-primary/30"
+        >
+          + New owner
+        </button>
       </div>
 
       {error && <p className="text-sm text-expense mb-3">{error}</p>}
@@ -88,6 +97,8 @@ export default function Owners() {
           </div>
         </>
       )}
+
+      <OwnerForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={() => setReloadKey((k) => k + 1)} />
     </div>
   );
 }
